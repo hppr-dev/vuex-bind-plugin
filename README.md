@@ -164,7 +164,7 @@ const plugin = new RestBindPlugin({
 |----------------|-----------------------------------------|------------------------------------------------------                   |
 | url            | ""                                      | Base endpoint url. Used as baseURL in axios query.                      |
 | headers        | { "Content-Type" : "application/json" } | Request headers. Used as headers in axios query.                        |
-| endpoints      | {}                                      | Endpoints config. See (Endpoint Configuration)[#endpoint-configuration]  |
+| endpoints      | {}                                      | Endpoints config. See [Endpoint Configuration](#endpoint-configuration)  |
 | namespace      | "bind"                                  | Namespace of the plugins "bind" store.                                  |
 | update_prefix  | "update_"                               | Prefix of generated update mutations.                                   |
 | loading_prefix | "loading_"                              | Prefix of generated loading mutations.                                  |
@@ -194,7 +194,7 @@ const endpoints = {
 | url            | "/ENDPOINT_NAME" | Endpoint url. Used as url in axios query.                                                                                                         |
 | method         | "get"            | REST method. Used as method in axios query.                                                                                                       |
 | type           | Object           | Type of object returned in the responses data                                                                                                     |
-| params         | {},              | Endpoint parameters. See (Endpoint Parameters)[#endpoint-parameters]                                                                              |
+| params         | {},              | Endpoint parameters. See [Endpoint Parameters](#endpoint-parameters)                                                                              |
 | get_url        | null,            | Url computation function. Use when parameters are needed in the url. When this is defined, the url setting is ignored.                            |
 | headers        | null,            | Special headers to set for this request. These headers are added to the headers set in the plugin config and then used as headers in axios query. |
 
@@ -224,8 +224,8 @@ const bindings = {
 | Config Key     | Default     | Description                                                                                                                                                |
 |----------------|-------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
 |  endpoint      | OUTPUT_NAME | Name of the endpoint to bind to. Should match an entry in endpoint configs. Defaults to the name of the output variable.                                   |
-|  bind_type     | "watch"     | Binding type. One of "watch", "trigger", or "once". See (Binding Types)[#binding-types]                                                                    |
-|  param_map     | null        | Parameter mapping. Defines which state variables to use as parameters to the api. See (Parameter Mapping)[#parameter-mapping])                             |
+|  bind_type     | "watch"     | Binding type. One of "watch", "trigger", or "once". See [Binding Types](#binding-types)                                                                    |
+|  param_map     | null        | Parameter mapping. Defines which state variables to use as parameters to the api. See [Parameter Mapping](#parameter-mapping)                             |
 |  side_effect   | ""          | The name of an action to call when REST data is commited to this binding. The action must be within the current namespace.                                 |
 |  update        | null        | Function that takes (state, payload). Replaces the automatically generated update mutation.                                                                |
 |  transform     | null        | Function that takes the (data) from the api and tranforms it before committing it to state.                                                                |
