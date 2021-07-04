@@ -84,7 +84,7 @@ import endpoints from './endpoint_config.js'
 ...
 
 const vuex_config = {
-  plugins   : [RestBindPlugin({url: "http://myapi", endpoints})],
+  plugins   : [new RestBindPlugin({url: "http://myapi", endpoints})],
   modules   : {
     user
   },
@@ -104,6 +104,7 @@ const vuex_config = {
   </div>
   <input :v-model="user_select" @update="update_user_id(user_select)" />
   <input :v-model="date_select" @update="update_date(daye_select)" />
+</div>
 </template>
 
 <script>
@@ -193,6 +194,7 @@ const plugin = new RestBindPlugin({
   done_prefix    : "done_",
   load_prefix    : "load_",
   trigger_prefix : "trigger_",
+  check_types.   : false,
 });
 ```
 
@@ -208,6 +210,7 @@ const plugin = new RestBindPlugin({
 | done_prefix    | "done_"                                 | Prefix of generated done loading mutations.                             |
 | load_prefix    | "load_"                                 | Prefix of generated load actions.                                       | 
 | trigger_prefix | "trigger_"                              | Prefix of generated trigger actions.                                    |
+| check_types    | false                                   | Check that state parameter types match when querying the api. Use only in development environment |
 
 ## Endpoint Configuration
 
@@ -232,13 +235,31 @@ const endpoints = {
 | url            | "/ENDPOINT_NAME" | Endpoint url. Used as url in axios query.                                                                                                         |
 | method         | "get"            | REST method. Used as method in axios query.                                                                                                       |
 | type           | Object           | Type of object returned in the responses data                                                                                                     |
-| params         | {},              | Endpoint parameters. See [Endpoint Parameters](#endpoint-parameters)                                                                              |
-| get_url        | null,            | Url computation function. Use when parameters are needed in the url. When this is defined, the url setting is ignored.                            |
-| headers        | null,            | Special headers to set for this request. These headers are added to the headers set in the plugin config and then used as headers in axios query. |
+| params         | {}               | Endpoint parameters. See [Endpoint Parameters](#endpoint-parameters)                                                                              |
+| get_url        | null             | Url computation function. Use when parameters are needed in the url. When this is defined, the url setting is ignored.                            |
+| headers        | null             | Special headers to set for this request. These headers are added to the headers set in the plugin config and then used as headers in axios query. |
 
 # Endpoint Parameters
 
-params: { <API_NAME> : API_TYPE>
+Endpoint parameters are set as an object in the form:
+
+```
+params : {
+  name : type
+}
+```
+
+Where the `name` is the parameter name used in the request and `type` is the type of object.
+
+Typically the type will be one of `String`, `Array`, `Number` or simply `Object` (which will match just about anything).
+Custom classes may also be able to be used.
+
+The types of these parameters are used to generate default values of the parameters when they are stored in the state.
+If another default value is desired, you will need to set the `create_params` option to false in your binding config.
+
+The `check_type` plugin config option may also be set to ensure that the values being sent are of the specified type.
+If a variable that does not match a parameter type is provided and the `check_types` option is set then a warning will show on the console.
+This option should only be set in the development environment.
 
 ## Binding Configutation
 
