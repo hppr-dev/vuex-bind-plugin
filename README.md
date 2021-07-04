@@ -36,6 +36,7 @@ Install with npm
 export default {
   posts: {
     endpoint : "/posts",
+    type     : Array,
     method   : "get", 
     params   : {
       user_id : Number,
@@ -44,6 +45,7 @@ export default {
   },
   create_post : {
     endpoint : "/posts",
+    type     : Object,
     method   : "post",
     params   : {
       user_id : Number,
@@ -57,20 +59,18 @@ export default {
 
 ```
 // user_store.js
-import { BoundStore } from 'vuex-rest-bind-plugin'
 
-export default BoundStore({
+export default {
   state     : {...}
   mutations : {...}
   actions   : {...},
   bindings  : {
     posts : {
-      type      : Array,
       bind_type : "watch",
       time      : 30000,
     },
   }
-})
+}
 
 ```
 
@@ -115,6 +115,9 @@ export default {
     user_select : 0,
     date_select : "",
   }),
+  mounted: function() {
+    this.$store.dispatch("user/bind");
+  },
   computed: {
     ...mapState("user", ["posts"]),
     ...mapMutations("user", ["update_user_id", "update_date"])
@@ -125,11 +128,11 @@ export default {
 
 # Plugin Components
 
-## bind module
+## bind namespace module
 
 The plugin automatically adds a module named "bind" to your store.
 The module name can be changed using the `namespace` configuration value.
-The bind module is responsible for holding and acting on the bound variables.
+The bind module is responsible for keeping track of current bindings and parameters being watched.
 
 ### Setting headers
 
@@ -138,11 +141,38 @@ Note that these headers will be set on all requests coming from the bind module.
 
 ## BoundStore
 
-### Custom state
+A BoundStore is automatically generated when a module has a `bindings` field defined.
+When a `bindings` field is present the store module is converted to a BoundStore.
+A BoundStore generates state, mutations and actions for the given bindings.
 
-### Custom mutations
+A root store can also be a BoundStore, but it will need to be initialized as one:
 
-### Custom actions
+```
+//TODO write root BoundStore example
+```
+
+### Generated state
+
+Endpoint bindings require two pieces of state to be present: the output and the parameters.
+The output is always defined by bindings, but you may choose to have endpoint parameters generated using the `create_params` binding config value.
+A reason you may want to define the endpoint parameters is when you want to have specific default values.
+The output and parameters types are defined in the endpoint config.
+
+### Generated mutations
+
+Each state variable must be able to be mutated.
+When the state variables are generated, an `update_` mutation is created as well.
+The prefix generated update mutations can be set using the update_prefix plugin config option.
+
+### Generated actions
+
+Every binding generates an action to be called to load its data.
+By default, the `load_` action is defined to load "watch" and "once" bindings and `trigger_` actions are generated for "trigger" bindings.
+These values can be changed with the `load_prefix` and `trigger_prefix` plugin config options.
+
+A special "bind" action is also created to start loading data.
+The "bind" action dispatches all of the load actions.
+Only call this action once, preferably when the store is needed.
 
 # Configuration
 
@@ -207,6 +237,7 @@ const endpoints = {
 | headers        | null,            | Special headers to set for this request. These headers are added to the headers set in the plugin config and then used as headers in axios query. |
 
 # Endpoint Parameters
+
 params: { <API_NAME> : API_TYPE>
 
 ## Binding Configutation
@@ -220,7 +251,7 @@ const bindings = {
     bind_type     : "watch",
     param_map     : {},
     side_effect   : "",
-    update        : null,
+    redirect      : "",
     transform     : null,
     create_params : false,
     loading       : false,
@@ -233,9 +264,9 @@ const bindings = {
 |----------------|-------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
 |  endpoint      | OUTPUT_NAME | Name of the endpoint to bind to. Should match an entry in endpoint configs. Defaults to the name of the output variable.                                   |
 |  bind_type     | "watch"     | Binding type. One of "watch", "trigger", or "once". See [Binding Types](#binding-types)                                                                    |
-|  param_map     | null        | Parameter mapping. Defines which state variables to use as parameters to the api. See [Parameter Mapping](#parameter-mapping)                             |
+|  param_map     | null        | Parameter mapping. Defines which state variables to use as parameters to the api. See [Parameter Mapping](#parameter-mapping)                              |
 |  side_effect   | ""          | The name of an action to call when REST data is commited to this binding. The action must be within the current namespace.                                 |
-|  update        | null        | Function that takes (state, payload). Replaces the automatically generated update mutation.                                                                |
+|  redirect      | ""          | Redirects the output to another mutation. Instead of updating the data in OUTPUT_NAME, commit the data here.                                               |
 |  transform     | null        | Function that takes the (data) from the api and tranforms it before committing it to state.                                                                |
 |  create_params | false       | Set to true to automatically create state variables for the parameters in the param_map.                                                                   |
 |  loading       | false       | Set to true to create state variables that track when the data is being loaded                                                                             |
@@ -245,22 +276,39 @@ const bindings = {
 
 #### watch
 
+Use when REST data and input data change.
+
 This binding periodically updates the data from the api.
 How often this updates can be set with the "period" binding configuratino.
 When a parameter in the state changes, the plugin automatically tries to pull data again.
 
 #### trigger
 
+Use when you want to control when data is sent or retrieved.
+
 This binding does not pull or push data until a trigger action is called.
 The trigger action by default is "trigger_OUTPUT_NAME".
 Set trigger_prefix in plugin options to change the prefix for the trigger action.
 
+An example of a trigger action would be posting data to the api.
+In this case, your application would be responsible for populating the parameters state data.
+When the binding is triggered the parameters' data would be taken from the state and pushed to the api.
+
 #### once
+
+Use when both REST data and input data are set values.
 
 This binding only pulls the data once.
 It is used by the other two actions, either periodically with watch or directly with trigger.
 This action checks that parameters are set and then makes the request.
 If any of the needed parameters are absent, no request takes place.
+
+#### on_change
+
+Use when REST data only changes based on parameters.
+
+Much like watch bindings, the parameters to the endpoint are tracked, but the api is not polled.
+Instead, output data is only updated when input parameters are changed.
 
 ### Parameter Mapping
 
