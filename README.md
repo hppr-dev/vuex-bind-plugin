@@ -34,7 +34,7 @@ Install with npm
 // endpoint_config.js
 
 export default {
-  get_posts: {
+  posts: {
     endpoint : "/posts",
     method   : "get", 
     params   : {
@@ -51,6 +51,7 @@ export default {
     }
   }
 }
+```
 
 2. Add binding information to your module store config
 
@@ -67,11 +68,6 @@ export default BoundStore({
       type      : Array,
       bind_type : "watch",
       time      : 30000,
-      endpoint  : "get_posts",
-      params   : {
-        user_id       : "user_id",
-        selected_date : "date",
-      },
     },
   }
 })
@@ -102,9 +98,12 @@ const vuex_config = {
 
 ```
 <template>
+<div>
   <div v-for="post in posts">
     <span> {{ post }} </span>
   </div>
+  <input :v-model="user_select" @update="update_user_id(user_select)" />
+  <input :v-model="date_select" @update="update_date(daye_select)" />
 </template>
 
 <script>
@@ -112,11 +111,17 @@ import { mapState } from 'vuex';
 
 export default {
   name: "UserPosts",
+  data: () => ({
+    user_select : 0,
+    date_select : "",
+  }),
   computed: {
-    ...mapState("user", ["posts"])
+    ...mapState("user", ["posts"]),
+    ...mapMutations("user", ["update_user_id", "update_date"])
   }
 }
 </script>
+```
 
 # Plugin Components
 
@@ -151,6 +156,7 @@ const plugin = new RestBindPlugin({
   url       : "",
   headers   : { "Content-Type" : "application/json" },
   endpoints : {},
+  camelCase : false,
   namespace : "bind",
   update_prefix  : "update_",
   loading_prefix : "loading_",
@@ -161,15 +167,17 @@ const plugin = new RestBindPlugin({
 ```
 
 | Config Key     | Default                                 | Description                                                             |
-|----------------|-----------------------------------------|------------------------------------------------------                   |
+|----------------|-----------------------------------------|-------------------------------------------------------------------------|
 | url            | ""                                      | Base endpoint url. Used as baseURL in axios query.                      |
 | headers        | { "Content-Type" : "application/json" } | Request headers. Used as headers in axios query.                        |
-| endpoints      | {}                                      | Endpoints config. See [Endpoint Configuration](#endpoint-configuration)  |
+| endpoints      | {}                                      | Endpoints config. See [Endpoint Configuration](#endpoint-configuration) |
 | namespace      | "bind"                                  | Namespace of the plugins "bind" store.                                  |
+| camelCase      | false                                   | Use camelCase instead of snakeCase.                                     |
 | update_prefix  | "update_"                               | Prefix of generated update mutations.                                   |
 | loading_prefix | "loading_"                              | Prefix of generated loading mutations.                                  |
-| done_prefix    | "loading_"                              | Prefix of generated done loading mutations.                             |
-| load_prefix    | "load_",                                | Prefix of generated load actions.                                       | 
+| done_prefix    | "done_"                                 | Prefix of generated done loading mutations.                             |
+| load_prefix    | "load_"                                 | Prefix of generated load actions.                                       | 
+| trigger_prefix | "trigger_"                              | Prefix of generated trigger actions.                                    |
 
 ## Endpoint Configuration
 
