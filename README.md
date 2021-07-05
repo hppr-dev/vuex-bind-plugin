@@ -14,8 +14,15 @@ This plugin:
 - Seperates component and api state data
 
 The link is established by configuring 2 parts of the plugin:
-  1. Api endpoint definitions --> how to query REST endpoints
-  2. Vuex store bindings --> how to store data for and from REST queries
+  1. Api endpoint definitions --> how to query api endpoints
+  2. Vuex store bindings --> how to store data for and from api queries
+
+More generally, this plugin provides the functionality to automatically update state data based on other state variables.
+
+The operation works by watching for commits to input parameters and when one is changed:
+1. Check input parameters
+2. If any parameters are unset, don't do anything
+3. Otherwise, get data and place it back into the store
 
 # Installation
 
@@ -149,7 +156,16 @@ A BoundStore generates state, mutations and actions for the given bindings.
 A root store can also be a BoundStore, but it will need to be initialized as one:
 
 ```
-//TODO write root BoundStore example
+import Vuex from "vuex"
+import { BindPlugin, BoundStore } from "vuex-bind-plugin"
+
+var rootStore = new Vuex.Store(new BoundStore{
+  plugins   : [new BindPlugin(...)],
+  state     : {...},
+  mutations : {...},
+  actions   : {...},
+  bindings  : {...},
+});
 ```
 
 ### Generated state
@@ -186,7 +202,7 @@ Plugin defaults:
 const plugin = new BindPlugin({
   url            : "",
   headers        : { "Content-Type" : "application/json" },
-  data_module    : { module: axios, transform: response => response.data },
+  data_module    : { ... },
   endpoints      : {},
   camelCase      : false,
   namespace      : "bind",
@@ -195,7 +211,7 @@ const plugin = new BindPlugin({
   done_prefix    : "done_",
   load_prefix    : "load_",
   trigger_prefix : "trigger_",
-  check_types    : false,
+  strict         : true,
 });
 ```
 
@@ -203,7 +219,7 @@ const plugin = new BindPlugin({
 |----------------|-----------------------------------------|-------------------------------------------------------------------------|
 | url            | ""                                      | Base endpoint url. Used as baseURL in axios query.                      |
 | headers        | { "Content-Type" : "application/json" } | Request headers. Used as headers in axios query.                        |
-| data_module    | { module: axios, transform: response => response.data } | Module to call to pull data from the api. See [Data Module](#data-module) |
+| data_module    | RestDataModule                          | Module to call to pull data from the api. See [Data Module](#data-module) |
 | endpoints      | {}                                      | Endpoints config. See [Endpoint Configuration](#endpoint-configuration) |
 | namespace      | "bind"                                  | Namespace of the plugins "bind" store.                                  |
 | camelCase      | false                                   | Use camelCase instead of snakeCase.                                     |
@@ -212,15 +228,26 @@ const plugin = new BindPlugin({
 | done_prefix    | "done_"                                 | Prefix of generated done loading mutations.                             |
 | load_prefix    | "load_"                                 | Prefix of generated load actions.                                       | 
 | trigger_prefix | "trigger_"                              | Prefix of generated trigger actions.                                    |
-| check_types    | false                                   | Check that state parameter types match when querying the api. Use only in development environment |
+| strict         | true                                    | Check types where possible and log them to the console. Use in development only |
 
 ## Data Module
 
-The data module defines how to pull data from the API.
-By default, the plugin uses axios, but it is possible to use any function to do so.
-The function must return a promise that is then transformed by the given transform function.
-This option is most useful when testing, because it allows the use of mock data to be injected.
-It is possible that the plugin could be used to pull data using different methods of pulling data.
+The data module defines which methods to use to retrieve data.
+By default, the plugin uses axios, and for most purposes this option should not change.
+
+This option is most useful when testing, because it allows the use of mock data to be bound.
+The `MockDataModule` data module is included to provide mock data:
+
+```
+import { MockDataModule } from "vuex-bind-plugin"
+
+const plugin = new BindPlugin({
+  ...
+  data_module : MockDataModule
+});
+```
+
+Other uses of the data_module option may exist, though it is out of scope of this document.
 
 ## Endpoint Configuration
 
