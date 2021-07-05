@@ -1,0 +1,26 @@
+{
+  "name": "vuex-bind-plugin",
+  "version": "1.0.0",
+  "description": "vuex plugin to automatically bind input state to output state",
+  "main": "bind_plugin.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/swalker90/vuex-bind-plugin.git"
+  },
+  "keywords": [
+    "vuex",
+    "bind",
+    "rest",
+    "state",
+    "vue"
+  ],
+  "author": "Stephen Walker",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/swalker90/vuex-bind-plugin/issues"
+  },
+  "homepage": "https://github.com/swalker90/vuex-bind-plugin#readme"
+}

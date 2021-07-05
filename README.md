@@ -153,19 +153,22 @@ A BoundStore is automatically generated when a module has a `bindings` field def
 When a `bindings` field is present the store module is converted to a BoundStore.
 A BoundStore generates state, mutations and actions for the given bindings.
 
-A root store can also be a BoundStore, but it will need to be initialized as one:
+A root store can also be a BoundStore, but it will need to be initialized as one.
+If the namespace option is set to a non-default value, it will need to passed in as a second argument to the function.
 
 ```
 import Vuex from "vuex"
 import { BindPlugin, BoundStore } from "vuex-bind-plugin"
 
-var rootStore = new Vuex.Store(new BoundStore{
-  plugins   : [new BindPlugin(...)],
+var rootStore = new Vuex.Store(new BoundStore({
+  plugins   : [new BindPlugin({ namespace: "my_bind_store", ... })],
   state     : {...},
   mutations : {...},
   actions   : {...},
   bindings  : {...},
-});
+  }, 
+  "my_bind_store" );
+);
 ```
 
 ### Generated state
@@ -202,7 +205,7 @@ Plugin defaults:
 const plugin = new BindPlugin({
   url            : "",
   headers        : { "Content-Type" : "application/json" },
-  data_module    : { ... },
+  data_source    : RestDataSource,
   endpoints      : {},
   camelCase      : false,
   namespace      : "bind",
@@ -219,7 +222,7 @@ const plugin = new BindPlugin({
 |----------------|-----------------------------------------|-------------------------------------------------------------------------|
 | url            | ""                                      | Base endpoint url. Used as baseURL in axios query.                      |
 | headers        | { "Content-Type" : "application/json" } | Request headers. Used as headers in axios query.                        |
-| data_module    | RestDataModule                          | Module to call to pull data from the api. See [Data Module](#data-module) |
+| data_source    | RestDataSource                          | Module to call to pull data from the api. See [Data Module](#data-module) |
 | endpoints      | {}                                      | Endpoints config. See [Endpoint Configuration](#endpoint-configuration) |
 | namespace      | "bind"                                  | Namespace of the plugins "bind" store.                                  |
 | camelCase      | false                                   | Use camelCase instead of snakeCase.                                     |
@@ -230,24 +233,24 @@ const plugin = new BindPlugin({
 | trigger_prefix | "trigger_"                              | Prefix of generated trigger actions.                                    |
 | strict         | true                                    | Check types where possible and log them to the console. Use in development only |
 
-## Data Module
+## Data Source
 
-The data module defines which methods to use to retrieve data.
+The data_source defines which methods to use to retrieve data.
 By default, the plugin uses axios, and for most purposes this option should not change.
 
 This option is most useful when testing, because it allows the use of mock data to be bound.
-The `MockDataModule` data module is included to provide mock data:
+`MockDataSource` is included to provide mock data:
 
 ```
-import { MockDataModule } from "vuex-bind-plugin"
+import { MockDataSource } from "vuex-bind-plugin"
 
 const plugin = new BindPlugin({
   ...
-  data_module : MockDataModule
+  data_source : MockDataSource
 });
 ```
 
-Other uses of the data_module option may exist, though it is out of scope of this document.
+Other uses of the data_source option may exist, though it is out of scope of this document.
 
 ## Endpoint Configuration
 
