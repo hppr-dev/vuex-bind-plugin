@@ -1,20 +1,20 @@
-# vuex-rest-bind-plugin
+# vuex-bind-plugin
 
-A vuex plugin that provides a link between your REST api and vuex state.
+A vuex plugin that provides a link between your API and vuex state.
 
-> Update your state, let me take care of the REST.
->      - vuex-rest-bind-plugin
+> Update your state, let me take care of the rest.
+>      - vuex-bind-plugin
 
 # Overview
 
 This plugin:
-- Keeps page data up to date with REST data automatically
-- Eliminates the need for additional code/logic when adding REST endpoints
-- Provides an at-a-glance perspective of REST endpoints and state bindings
-- Seperates component and REST state data
+- Keeps page data up to date with API data automatically
+- Eliminates the need for additional code/logic when adding API endpoints
+- Provides an at-a-glance perspective of api endpoints and state bindings
+- Seperates component and api state data
 
 The link is established by configuring 2 parts of the plugin:
-  1. REST endpoint definitions --> how to query REST endpoints
+  1. Api endpoint definitions --> how to query REST endpoints
   2. Vuex store bindings --> how to store data for and from REST queries
 
 # Installation
@@ -22,7 +22,7 @@ The link is established by configuring 2 parts of the plugin:
 Install with npm
 
 ```
-  npm install vuex-rest-bind-plugin
+  npm install vuex-bind-plugin
 ```
 
 # Usage Overview
@@ -77,14 +77,14 @@ export default {
 3. Include the plugin with your vuex config:
 
 ```
-import RestBindPlugin from 'vuex-rest-bind-plugin'
+import BindPlugin from 'vuex-bind-plugin'
 import user from './user_store.js'
 import endpoints from './endpoint_config.js'
 
 ...
 
 const vuex_config = {
-  plugins   : [new RestBindPlugin({url: "http://myapi", endpoints})],
+  plugins   : [new BindPlugin({url: "http://myapi", endpoints})],
   modules   : {
     user
   },
@@ -183,18 +183,19 @@ Defines how the plugin will function.
 
 Plugin defaults:
 ```
-const plugin = new RestBindPlugin({
-  url       : "",
-  headers   : { "Content-Type" : "application/json" },
-  endpoints : {},
-  camelCase : false,
-  namespace : "bind",
+const plugin = new BindPlugin({
+  url            : "",
+  headers        : { "Content-Type" : "application/json" },
+  data_module    : { module: axios, transform: response => response.data },
+  endpoints      : {},
+  camelCase      : false,
+  namespace      : "bind",
   update_prefix  : "update_",
   loading_prefix : "loading_",
   done_prefix    : "done_",
   load_prefix    : "load_",
   trigger_prefix : "trigger_",
-  check_types.   : false,
+  check_types    : false,
 });
 ```
 
@@ -202,6 +203,7 @@ const plugin = new RestBindPlugin({
 |----------------|-----------------------------------------|-------------------------------------------------------------------------|
 | url            | ""                                      | Base endpoint url. Used as baseURL in axios query.                      |
 | headers        | { "Content-Type" : "application/json" } | Request headers. Used as headers in axios query.                        |
+| data_module    | { module: axios, transform: response => response.data } | Module to call to pull data from the api. See [Data Module](#data-module) |
 | endpoints      | {}                                      | Endpoints config. See [Endpoint Configuration](#endpoint-configuration) |
 | namespace      | "bind"                                  | Namespace of the plugins "bind" store.                                  |
 | camelCase      | false                                   | Use camelCase instead of snakeCase.                                     |
@@ -211,6 +213,14 @@ const plugin = new RestBindPlugin({
 | load_prefix    | "load_"                                 | Prefix of generated load actions.                                       | 
 | trigger_prefix | "trigger_"                              | Prefix of generated trigger actions.                                    |
 | check_types    | false                                   | Check that state parameter types match when querying the api. Use only in development environment |
+
+## Data Module
+
+The data module defines how to pull data from the API.
+By default, the plugin uses axios, but it is possible to use any function to do so.
+The function must return a promise that is then transformed by the given transform function.
+This option is most useful when testing, because it allows the use of mock data to be injected.
+It is possible that the plugin could be used to pull data using different methods of pulling data.
 
 ## Endpoint Configuration
 
@@ -297,7 +307,7 @@ const bindings = {
 
 #### watch
 
-Use when REST data and input data change.
+Use when API data and input data change.
 
 This binding periodically updates the data from the api.
 How often this updates can be set with the "period" binding configuratino.
@@ -317,7 +327,7 @@ When the binding is triggered the parameters' data would be taken from the state
 
 #### once
 
-Use when both REST data and input data are set values.
+Use when both API data and input data are set values.
 
 This binding only pulls the data once.
 It is used by the other two actions, either periodically with watch or directly with trigger.
@@ -326,14 +336,14 @@ If any of the needed parameters are absent, no request takes place.
 
 #### on_change
 
-Use when REST data only changes based on parameters.
+Use when API data only changes based on parameters.
 
-Much like watch bindings, the parameters to the endpoint are tracked, but the api is not polled.
+Much like watch bindings, the parameters to the endpoint are tracked, but the API is not polled.
 Instead, output data is only updated when input parameters are changed.
 
 ### Parameter Mapping
 
-The default parameter mapping is to use the same names as the REST endpoint.
+The default parameter mapping is to use the same names as the API endpoint.
 For example, if the endpoint has `params: {id: Number, text: String}` then the state should have `{ id: 0, text: "" }`.
 
 Sometimes it may be necessary to name your state variables differently than what is in the endpoint parameters.
