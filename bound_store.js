@@ -1,21 +1,5 @@
-import RestBindPlugin from './exports.js'
-
-const reverse_map = function(str_map) {
-  return Object.fromEntries(Object.keys(str_map).map( (key) => [ str_map[key], key ] ) );
-}
-
-const map_endpoint_types = function(param_map, type_map) {
-  let reversed = reverse_map(param_map);
-  return Object.fromEntries(
-    Object.keys(type_map).map((param) => {
-      let param_type = type_map[param];
-      if ( reversed[param] ) {
-        return [ reversed[param], param_type ];
-      } 
-      return [ param, param_type ];
-    })
-  );
-}
+import RestBindPlugin from './bind_plugin.js'
+import { map_endpoint_types } from './utils.js'
 
 export default class _BoundStore {
   constructor(store_config, namespace, plugin_config){

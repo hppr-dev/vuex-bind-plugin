@@ -1,16 +1,19 @@
+import { map_endpoint_types } from './utils.js'
 
 export const class BindModule {
   contructor(plugin_config) {
     this.plugin_config = plugin_config;
-    //TODO add in data source specific state with mutations.
+    this.source = this.plugin_config.data_source;
     return {
       namespaced : true,
       state      : {
         bind_url     : this.plugin_config.url,
         intervals    : {},
         watch_params : {},
+        ...this.source.state,
       },
       mutations: {
+        ...this.source.mutations,
         watch_param : (state, param_name) => {
           state.watch_params[param_name] = true;
         },
@@ -34,15 +37,7 @@ export const class BindModule {
       },
       actions: {
         bind    : ({ dispatch }, payload) => {
-          switch payload.binding.bind_type {
-            case "change":
-            case "once":
-            case "trigger":
-              dispatch("once", payload);
-              break;
-            case "watch":
-              dispatch("watch", payload);
-          }
+          return payload.binding.bind_type === "watch"? dispatch("watch", payload) : dispatch("once", payload);
         },
         watch   : (ctx, payload) => {
           dispatch('once', payload);
@@ -54,62 +49,35 @@ export const class BindModule {
             interval: setInterval( interval_func, payload.binding.period ) 
           });
         },
-        once    : ({state, rootState, commit}, { binding, endpoint, namespace }) => {
-          let computed_params = {};
-          let local_state = rootState[namespace];
-        //TODO write once. Should use this.plugin.data_source to query the endpoint.
+        once    : ({state, rootState, commit}, { output , binding, endpoint, namespace }) => {
+          let local_state = namespace? rootState[namespace] : rootState;
+          let computed_params = this.pull_params_from(local_state, binding.param_map, endpoint.params, output);
+          return computed_params? this.source.module(
+            ...this.source.args(state, computed_params, endpoint)
+          ).then(
+            (data) => commit(`${namespace}${output},`this.source.assign(data) ) 
+          ) : new Promise() ;
         },
       }
+    },
+    pull_params_from(local_state, param_map, params, output) {
+      let computed_params = {};
+      let param_defs = map_endpoint_types(param_map, params);
+      for ( let param in Object.key(param_map) ) {
+        computed_params[param] = local_state[param];
+        if (JSON.stringify(computed_params[param]) === JSON.strigify(new param_defs[param]())){
+          return false;
+        }
+      }
+
+      if ( this.plugin_config.strict ) {
+        let bad_param = Object.keys(params).find((p) => ! computed_params[p] instanceof param_defs[p] );
+        if ( bad_param ) {
+          console.warn(`Bind ${output}: Received bad parameter type for ${bad_param}. Got ${computed_params[bad_param]}, expected ${param_defs[p]}`);
+        }
+      }
+
+      return computed_params;
     }
   }
 }
-/*
-  actions   : {
-    once : ( { state, rootState, commit } , { endpoint, params, out, namespace }) => {
-      let computed_params = {};
-      let local_state = rootState[namespace];
-      for (let state_var of Object.keys(params)) {
-        let is_str = typeof params[state_var] === "string";
-        let state_value = local_state[state_var];
-        if (( is_str && state_value === null )||( state_value === params[state_var].zero )) {
-          return;
-        }
-        let endpoint_param = is_str? params[state_var] : params[state_var].param;
-        computed_params[endpoint_param] = state_value;
-      }
-
-      let spec = endpoints[endpoint];
-      if ( spec == null ) {
-        // eslint-disable-next-line
-        console.error(`Could not find api spec for ${name}`);
-        return
-      }
-
-      if ( process.env.NODE_ENV !== 'production' ) {
-        let bad_param = spec.params? Object.keys(params).find((p) => typeof spec.params[p]() !== typeof params[p]) : null;
-        if ( bad_param != null ) {
-          // eslint-disable-next-line
-          console.warn(`Spec ${name} expected ${bad_param} to be ${typeof spec.params[bad_param]()} but got ${typeof params[bad_param]}`);
-        }
-      }
-
-      return axios({
-        method  : spec.method,
-        baseURL : state.bind_url,
-        url     : spec.get_url? spec.get_url(computed_params): spec.url,
-        params  : spec.method === "get"? computed_params: {},
-        data    : spec.method === "get"? {} : computed_params,
-        headers : state.headers,
-      }).then(
-        (response) => {
-          if ( response.data.length > 0 ) {
-            let outname = typeof out === "string"? out : Object.keys(out)[0];
-            let mut_name = namespace === ""? `update_${outname}` : `${namespace}/update_${outname}`;
-            commit(mut_name, response.data, { root : true });
-          }
-        }
-      );
-    },
-  }
-});
-*/

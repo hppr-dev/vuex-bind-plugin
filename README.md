@@ -203,9 +203,8 @@ Defines how the plugin will function.
 Plugin defaults:
 ```
 const plugin = new BindPlugin({
-  url            : "",
-  headers        : { "Content-Type" : "application/json" },
-  data_source    : RestDataSource,
+  initial_state  : { url: "", headers :{ "Content-Type" : "application/json" },  
+  data_source    : null,
   endpoints      : {},
   camelCase      : false,
   namespace      : "bind",
@@ -220,12 +219,11 @@ const plugin = new BindPlugin({
 
 | Config Key     | Default                                 | Description                                                             |
 |----------------|-----------------------------------------|-------------------------------------------------------------------------|
-| url            | ""                                      | Base endpoint url. Used as baseURL in axios query.                      |
-| headers        | { "Content-Type" : "application/json" } | Request headers. Used as headers in axios query.                        |
-| data_source    | RestDataSource                          | Module to call to pull data from the api. See [Data Module](#data-module) |
+| initial_state  | { url: "", headers :{ "Content-Type" : "application/json" } | The inital state of the data source. See [Data Source](#data-source) |
+| data_source    | null                                    | Module to call to pull data from the api. See [Data Source](#data-source) |
 | endpoints      | {}                                      | Endpoints config. See [Endpoint Configuration](#endpoint-configuration) |
 | namespace      | "bind"                                  | Namespace of the plugins "bind" store.                                  |
-| camelCase      | false                                   | Use camelCase instead of snakeCase.                                     |
+| camelCase      | false                                   | Use camelCase instead of snake_case. (Not implemented yet)              |
 | update_prefix  | "update_"                               | Prefix of generated update mutations.                                   |
 | loading_prefix | "loading_"                              | Prefix of generated loading mutations.                                  |
 | done_prefix    | "done_"                                 | Prefix of generated done loading mutations.                             |
@@ -235,22 +233,89 @@ const plugin = new BindPlugin({
 
 ## Data Source
 
-The data_source defines which methods to use to retrieve data.
-By default, the plugin uses axios, and for most purposes this option should not change.
+The intial_state is used to initialize the state of the data source.
+It is used when initializing the given data_source class.
+By default, the plugin uses the internal RestDataSource class, which takes an object with url and header fields.
+In most cases, setting the url in the initial_state will all you need.
 
-This option is most useful when testing, because it allows the use of mock data to be bound.
-`MockDataSource` is included to provide mock data:
+The data_source option defines the class to use to pull data.
+
+### Mocking the default datasource
+
+The data_source option is most useful when testing, because it allows the use of mock data to be bound instead of request data.
+`MockRestDataSource` is provided to facilitate this:
 
 ```
-import { MockDataSource } from "vuex-bind-plugin"
+import { MockRestDataSource } from "vuex-bind-plugin"
 
 const plugin = new BindPlugin({
   ...
-  data_source : MockDataSource
+  data_source : MockRestDataSource
 });
 ```
 
-Other uses of the data_source option may exist, though it is out of scope of this document.
+This will automatically return `mock_data` that is included in the endpoint config:
+
+```
+const endpoints = {
+  posts: {
+    endpoint : "/posts",
+    type     : Array,
+    method   : "get", 
+    params   : {
+      user_id : Number,
+      date    : Date, 
+    },
+    mock_data : ["my first post", "my second post", "my third post" ]
+  },
+}
+```
+
+If more complex logic is needed for mock data, include a `transform` option in the inital_state.
+
+```
+import { MockRestDataSource } from "vuex-bind-plugin"
+
+const endpoints = {
+  posts: {
+    endpoint : "/posts",
+    type     : Array,
+    method   : "get", 
+    params   : {
+      user_id : Number,
+      date    : Date, 
+    },
+    mock_data : ({ user_id }) => ({
+      "fred" : ["fred's first post", "fred is da best"],
+      "ben"  : ["ben is da benst", "who wants a taco?"],
+      "julia": ["can anyone pet sit?", "hey it's julia"]
+    }[user_id])
+  },
+}
+
+const plugin = new BindPlugin({
+  initial_state : { transform : ({endpoint, input_params}) => endpoint.mock_data(input_params) },
+  data_source : MockRestDataSource
+  endpoints : endpoints
+});
+```
+
+The tranform function is passed an object with `endpoint`, and `input_params` fields.
+The `endpoint` is a reference to the endpoint definition, `input_params` are the current parameter values.
+
+The additional `mock_data` can be excluded when building for production by adding `remove_mock_data` rule to your vue/webpack config.
+
+```
+// vue.config.js
+import { remove_mock_data } from 'vuex-bind-plugin'
+...
+
+TODO write example
+
+// webpack.config
+
+TODO write example
+```
 
 ## Endpoint Configuration
 
