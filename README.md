@@ -229,7 +229,7 @@ const plugin = new BindPlugin({
 | done_prefix    | "done_"                                 | Prefix of generated done loading mutations.                             |
 | load_prefix    | "load_"                                 | Prefix of generated load actions.                                       | 
 | trigger_prefix | "trigger_"                              | Prefix of generated trigger actions.                                    |
-| strict         | true                                    | Check types where possible and log them to the console. Use in development only |
+| strict         | false                                   | Check types where possible and log them to the console. Use in development only |
 
 ## Data Source
 

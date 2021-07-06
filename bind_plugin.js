@@ -8,6 +8,7 @@ export default class BindPlugin {
     initial_state  = { url: "", headers: "application/json" },
     data_source    = RestDataSource,
     endpoints      = {},
+    camelCase      = false,
     namespace      = "bind",
     loading_prefix = "loading_",
     done_prefix    = "done_",
@@ -15,6 +16,7 @@ export default class BindPlugin {
     trigger_prefix = "trigger_",
     strict         = true,
   }) {
+    this.config = {};
     this.config.data_source    = new data_source(initial_state);
     this.config.endpoints      = endpoints;
     this.config.camelCase      = camelCase;
@@ -37,7 +39,7 @@ export default class BindPlugin {
     for( let module_name of Object.keys(store.modules) ) {
       store.modules[module_name] = store.modules[module_name].bindings? new BoundStore(store.modules[module_name], module_name, this.config) : store.modules[module_name];
     }
-    store.modules[this.config.namespace] = new BindModule(this.config));
+    store.modules[this.config.namespace] = new BindModule(this.config);
   }
 }
 

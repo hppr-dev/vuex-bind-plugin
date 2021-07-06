@@ -13,7 +13,7 @@ export default class _BoundStore {
     this.watch_param_defs = [];
     this.generate_modifications();
     store_config.bindings = undefined;
-    Object.assign(store_config.state, this.generated_state));
+    Object.assign(store_config.state, this.generated_state);
     Object.assign(store_config.mutations, this.generated_mutations);
     Object.assign(store_config.actions, this.generated_actions);
     return store_config;
