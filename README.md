@@ -166,8 +166,7 @@ var rootStore = new Vuex.Store(new BoundStore({
   mutations : {...},
   actions   : {...},
   bindings  : {...},
-  }, 
-  "my_bind_store" );
+  } 
 );
 ```
 
@@ -190,9 +189,9 @@ Every binding generates an action to be called to load its data.
 By default, the `load_` action is defined to load "watch" and "once" bindings and `trigger_` actions are generated for "trigger" bindings.
 These values can be changed with the `load_prefix` and `trigger_prefix` plugin config options.
 
-A special "bind" action is also created to start loading data.
-The "bind" action dispatches all of the load actions.
-Only call this action once, preferably when the store is needed.
+A special "start_bind" action is also created to start loading data.
+The "state_bind" action dispatches all of the load actions.
+Only call this action once before the bindings are needed.
 
 # Configuration
 

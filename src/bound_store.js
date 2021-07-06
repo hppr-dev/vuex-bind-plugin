@@ -81,7 +81,7 @@ export default class _BoundStore {
   }
 
   create_bind_action(name) {
-    this.generated_actions["bind"] = ({ dispatch, commit }) => {
+    this.generated_actions["start_bind"] = ({ dispatch, commit }) => {
       this.add_watch_params(commit);
       this.all_load_actions.map((action) => dispatch(action));
     };

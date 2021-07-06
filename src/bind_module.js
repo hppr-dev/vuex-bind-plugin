@@ -1,6 +1,6 @@
 import { map_endpoint_types } from './utils.js'
 
-export class BindModule {
+export default class BindModule {
   contructor(plugin_config) {
     this.plugin_config = plugin_config;
     this.source = this.plugin_config.data_source;
