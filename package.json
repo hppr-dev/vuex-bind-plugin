@@ -4,7 +4,8 @@
   "description": "vuex plugin to automatically bind input state to output state",
   "main": "src/bind_plugin.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "coverage":"jest --coverage"
   },
   "repository": {
     "type": "git",
