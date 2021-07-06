@@ -1,7 +1,7 @@
 export class TestDataSource { 
   constructor({
     module = (data) => new Promise((resolve) => resolve(data)),
-    args = (bind_state, computed_params, endpoint) => [endpoint.data],
+    args = (bind_state, computed_params, endpoint) => [endpoint.data(computed_params)],
     assign = (data) => data,
     state  = {},
     mutations = {},

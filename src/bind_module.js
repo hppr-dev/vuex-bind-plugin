@@ -14,22 +14,22 @@ export default class BindModule {
       },
       mutations: {
         ...this.source.mutations,
-        watch_param : ( state,{ action, mutations } ) => {
+        watch_params : ( state,{ action, mutations } ) => {
           mutations.forEach((mutation) => {
             if ( state.watch_params[mutation] ) {
               state.watch_params[mutation].push(action);
             } else {
-              state.watch_param[mutation] = [action];
+              state.watch_params[mutation] = [action];
             }
           });
         },
-        update_interval : (state, { name, interval } ) => {
+        add_interval : (state, { name, interval } ) => {
           clearInterval(state.intervals[name]);
           state.intervals[name] = interval;
         },
         delete_interval : (state, { name }) => {
           clearInterval(state.intervals[name]);
-          state.intervals[name] = null;
+          delete state.intervals[name];
         },
         clear_intervals : (state) => {
           for( let [, interval] of Object.entries(state.intervals)) {
@@ -46,7 +46,7 @@ export default class BindModule {
           let interval_func = () => {
             dispatch('once', payload );
           };
-          commit('update_interval', { 
+          commit('add_interval', { 
             name: `${payload.namespace}${payload.output}`,
             interval: setInterval( interval_func, payload.binding.period ) 
           });
@@ -68,7 +68,7 @@ export default class BindModule {
     let computed_params = {};
     let param_defs = map_endpoint_types(param_map, params);
     for ( let state_name of Object.keys(param_defs) ) {
-      let param_name = param_map? param_map[state_name] : param_defs[state_name];
+      let param_name = param_map? param_map[state_name] : state_name;
       computed_params[param_name] = local_state[state_name];
       if (JSON.stringify(computed_params[param_name]) === JSON.stringify(param_defs[state_name]())){
         return false;
@@ -76,9 +76,9 @@ export default class BindModule {
     }
 
     if ( strict ) {
-      let bad_param = Object.keys(params).find((p) => ! computed_params[p] instanceof param_defs[p] );
+      let bad_param = Object.keys(computed_params).find((p) => typeof(computed_params[p]) !== typeof(params[p]()));
       if ( bad_param ) {
-        console.warn(`Bind ${output}: Received bad parameter type for ${bad_param}. Got ${computed_params[bad_param]}, expected ${param_defs[p]}`);
+        console.warn(`Bind ${output}: Received bad parameter type for ${bad_param}. Got ${computed_params[bad_param]}, expected ${params[bad_param]}`);
       }
     }
 
