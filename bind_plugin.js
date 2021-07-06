@@ -25,9 +25,10 @@ export default class BindPlugin {
     this.config.trigger_prefix = trigger_prefix;
     return (store) => {
       this.config_store(store);
-      store.subscribe((mutation, state) =>  {
-        if ( state[this.config.namespace].watch_params[mutation.type] ) {
-          store.dispatch(state[this.config.namespace].watch_params[mutation.type]);
+      store.subscribe((mutation, state) => {
+        let actions = state[this.config.namespace].watch_params[mutation.type];
+        if ( actions ) {
+          actions.forEach((action) => store.dispatch(action));
         }
       });
     }

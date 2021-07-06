@@ -90,10 +90,9 @@ export default class _BoundStore {
   add_watch_params(commit) {
     for( let output_var of Object.keys(this.watch_params_defs) ) {
       commit(`${this.plugin_config.namespace}/watch_params`, {
-        params    : this.watch_param_defs[output_var], 
-        output    : output_var,
-        namespace : this.namespace,
-      });
+        action    : `${this.namespace}${this.plugin_config.load_prefix}${output_var}`,
+        mutations : Object.keys(this.watch_param_defs).map((state_var) => `${this.namespace}${this.plugin_config.update_prefix}${state_var}`),
+      }, { root : true });
     }
   }
 }

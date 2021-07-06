@@ -14,11 +14,14 @@ export const class BindModule {
       },
       mutations: {
         ...this.source.mutations,
-        watch_param : (state, param_name) => {
-          state.watch_params[param_name] = true;
-        },
-        unwatch_param : (state, param_name) => {
-          state.watch_params[param_name] = false;
+        watch_param : ( state,{ action, mutations } ) => {
+          mutations.forEach((mutation) =>
+            if ( state.watch_params[mutation] ) {
+              state.watch_params[mutation].push(action);
+            } else {
+              state.watch_param[mutation] = [action];
+            }
+          );
         },
         update_interval : (state, { name, interval } ) => {
           clearInterval(state.intervals[name]);
