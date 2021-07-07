@@ -58,13 +58,13 @@ export default class _BoundStore {
         this.create_loading_variable(output_var);
       }
 
-      this.create_load_action(output_var, binding_spec);
+      this.create_load_action(output_var, binding_spec, endpoint_spec);
     }
     this.create_start_bind_action();
   }
 
   create_variable(name, type) {
-    this.generated_state[name] = type();
+    this.generated_state[name] = type instanceof Function? type() : Object();
     this.generated_mutations[`${this.plugin_config.update_prefix}${name}`] = (state, payload) => state[name] = payload;
   }
 

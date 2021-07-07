@@ -225,8 +225,8 @@ describe("generate_modifications", () => {
     };
     generate_modifications();
     expect(new_this.create_load_action).toHaveBeenCalledTimes(2);
-    expect(new_this.create_load_action).toHaveBeenCalledWith("out", new_this.bindings.out );
-    expect(new_this.create_load_action).toHaveBeenCalledWith("out2", new_this.bindings.out2 );
+    expect(new_this.create_load_action).toHaveBeenCalledWith("out", new_this.bindings.out, new_this.plugin_config.endpoints.load_me );
+    expect(new_this.create_load_action).toHaveBeenCalledWith("out2", new_this.bindings.out2, new_this.plugin_config.endpoints.load_me );
   });
 
   it("should create a start_bind action", () => {
@@ -270,6 +270,11 @@ describe("create_variable", () => {
     };
     new_this.generated_mutations.update_some_variable(state, "from the otherside");
     expect(state.some_variable).toBe("from the otherside");
+  });
+
+  it("should assume object if type is not set", () => {
+    create_variable("no_type_variable");
+    expect(new_this.generated_state.no_type_variable).toStrictEqual(Object());
   });
 });
 
