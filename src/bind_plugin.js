@@ -33,11 +33,11 @@ export default class BindPlugin {
           actions.forEach((action) => store.dispatch(action));
         }
       });
-    }
+    };
   }
   config_store(store){
     for( let module_name of Object.keys(store.modules) ) {
-      store.modules[module_name] = store.modules[module_name].bindings? new BoundStore(store.modules[module_name], module_name, this.config) : store.modules[module_name];
+      store.modules[module_name] = store.modules[module_name].bindings? new _BoundStore(store.modules[module_name], module_name, this.config) : store.modules[module_name];
     }
     store.modules[this.config.namespace] = new BindModule(this.config);
   }
