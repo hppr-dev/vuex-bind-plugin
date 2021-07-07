@@ -2,10 +2,13 @@
 
 A vuex plugin that provides a link between outside data and your state.
 In this context, outside data means any data that is not initially available to the application.
-For example, outside data could be API endpoints, browser storage or a WebAssembly binary.
+For example, outside data could be API endpoints, browser storage* or a WebAssembly binary*. 
+
+*Future version
 
 > Update your state, let me take care of the rest.
 >      - vuex-bind-plugin
+
 
 # Overview
 
@@ -30,7 +33,7 @@ export default {
     params: {
       id: Number
     }
-    type : Array,
+    type : String,
   }
 };
 ```
@@ -47,16 +50,18 @@ const bindings = {
 };
 ```
 
-In the resulting configuration, once $store.commit("update_id", 10) is called, current_user will be automatically updated with whatever is at /users/?id=10.
+In the resulting configuration, once `$store.commit("update_id", 10)` is called, `$store.state.current_user` will be automatically updated with resource is returned by GETing /users/?id=10.
 See [Usage Overview](#usage-overview) for a more in depth example.
 
 # Installation
 
-Install with npm
+Install with npm*
 
 ```
   npm install vuex-bind-plugin
 ```
+
+* Not uploaded to npm yet.
 
 # Usage Overview
 
@@ -113,7 +118,7 @@ export default new BoundStore({
 
 ```
 import BindPlugin from 'vuex-bind-plugin'
-import user from './user_store.js'
+import user_store from './user_store.js'
 import endpoints from './endpoint_config.js'
 
 ...
@@ -121,7 +126,7 @@ import endpoints from './endpoint_config.js'
 const vuex_config = {
   plugins   : [new BindPlugin({url: "http://myapi", endpoints})],
   modules   : {
-    ...user
+    ...user_store       // Short for "user" : user_store["user"]
   },
   state     : {...},
   mutations : {...},
@@ -207,24 +212,34 @@ var rootStore = new Vuex.Store(new BoundStore({
 ### Generated state
 
 Endpoint bindings require two pieces of state to be present: the output and the parameters.
-The output is always defined by bindings, but you may choose to have endpoint parameters generated using the `create_params` binding config value.
+
+The output is automatically created and you may choose to have endpoint parameters generated using the `create_params` binding config value.
+Use `redirect : 'update_other_thing'` to redirect the output to another state variable.
+
 A reason you may want to define the endpoint parameters is when you want to have specific default values.
+
 The output and parameters types are defined in the endpoint config.
 
 ### Generated mutations
 
 Each state variable must be able to be mutated.
+
 When the state variables are generated, an `update_` mutation is created as well.
+
 The prefix generated update mutations can be set using the update_prefix plugin config option.
 
 ### Generated actions
 
 Every binding generates an action to be called to load its data.
+
 By default, the `load_` action is defined to load "watch" and "once" bindings and `trigger_` actions are generated for "trigger" bindings.
+
 These values can be changed with the `load_prefix` and `trigger_prefix` plugin config options.
 
 A special "start_bind" action is also created to start loading data.
+
 The "state_bind" action dispatches all of the load actions.
+
 Only call this action once before the bindings are needed.
 
 # Configuration
@@ -238,14 +253,13 @@ Plugin defaults:
 const plugin = new BindPlugin({
   initial_state  : { url: "", headers :{ "Content-Type" : "application/json" },  
   endpoints      : {},
-  camelCase      : false,
   namespace      : "bind",
   update_prefix  : "update_",
   loading_prefix : "loading_",
   done_prefix    : "done_",
   load_prefix    : "load_",
   trigger_prefix : "trigger_",
-  strict         : true,
+  strict         : false,
 });
 ```
 
@@ -254,7 +268,7 @@ const plugin = new BindPlugin({
 | initial_state  | { url: "", headers :{ "Content-Type" : "application/json" } | The inital state of the data source. See [Data Source](#data-source) |
 | endpoints      | {}                                      | Endpoints config. See [Endpoint Configuration](#endpoint-configuration) |
 | namespace      | "bind"                                  | Namespace of the plugins "bind" store.                                  |
-| camelCase      | false                                   | Use camelCase instead of snake_case. (Not implemented yet)              |
+| camelCase*      | false                                  | Use camelCase instead of snake_case. *Future version             |
 | update_prefix  | "update_"                               | Prefix of generated update mutations.                                   |
 | loading_prefix | "loading_"                              | Prefix of generated loading mutations.                                  |
 | done_prefix    | "done_"                                 | Prefix of generated done loading mutations.                             |
@@ -262,14 +276,19 @@ const plugin = new BindPlugin({
 | trigger_prefix | "trigger_"                              | Prefix of generated trigger actions.                                    |
 | strict         | false                                   | Check types where possible and log them to the console. Use in development only |
 
-## Data Source
+## Data Sources
 
-The intial_state is used to initialize the state of the data source.
-It is used when initializing the data source from which data is pulled.
-By default, the plugin uses the built in rest data source, which takes an object with url and header fields.
+The intial_state is used when initializing the data source.
+By default, the plugin uses the rest data source, which takes an object in the form:
+```
+{
+  url     : "http://api_url", // Base url of all requests
+  headers : request_headers   // Request headers for requests
+}
+```
 In most cases, setting the url in the initial_state will be all you need.
 
-### Mocking the default datasource
+### Using Mock Data
 
 Mock data can be built in to your endpoint definitions by including a mock_data field.
 
@@ -333,7 +352,7 @@ const plugin = new BindPlugin({
 The tranform function is passed an object with `endpoint`, and `input_params` fields.
 The `endpoint` is a reference to the endpoint definition, `input_params` are the current parameter values.
 
-The additional `mock_data` can be excluded when building for production by adding `remove_mock_data` rule to your vue or webpack config.
+*Not Implemented Yet* -- The additional `mock_data` can be excluded when building for production by adding `remove_mock_data` rule to your vue or webpack config.
 
 ```
 // vue.config.js
@@ -432,7 +451,7 @@ const bindings = {
 
 #### watch
 
-Use when API data and input data change.
+Use when data and input data change.
 
 This binding periodically updates the data from the api.
 How often this updates can be set with the "period" binding configuratino.
@@ -452,16 +471,16 @@ When the binding is triggered the parameters' data would be taken from the state
 
 #### once
 
-Use when both API data and input data are set values.
+Use when both data and input data are set values.
 
 This binding only pulls the data once.
 It is used by the other two actions, either periodically with watch or directly with trigger.
 This action checks that parameters are set and then makes the request.
 If any of the needed parameters are absent, no request takes place.
 
-#### on_change
+#### change
 
-Use when API data only changes based on parameters.
+Use when data only changes based on parameters.
 
 Much like watch bindings, the parameters to the endpoint are tracked, but the API is not polled.
 Instead, output data is only updated when input parameters are changed.
@@ -473,6 +492,8 @@ For example, if the endpoint has `params: {id: Number, text: String}` then the s
 
 Sometimes it may be necessary to name your state variables differently than what is in the endpoint parameters.
 This is where the param_map setting comes in.
+
 The param_map is in the format `{ STATE_VAR: ENDPOINT_PARAM }` and any missing parameters default to the endpoint parameter name.
+
 For example, if the endpoint has `params: { id: Number, text: String }` and the binding has `{ param_map: { some_id: "id" } }` then the state should have `{ some_id: 0, text: "" }`.
 
