@@ -1,5 +1,5 @@
 import BindPlugin from '../src/bind_plugin.js'
-import { RestDataSource } from '../src/data_sources.js'
+import { RestDataSource, MockRestDataSource } from '../src/data_sources.js'
 import BoundStore from '../src/bound_store.js'
 import BindModule from '../src/bind_module.js'
 import { mock_prototype } from './test-utils.js'
@@ -25,6 +25,15 @@ describe("constructor", () => {
     plugin(store);
     expect(store.subscribe).toHaveBeenCalledTimes(1);
     expect(store.subscribe).toHaveBeenCalledWith(expect.any(Function));
+  });
+
+  it("should have a RestDataSource by default", () => {
+    expect(BindPlugin.config.data_source).toBeInstanceOf(RestDataSource);
+  });
+
+  it("should have a MockRestDataSource by when intial_state.mock is set", () => {
+    new BindPlugin({ initial_state: {mock: true} });
+    expect(BindPlugin.config.data_source).toBeInstanceOf(MockRestDataSource);
   });
 
   describe("returned function", () => {

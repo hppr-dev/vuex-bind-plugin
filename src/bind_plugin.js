@@ -1,13 +1,12 @@
 import BoundStore from "./bound_store.js"
 import BindModule from "./bind_module.js"
-import { _MockRestDataSource, RestDataSource } from "./data_sources.js"
+import { MockRestDataSource, RestDataSource } from "./data_sources.js"
 
 
 export default class BindPlugin {
   static config = {};
   constructor({
     initial_state  = { url: "", headers: "application/json" },
-    data_source    = RestDataSource,
     endpoints      = {},
     camelCase      = false,
     namespace      = "bind",
@@ -17,7 +16,7 @@ export default class BindPlugin {
     trigger_prefix = "trigger_",
     strict         = true,
   }) {
-    BindPlugin.config.data_source    = new data_source(initial_state);
+    BindPlugin.config.data_source    = initial_state.mock? new MockRestDataSource(initial_state) : new RestDataSource(initial_state);
     BindPlugin.config.endpoints      = endpoints;
     BindPlugin.config.camelCase      = camelCase;
     BindPlugin.config.namespace      = namespace;

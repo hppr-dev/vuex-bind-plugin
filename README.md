@@ -210,7 +210,6 @@ Plugin defaults:
 ```
 const plugin = new BindPlugin({
   initial_state  : { url: "", headers :{ "Content-Type" : "application/json" },  
-  data_source    : null,
   endpoints      : {},
   camelCase      : false,
   namespace      : "bind",
@@ -226,7 +225,6 @@ const plugin = new BindPlugin({
 | Config Key     | Default                                 | Description                                                             |
 |----------------|-----------------------------------------|-------------------------------------------------------------------------|
 | initial_state  | { url: "", headers :{ "Content-Type" : "application/json" } | The inital state of the data source. See [Data Source](#data-source) |
-| data_source    | null                                    | Module to call to pull data from the api. See [Data Source](#data-source) |
 | endpoints      | {}                                      | Endpoints config. See [Endpoint Configuration](#endpoint-configuration) |
 | namespace      | "bind"                                  | Namespace of the plugins "bind" store.                                  |
 | camelCase      | false                                   | Use camelCase instead of snake_case. (Not implemented yet)              |
@@ -240,27 +238,13 @@ const plugin = new BindPlugin({
 ## Data Source
 
 The intial_state is used to initialize the state of the data source.
-It is used when initializing the given data_source class.
-By default, the plugin uses the internal RestDataSource class, which takes an object with url and header fields.
-In most cases, setting the url in the initial_state will all you need.
-
-The data_source option defines the class to use to pull data.
+It is used when initializing the data source from which data is pulled.
+By default, the plugin uses the built in rest data source, which takes an object with url and header fields.
+In most cases, setting the url in the initial_state will be all you need.
 
 ### Mocking the default datasource
 
-The data_source option is most useful when testing, because it allows the use of mock data to be bound instead of request data.
-`MockRestDataSource` is provided to facilitate this:
-
-```
-import { MockRestDataSource } from "vuex-bind-plugin"
-
-const plugin = new BindPlugin({
-  ...
-  data_source : MockRestDataSource
-});
-```
-
-This will automatically return `mock_data` that is included in the endpoint config:
+Mock data can be built in to your endpoint definitions by including a mock_data field.
 
 ```
 const endpoints = {
@@ -277,7 +261,18 @@ const endpoints = {
 }
 ```
 
-If more complex logic is needed for mock data, include a `transform` option in the inital_state.
+To return the mock data instead of querying the data source set `mock : true` in initial_state.
+
+```
+import { MockRestDataSource } from "vuex-bind-plugin"
+
+const plugin = new BindPlugin({
+  ...
+  initial_state : { mock : true }
+});
+```
+
+If more complex logic is needed for mock data, include a `transform` function in the inital_state.
 
 ```
 import { MockRestDataSource } from "vuex-bind-plugin"
@@ -300,8 +295,10 @@ const endpoints = {
 }
 
 const plugin = new BindPlugin({
-  initial_state : { transform : ({endpoint, input_params}) => endpoint.mock_data(input_params) },
-  data_source : MockRestDataSource
+  initial_state : { 
+    mock: true ,
+    transform : ({endpoint, input_params}) => endpoint.mock_data(input_params) 
+  },
   endpoints : endpoints
 });
 ```
@@ -309,7 +306,7 @@ const plugin = new BindPlugin({
 The tranform function is passed an object with `endpoint`, and `input_params` fields.
 The `endpoint` is a reference to the endpoint definition, `input_params` are the current parameter values.
 
-The additional `mock_data` can be excluded when building for production by adding `remove_mock_data` rule to your vue/webpack config.
+The additional `mock_data` can be excluded when building for production by adding `remove_mock_data` rule to your vue or webpack config.
 
 ```
 // vue.config.js
