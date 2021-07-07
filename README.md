@@ -1,6 +1,8 @@
 # vuex-bind-plugin
 
-A vuex plugin that provides a link between your API and vuex state.
+A vuex plugin that provides a link between outside data and your state.
+In this context, outside data means any data that is not initially available to the application.
+For example, outside data could be API endpoints, browser storage or a WebAssembly binary.
 
 > Update your state, let me take care of the rest.
 >      - vuex-bind-plugin
@@ -8,21 +10,45 @@ A vuex plugin that provides a link between your API and vuex state.
 # Overview
 
 This plugin:
-- Keeps page data up to date with API data automatically
-- Eliminates the need for additional code/logic when adding API endpoints
-- Provides an at-a-glance perspective of api endpoints and state bindings
-- Seperates component and api state data
+- Watches your state and updates outputs based on state changes or action triggers
+- Eliminates the need for additional code/logic when adding new sources of data
+- Provides an at-a-glance perspective of which data is coming from where
+- Seperates component and outside data
 
 The link is established by configuring 2 parts of the plugin:
-  1. Api endpoint definitions --> how to query api endpoints
-  2. Vuex store bindings --> how to store data for and from api queries
+  1. Endpoints
+  2. Bindings
 
-More generally, this plugin provides the functionality to automatically update state data based on other state variables.
+Endpoints define a place where outside data is stored and what parameters are needed to retreive it.
+An example of a rest endpoint:
 
-The operation works by watching for commits to input parameters and when one is changed:
-1. Check input parameters
-2. If any parameters are unset, don't do anything
-3. Otherwise, get data and place it back into the store
+```
+export default { 
+  get_user: {
+    method: "get",
+    url: "/users/",
+    params: {
+      id: Number
+    }
+    type : Array,
+  }
+};
+```
+
+Bindings define the variables in the application state to store the parameters and resulting data.
+An example of a rest binding to the previous endpoint:
+
+```
+const bindings = {
+  current_user : {
+    endpoint  : get_user,
+    bind_type : "change",
+  }
+};
+```
+
+In the resulting configuration, once $store.commit("update_id", 10) is called, current_user will be automatically updated with whatever is at /users/?id=10.
+See [Usage Overview](#usage-overview) for a more in depth example.
 
 # Installation
 
@@ -112,7 +138,7 @@ const vuex_config = {
     <span> {{ post }} </span>
   </div>
   <input :v-model="user_select" @update="update_user_id(user_select)" />
-  <input :v-model="date_select" @update="update_date(daye_select)" />
+  <input :v-model="date_select" @update="update_date(date_select)" />
 </div>
 </template>
 
@@ -126,7 +152,7 @@ export default {
     date_select : "",
   }),
   mounted: function() {
-    this.$store.dispatch("user/bind");
+    this.$store.dispatch("user/start_bind");
   },
   computed: {
     ...mapState("user", ["posts"]),
@@ -142,16 +168,16 @@ export default {
 
 The plugin automatically adds a module named "bind" to your store.
 The module name can be changed using the `namespace` configuration value.
-The bind module is responsible for keeping track of current bindings and parameters being watched.
+The bind module is responsible for keeping track of current bindings and the parameters that trigger updates.
 
 ### Setting headers
 
-Call `commit("bin/set_header", {key: "key", value: "value"})` to set custom request headers.
+Call `commit("bind/update_header", {key: "key", value: "value"})` to set custom request headers.
 Note that these headers will be set on all requests coming from the bind module.
 
 ## BoundStore
 
-A BoundStore generates state, mutations and actions for the given bindings.
+A BoundStore generates state, mutations and actions for given bindings.
 The configuration for BoundStore is exactly the same as for a regular vuex store, but with two extra required fields:
 
 - bindings  -- bindings configuration
@@ -159,15 +185,16 @@ The configuration for BoundStore is exactly the same as for a regular vuex store
 
 vuex-bind-plugin requires BoundStores to be namespaced.
 The resulting configuration automatically sets namespaced to true, even if it is set to false in the Boundstore config.
-To configure the root vuex store set namespace to "".
-An error will occur if namespace is not set.
+An error will occur if namespace is not set or if a BoundStore is initialized before the BindPlugin.
+
+It is possible to configure the root store by setting the namespace to "":
 
 ```
 import Vuex from "vuex"
 import { BindPlugin, BoundStore } from "vuex-bind-plugin"
 
 var rootStore = new Vuex.Store(new BoundStore({
-  plugins   : [new BindPlugin({ namespace: "my_bind_store", ... })],
+  plugins   : [new BindPlugin({ ... })],
   state     : {...},
   mutations : {...},
   actions   : {...},
