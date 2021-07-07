@@ -36,7 +36,7 @@ export default class _BoundStore {
   generate_modifications() {
     for ( let output_var of Object.keys(this.bindings) ) {
       let binding_spec  = this.bindings[output_var];
-      binding_spec.output_var = output_var;
+      binding_spec.output = output_var;
       let endpoint_spec = this.plugin_config.endpoints[binding_spec.endpoint];
       let params = binding_spec.param_map? map_endpoint_types(binding_spec.param_map, endpoint_spec.params) : endpoint_spec.params;
 
@@ -49,7 +49,7 @@ export default class _BoundStore {
       }
 
       if ( binding_spec.create_params ) {
-        for ( let [state_var, type] of params ) {
+        for ( let [state_var, type] of Object.entries(params) ) {
           this.create_variable(state_var, type);
         }
       }
@@ -58,9 +58,9 @@ export default class _BoundStore {
         this.create_loading_variable(output_var);
       }
 
-      this.create_load_action(output_var, binding_spec.bind_type);
+      this.create_load_action(output_var, binding_spec);
     }
-    this.create_bind_action();
+    this.create_start_bind_action();
   }
 
   create_variable(name, type) {
@@ -76,7 +76,7 @@ export default class _BoundStore {
     this.generated_mutations[done_name] = (state) => state[loading_name] = false;
   }
 
-  create_load_action(name, binding_spec) {
+  create_load_action(name, binding_spec, endpoint_spec) {
     let action_name = `${this.plugin_config.trigger_prefix}${name}`;
     if(binding_spec.bind_type !== "trigger" ){
       action_name = `${this.plugin_config.load_prefix}${name}`;
@@ -92,7 +92,7 @@ export default class _BoundStore {
     };
   }
 
-  create_bind_action(name) {
+  create_start_bind_action(name) {
     this.generated_actions["start_bind"] = ({ dispatch, commit }) => {
       this.add_watch_params(commit);
       this.all_load_actions.map((action) => dispatch(action));
@@ -100,10 +100,10 @@ export default class _BoundStore {
   }
 
   add_watch_params(commit) {
-    for( let output_var of Object.keys(this.watch_params_defs) ) {
+    for( let output_var of Object.keys(this.watch_param_defs) ) {
       commit(`${this.plugin_config.namespace}/watch_params`, {
         action    : `${this.namespace}${this.plugin_config.load_prefix}${output_var}`,
-        mutations : Object.keys(this.watch_param_defs).map((state_var) => `${this.namespace}${this.plugin_config.update_prefix}${state_var}`),
+        mutations : Object.keys(this.watch_param_defs[output_var]).map((state_var) => `${this.namespace}${this.plugin_config.update_prefix}${state_var}`),
       }, { root : true });
     }
   }
