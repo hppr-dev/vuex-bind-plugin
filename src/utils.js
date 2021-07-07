@@ -19,3 +19,7 @@ export const map_endpoint_types = function(param_map, type_map) {
     return type_map;
   }
 }
+
+export const Nullable = () => "nullable"
+
+export const Zero = (x) => () => x

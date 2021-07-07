@@ -1,5 +1,6 @@
 import BindModule from '../src/bind_module.js'
 import BindPlugin from '../src/bind_plugin.js'
+import { Nullable, Zero } from '../src/utils.js'
 import { test_plugin_config, TestDataSource } from './test-utils.js'
 
 beforeAll(() => BindPlugin.config = test_plugin_config);
@@ -79,6 +80,23 @@ describe("pull_params_from", () => {
     console.warn = jest.fn();
     let pulled_params = BindModule.prototype.pull_params_from(state,  param_map, params, "output", true);
     expect(console.warn).toHaveBeenCalledTimes(0);
+  });
+
+  it("should return ok if param is Nullable", () => {
+    let map = { user_id : "user", date_str : "date" };
+    let nullable_params = { user: Nullable, date: String }; 
+    let unset_state = { user_id : "", date_str : "2020-01-01" };
+    let pulled_params = BindModule.prototype.pull_params_from(unset_state, map, nullable_params, "out", true);
+    expect(pulled_params.user).toBe("");
+    expect(pulled_params.date).toBe("2020-01-01");
+  });
+
+  it("should return flasey if param matches Zero", () => {
+    let map = { user_id : "user", date_str : "date" };
+    let zero_params = { user: Zero("unset"), date: String }; 
+    let zero_state = { user_id : "unset", date_str : "2020-01-01" };
+    let pulled_params = BindModule.prototype.pull_params_from(zero_state, map, zero_params, "out", true);
+    expect(pulled_params).toBeFalsy();
   });
 });
 

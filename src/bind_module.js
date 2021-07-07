@@ -70,7 +70,7 @@ export default class BindModule {
     for ( let state_name of Object.keys(param_defs) ) {
       let param_name = param_map? param_map[state_name] : state_name;
       computed_params[param_name] = local_state[state_name];
-      if (JSON.stringify(computed_params[param_name]) === JSON.stringify(param_defs[state_name]())){
+      if (param_defs[state_name]() !== "nullable" && JSON.stringify(computed_params[param_name]) === JSON.stringify(param_defs[state_name]())){
         return false;
       }
     }

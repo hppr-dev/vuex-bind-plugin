@@ -1,6 +1,7 @@
 import BoundStore from "./bound_store.js"
 import BindModule from "./bind_module.js"
 import { MockRestDataSource, RestDataSource } from "./data_sources.js"
+import { Nullable, Zero } from './utils.js'
 
 
 export default class BindPlugin {
@@ -38,4 +39,7 @@ export default class BindPlugin {
 
 export { BoundStore }
 
+export { Nullable }
+
+export { Zero }
 

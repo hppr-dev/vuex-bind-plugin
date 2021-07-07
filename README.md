@@ -393,7 +393,7 @@ const endpoints = {
 | get_url        | null             | Url computation function. Use when parameters are needed in the url. When this is defined, the url setting is ignored.                            |
 | headers        | null             | Special headers to set for this request. These headers are added to the headers set in the plugin config and then used as headers in axios query. |
 
-# Endpoint Parameters
+### Endpoint Parameters
 
 Endpoint parameters are set as an object in the form:
 
@@ -408,12 +408,86 @@ Where the `name` is the parameter name used in the request and `type` is the typ
 Typically the type will be one of `String`, `Array`, `Number` or simply `Object` (which will match just about anything).
 Custom classes may also be able to be used.
 
-The types of these parameters are used to generate default values of the parameters when they are stored in the state.
-If another default value is desired, you will need to set the `create_params` option to false in your binding config.
+The types of these parameters are used to generate default values of parameters when they are stored in the state. See [Default Values](#default-values)
 
-The `check_type` plugin config option may also be set to ensure that the values being sent are of the specified type.
-If a variable that does not match a parameter type is provided and the `check_types` option is set then a warning will show on the console.
+The `strict` plugin config option may also be set to ensure that the values being sent are of the specified type.
+If a variable that does not match a parameter type is provided and the `strict` option is set a warning will show on the console.
 This option should only be set in the development environment.
+
+### Default Values
+
+Default values are inferred from the type given for the parameter or binding.
+
+Specifically, the default value is `Array()`,`Number()`, `Object()`, etc.
+This value is also inferred to be the parameter in "unset" state.
+
+In other words, if a parameter has the same value as the default value, it will be treated as unusable.
+
+#### Nullable
+
+A way to get around needing to send an empty object is to use the `Nullable` function as the type.
+This is a special type that denotes that this parameter can be sent no matter it's value, even if it is empty, zero, etc.
+
+#### Zero
+
+If you need to set a different value to be treated as unset, use `Zero`.
+`Zero` signifies that the new default, and therefore "unset" value is different from the type default.
+
+This is different from setting an initial value in your state.
+Setting the type as `Zero(10)` with `create_params : true` will initialize the parameter to the value 10 and assume that you have not touched it until it changes.
+Setting a state variable in your store to a default value and binding it to a parameter will still run the binding.
+
+For example: 
+```
+import { Zero } from "vuex-bind-plugin"
+
+const endpoints = {
+  bananas : {
+    url : "bananas/"
+    method : "get",
+    params : {
+      num : Zero(-1),
+    },
+  }
+}
+
+const store = new BoundStore {
+  state : {},
+  bananas : {
+    endpoint : "bananas",
+    bind_type: "change",
+  }
+}
+```
+
+The above code WILL reach out to "bananas/" when 'update_num' is called with 0,1,2,3,-2,-3, etc.
+It will not reach out when 'start_bind' or 'update_name' is called with -1.
+
+On the other hand:
+```
+const endpoints = {
+  apples : {
+    url : "apples/"
+    method : "get",
+    params : {
+      num : Number,
+    },
+  }
+}
+
+const store = new BoundStore {
+  state : {
+    num : 10,
+  },
+  apples : {
+    endpoint : "apples",
+    bind_type: "change",
+  }
+}
+```
+
+The above code will reach out to "apples/?num=10" when "start_bind is called and will reach out again when num changes to any number that is not zero.
+
 
 ## Binding Configutation
 
