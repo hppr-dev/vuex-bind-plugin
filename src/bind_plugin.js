@@ -1,4 +1,4 @@
-import _BoundStore from "./bound_store.js"
+import BoundStore from "./bound_store.js"
 import BindModule from "./bind_module.js"
 import { _MockRestDataSource, RestDataSource } from "./data_sources.js"
 
@@ -37,6 +37,5 @@ export default class BindPlugin {
   }
 }
 
-export const BoundStore = _BoundStore;
+export { BoundStore }
 
-export const MockRestDataSource = _MockRestDataSource; 

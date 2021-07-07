@@ -19,14 +19,3 @@ export const map_endpoint_types = function(param_map, type_map) {
     return type_map;
   }
 }
-
-export const add_camel_case = function(obj) {
-  for( let key of Object.key(obj) ) {
-    obj[to_camel_case(key)] = obj[key];
-  }
-}
-
-export const to_camel_case = function(str) {
-  let words = str.split('_');
-  return words.slice(0,1) + words.slice(1).map((s) => s.slice(0,1).toUpperCase() + s.slice(1));
-}

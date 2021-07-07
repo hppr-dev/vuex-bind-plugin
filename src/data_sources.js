@@ -12,7 +12,7 @@ export class RestDataSource {
       headers : bind_state.headers,
     }
   ];
-  assign = (data) => response.data;
+  assign = (response) => response.data? response.data : null ;
   state  = {
     url     : "",
     headers : {},
@@ -30,7 +30,7 @@ export class RestDataSource {
   }
 }
 
-export class _MockRestDataSource { 
+export class MockRestDataSource { 
   args = ( bind_state, input_params, endpoint ) => [
     { 
       endpoint,
@@ -49,7 +49,7 @@ export class _MockRestDataSource {
   constructor({ 
     url       = "",
     headers   = {},
-    transform = (endpoint) => endpoint.mock_data 
+    transform = ({ endpoint }) => endpoint.mock_data 
   }) {
     this.state.url = url;
     this.state.headers = headers;

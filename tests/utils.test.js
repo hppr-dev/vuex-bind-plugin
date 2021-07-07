@@ -1,19 +1,29 @@
-import { reverse_map, map_endpoint_types, add_camel_case, to_camel_case } from '../src/utils.js'
+import { reverse_map, map_endpoint_types } from '../src/utils.js'
 
-test("reverse_map should create a map that values are keys and keys are values", () => {
+describe("reverse_map", () => {
+  it("should create a map that values are keys and keys are values", () => {
+    let results = reverse_map({
+      hello: "world",
+      foo: "bar",
+    });
+    expect(results.bar).toBe("foo");
+    expect(results.world).toBe("hello");
+  });
 });
 
-test("map_endpoint_types should return parameter definitions when param map is empty", () => {
-});
-
-test("map_endpoint_types should return partial parameter definitions when param map does not have a mapping", () => {
-});
-
-test("map_endpoint_types should return parameters mapped using param_map", () => {
-});
-
-test("add_camel_case should add equivalent camel case fields to given object", () => {
-});
-
-test("to_camel_case should return a camel case string from snake case", () => {
+describe("map_endpoint_types", () => {
+  it("should return parameter definitions when param map is empty", () => {
+    let results = map_endpoint_types({}, {id: Number, user: String});
+    expect(results).toStrictEqual({id: Number, user: String});
+  });
+  
+  it("should return partial parameter definitions when param map does not have a mapping", () => {
+    let results = map_endpoint_types({ user_id : "id" }, {id: Number, user: String});
+    expect(results).toStrictEqual({user_id: Number, user: String});
+  });
+  
+  it("should return parameters mapped using param_map", () => {
+    let results = map_endpoint_types({ user_id : "id", username: "user" }, {id: Number, user: String});
+    expect(results).toStrictEqual({user_id: Number, username: String});
+  });
 });
