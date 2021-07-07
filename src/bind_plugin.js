@@ -4,6 +4,7 @@ import { _MockRestDataSource, RestDataSource } from "./data_sources.js"
 
 
 export default class BindPlugin {
+  static config = {};
   constructor({
     initial_state  = { url: "", headers: "application/json" },
     data_source    = RestDataSource,
@@ -16,33 +17,23 @@ export default class BindPlugin {
     trigger_prefix = "trigger_",
     strict         = true,
   }) {
-    this.config = {};
-    this.config.data_source    = new data_source(initial_state);
-    this.config.endpoints      = endpoints;
-    this.config.camelCase      = camelCase;
-    this.config.namespace      = namespace;
-    this.config.loading_prefix = loading_prefix;
-    this.config.done_prefix    = done_prefix;
-    this.config.load_prefix    = load_prefix;
-    this.config.trigger_prefix = trigger_prefix;
-    let init_func = (store) => {
-      this.config_store(store);
+    BindPlugin.config.data_source    = new data_source(initial_state);
+    BindPlugin.config.endpoints      = endpoints;
+    BindPlugin.config.camelCase      = camelCase;
+    BindPlugin.config.namespace      = namespace;
+    BindPlugin.config.loading_prefix = loading_prefix;
+    BindPlugin.config.done_prefix    = done_prefix;
+    BindPlugin.config.load_prefix    = load_prefix;
+    BindPlugin.config.trigger_prefix = trigger_prefix;
+    return (store) => {
+      store.registerModule(BindPlugin.config.namespace, new BindModule());
       store.subscribe((mutation, state) => {
-        let actions = state[this.config.namespace].watch_params[mutation.type];
+        let actions = state[BindPlugin.config.namespace].watch_params[mutation.type];
         if ( actions ) {
           actions.forEach((action) => store.dispatch(action));
         }
       });
     };
-    init_func.config = this.config;
-    init_func.plugin_name   = "BindPlugin";
-    return init_func;
-  }
-  config_store(store){
-    for( let module_name of Object.keys(store.modules) ) {
-      store.modules[module_name] = store.modules[module_name].bindings? new _BoundStore(store.modules[module_name], module_name, this.config) : store.modules[module_name];
-    }
-    store.modules[this.config.namespace] = new BindModule(this.config);
   }
 }
 

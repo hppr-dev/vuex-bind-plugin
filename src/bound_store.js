@@ -1,10 +1,18 @@
-import RestBindPlugin from './bind_plugin.js'
+import BindPlugin from './bind_plugin.js'
 import { map_endpoint_types } from './utils.js'
 
 export default class _BoundStore {
-  constructor(store_config, namespace, plugin_config){
-    this.plugin_config = namespace? plugin_config : this.plugin_config_from_store_config();
-    this.namespace = namespace? `${namespace}/` : "" ;
+  constructor(store_config){
+    if ( store_config.namespace === undefined ) {
+      throw `BoundStore initialized without namespace: ${JSON.stringify(store_config)}`; 
+    }
+    if ( BindPlugin.config.endpoints === undefined ) {
+      throw `BoundStore created before plugin was configured: ${JSON.stringify(store_config)}`;
+    }
+
+    this.store_config = store_config;
+    this.plugin_config = BindPlugin.config;
+    this.namespace = store_config.namespace;
     this.bindings = store_config.bindings;
     this.generated_state = {};
     this.generated_mutations = {};
@@ -12,16 +20,19 @@ export default class _BoundStore {
     this.all_load_actions = [];
     this.watch_param_defs = [];
     this.generate_modifications();
-    store_config.bindings = undefined;
+
+    delete store_config.bindings;
+    delete store_config.namespace;
+
     Object.assign(store_config.state, this.generated_state);
     Object.assign(store_config.mutations, this.generated_mutations);
     Object.assign(store_config.actions, this.generated_actions);
+
     store_config.namespaced = true;
-    return store_config;
+
+    return this.namespace === ""? store_config : { [this.namespace] : store_config }
   }
-  plugin_config_from_store_config() {
-    return this.store_config.plugins.find((plugin) => plugin.plugin_name === "BindPlugin").config;
-  }
+
   generate_modifications() {
     for ( let output_var of Object.keys(this.bindings) ) {
       let binding_spec  = this.bindings[output_var];

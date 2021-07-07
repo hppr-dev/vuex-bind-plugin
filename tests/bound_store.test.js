@@ -1,9 +1,14 @@
 import BoundStore from '../src/bound_store.js'
+import BindPlugin from '../src/bind_plugin.js'
 import { test_plugin_config, mock_prototype } from './test-utils.js'
+
+beforeAll(() => BindPlugin.config = test_plugin_config);
+afterAll(() => BindPlugin.config = {});
 
 describe("constructor", () => {
   let store = null
   let init_store = (bindings, namespace, extras={}) => store = new BoundStore({
+    namespace : "test",
     bindings,
     state : {
       regular_state_var : "hello",
@@ -15,29 +20,29 @@ describe("constructor", () => {
       regular_action : "some action",
     },
     ...extras
-  }, namespace, test_plugin_config);
+  });
 
-  let plugin_config_from_store_config = mock_prototype(BoundStore, "plugin_config_from_store_config");
   let generate_modifications = mock_prototype(BoundStore, "generate_modifications");
 
-  it('should return a namespaced vuex store config', () => {
+  it('should return a namespaced module config', () => {
     store = init_store({}, "my_namespace");
+    expect(store.test.namespaced).toBe(true);
+    expect(store.test.state.regular_state_var).toBe("hello");
+    expect(store.test.mutations.regular_mutation).toBe("mutate a thing");
+    expect(store.test.actions.regular_action).toBe("some action");
+    expect(store.test.bindings).toBeUndefined();
+    expect(generate_modifications).toHaveBeenCalledTimes(1);
+  });
+
+  it('should return a root root module config when namespace is ""', () => {
+    store = init_store({}, "", { strict: "Some value that shouldn't be changed", namespace : "" });
+    expect(store.strict).toBe("Some value that shouldn't be changed");
     expect(store.namespaced).toBe(true);
     expect(store.state.regular_state_var).toBe("hello");
     expect(store.mutations.regular_mutation).toBe("mutate a thing");
     expect(store.actions.regular_action).toBe("some action");
     expect(store.bindings).toBeUndefined();
     expect(generate_modifications).toHaveBeenCalledTimes(1);
-  });
-
-  it('should return a root vuex store config when no namespace is given', () => {
-    store = init_store({}, "", { strict: "Some value that shouldn't be changed" });
-    expect(store.strict).toBe("Some value that shouldn't be changed");
-  });
-  
-  it('should get plugin config from root data store when no namespace is given', () => {
-    store = init_store({}, "", { });
-    expect(plugin_config_from_store_config).toHaveBeenCalledTimes(1);
   });
   
 });

@@ -34,20 +34,23 @@ describe("constructor", () => {
       }
     };
 
-    let config_store = mock_prototype(BindPlugin, "config_store")
-
     store.subscribe = jest.fn();
     store.dispatch = jest.fn();
+
+    store.registerModule = jest.fn();
 
     beforeEach(() => {
       store.subscribe.mockClear();
       store.dispatch.mockClear();
+      BindModule.mockClear();
+      store.registerModule.mockClear();
     });
 
-    it("should configure store", () => {
+    it("should register store", () => {
       plugin(store);
-      expect(config_store).toHaveBeenCalledTimes(1);
-      expect(config_store).toHaveBeenCalledWith(store);
+      expect(store.registerModule).toHaveBeenCalledTimes(1);
+      expect(store.registerModule).toHaveBeenCalledWith("bind", expect.any(Object));
+      expect(BindModule).toHaveBeenCalledTimes(1);
     });
 
     it("should react to watched parameters", () => {
@@ -77,48 +80,3 @@ describe("constructor", () => {
   
 });
 
-describe("config_store", () => {
-  let plugin = null;
-  let config = {};
-  let store = {};
-
-  beforeEach(() => {
-    plugin = new BindPlugin(config)
-    config = {};
-    BoundStore.mockClear();
-    BindModule.mockClear();
-    store = {
-      subscribe : jest.fn(),
-      modules   : {
-        module1 : { bindings: true },
-        module2 : { actions: "some actions" }
-      },
-    };
-  });
-
-  it("should configure default bind module", () => {
-    plugin(store);
-    expect(BindModule).toHaveBeenCalledTimes(1);
-    expect(store.modules.bind).toBeDefined();
-  });
-
-  it("should custom namespaced module", () => {
-    config.namespace = "my_bind_module";
-    plugin = new BindPlugin(config);
-    plugin(store);
-    expect(BindModule).toHaveBeenCalledTimes(1);
-    expect(store.modules.my_bind_module).toBeDefined();
-  });
-
-  it("should add bound stores for each module with bindings", () => {
-    plugin(store);
-    expect(BoundStore).toHaveBeenCalledTimes(1);
-    expect(BoundStore).toHaveBeenCalledWith({ bindings : true }, "module1", expect.any(Object));
-  });
-
-  it("should leave modules without bindings as is", () => {
-    plugin(store);
-    expect(store.modules.module2).toStrictEqual( {actions: "some actions" });
-  });
-
-});

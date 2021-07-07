@@ -1,8 +1,16 @@
 import BindModule from '../src/bind_module.js'
+import BindPlugin from '../src/bind_plugin.js'
 import { test_plugin_config, TestDataSource } from './test-utils.js'
 
+beforeAll(() => BindPlugin.config = test_plugin_config);
+afterAll(() => BindPlugin.config = {});
+
+var module = null;
+
+beforeEach(() => module = new BindModule());
+
+
 describe("default constructor", () => {
-  let module = new BindModule(test_plugin_config);
 
   it("should returns an object", () => {
     expect(module).toBeInstanceOf(Object);
@@ -22,12 +30,15 @@ describe("default constructor", () => {
 });
 
 describe("constructor with custom data source", () => {
-  let config_copy = Object.assign({}, test_plugin_config);
-  config_copy.data_source = new TestDataSource({
-    state : { some_state_var : "some state" },
-    mutations : { some_mutation : "some mutation is here" }
+  beforeAll(() => {
+    BindPlugin.config.data_source = new TestDataSource({
+      state : { some_state_var : "some state" },
+      mutations : { some_mutation : "some mutation is here" }
+    });
   });
-  let module = new BindModule(config_copy);
+  afterAll(() => {
+    BindPlugin.config = test_plugin_config;
+  });
 
   it("should have state and mutations from datasource", () => {
     expect(module.state.some_state_var).toBe("some state");
@@ -72,7 +83,6 @@ describe("pull_params_from", () => {
 });
 
 describe("mutations", () => {
-  let module = new BindModule(test_plugin_config);
   let state = {
     intervals : {},
     watch_params : {}
@@ -168,7 +178,6 @@ describe("mutations", () => {
 });
 
 describe("actions", () => {
-  let module = new BindModule(test_plugin_config);
   let ctx = {
     state : {},
     rootState: {

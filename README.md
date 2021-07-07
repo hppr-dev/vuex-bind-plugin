@@ -62,14 +62,16 @@ export default {
 }
 ```
 
-2. Add binding information to your module store config
+2. Create a BoundStore with namespace and binding information to your module store config
 
 ```
 // user_store.js
+import BoundStore from 'vuex-bind-plugin'
 
-export default {
-  state     : {...}
-  mutations : {...}
+export default new BoundStore({
+  namespace : "user",
+  state     : {...},
+  mutations : {...},
   actions   : {...},
   bindings  : {
     posts : {
@@ -77,7 +79,7 @@ export default {
       time      : 30000,
     },
   }
-}
+});
 
 ```
 
@@ -93,7 +95,7 @@ import endpoints from './endpoint_config.js'
 const vuex_config = {
   plugins   : [new BindPlugin({url: "http://myapi", endpoints})],
   modules   : {
-    user
+    ...user
   },
   state     : {...},
   mutations : {...},
@@ -149,12 +151,16 @@ Note that these headers will be set on all requests coming from the bind module.
 
 ## BoundStore
 
-A BoundStore is automatically generated when a module has a `bindings` field defined.
-When a `bindings` field is present the store module is converted to a BoundStore.
 A BoundStore generates state, mutations and actions for the given bindings.
+The configuration for BoundStore is exactly the same as for a regular vuex store, but with two extra required fields:
 
-A root store can also be a BoundStore, but it will need to be initialized as one.
-If the namespace option is set to a non-default value, it will need to passed in as a second argument to the function.
+- bindings  -- bindings configuration
+- namespace -- Namespace of the store. Not to be confused with the namespaced vuex option.
+
+vuex-bind-plugin requires BoundStores to be namespaced.
+The resulting configuration automatically sets namespaced to true, even if it is set to false in the Boundstore config.
+To configure the root vuex store set namespace to "".
+An error will occur if namespace is not set.
 
 ```
 import Vuex from "vuex"
@@ -165,6 +171,7 @@ var rootStore = new Vuex.Store(new BoundStore({
   state     : {...},
   mutations : {...},
   actions   : {...},
+  namespace : "",   //MUST BE SET
   bindings  : {...},
   } 
 );
