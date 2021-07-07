@@ -240,6 +240,28 @@ describe("generate_modifications", () => {
     generate_modifications();
     expect(new_this.create_start_bind_action).toHaveBeenCalledTimes(1);
   });
+
+  it("should handle when endpoint does not have params and create_params is true", () => {
+    new_this.plugin_config.endpoints.no_param_endpoint = {
+    };
+    new_this.bindings.out = {
+      bind_type : "once",
+      endpoint  : "no_param_endpoint",
+      create_params : true
+    };
+    generate_modifications();
+    expect(new_this.create_variable).toHaveBeenCalledTimes(1);
+    expect(new_this.create_variable).toHaveBeenCalledWith("out", undefined);
+  });
+
+  it("should throw an error if an when an binding endpoing is not defined", () => {
+    new_this.bindings.out = {
+      bind_type : "once",
+      endpoint  : "no_param_endpoint",
+      create_params : true
+    };
+    expect(() => generate_modifications()).toThrow();
+  });
   
 });
 

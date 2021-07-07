@@ -36,8 +36,6 @@ export default class BindPlugin {
   }
 }
 
-export const DefaultBindPlugin = (initial_state, endpoints) => new BindPlugin({initial_state, endpoints});
-
 export { BoundStore }
 
 

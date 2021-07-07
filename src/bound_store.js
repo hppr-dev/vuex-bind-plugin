@@ -38,6 +38,11 @@ export default class _BoundStore {
       let binding_spec  = this.bindings[output_var];
       binding_spec.output = output_var;
       let endpoint_spec = this.plugin_config.endpoints[binding_spec.endpoint];
+
+      if ( endpoint_spec === undefined ) {
+        throw `Tried to bind to unknown endpoint : ${binding_spec.endpoint}`;
+      }
+
       let params = binding_spec.param_map? map_endpoint_types(binding_spec.param_map, endpoint_spec.params) : endpoint_spec.params;
 
       if ( binding_spec.bind_type === "watch" || binding_spec.bind_type === "change") {
@@ -48,7 +53,7 @@ export default class _BoundStore {
         this.create_variable(output_var, endpoint_spec.type);
       }
 
-      if ( binding_spec.create_params ) {
+      if ( params && binding_spec.create_params ) {
         for ( let [state_var, type] of Object.entries(params) ) {
           this.create_variable(state_var, type);
         }
