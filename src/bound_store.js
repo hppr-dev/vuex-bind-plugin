@@ -16,10 +16,11 @@ export default class _BoundStore {
     Object.assign(store_config.state, this.generated_state);
     Object.assign(store_config.mutations, this.generated_mutations);
     Object.assign(store_config.actions, this.generated_actions);
+    store_config.namespaced = true;
     return store_config;
   }
   plugin_config_from_store_config() {
-    return this.store_config.plugins.find((plugin) => plugin instanceof RestBindPlugin).config;
+    return this.store_config.plugins.find((plugin) => plugin.plugin_name === "BindPlugin").config;
   }
   generate_modifications() {
     for ( let output_var of Object.keys(this.bindings) ) {
@@ -43,7 +44,7 @@ export default class _BoundStore {
       }
 
       if ( binding_spec.loading ) {
-        this.create_loading_variables(output_var);
+        this.create_loading_variable(output_var);
       }
 
       this.create_load_action(output_var, binding_spec.bind_type);
@@ -56,7 +57,7 @@ export default class _BoundStore {
     this.generated_mutations[`${this.plugin_config.update_prefix}${name}`] = (state, payload) => state[name] = payload;
   }
 
-  create_loading_variables(name) {
+  create_loading_variable(name) {
     let loading_name = `${this.plugin_config.loading_prefix}${name}`;
     let done_name = `${this.plugin_config.done_prefix}${loading_name}`;
     this.generated_state[loading_name] = false;

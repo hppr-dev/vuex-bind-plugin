@@ -28,3 +28,20 @@ export const test_plugin_config = {
   trigger_prefix : "trigger_",
   strict         : false,
 };
+
+export const mock_prototype = (clazz, name, test) => {
+  let holder = clazz.prototype[name];
+  let fun = jest.fn();
+  beforeAll(() => {
+    holder = clazz.prototype[name];
+    clazz.prototype[name] = fun;
+  });
+
+  afterAll(() => {
+    clazz.prototype[name] = holder;
+  });
+
+  beforeEach(() => fun.mockClear());
+
+  return fun;
+};

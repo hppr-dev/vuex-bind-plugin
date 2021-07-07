@@ -2,6 +2,7 @@ import BindPlugin from '../src/bind_plugin.js'
 import { RestDataSource } from '../src/data_sources.js'
 import BoundStore from '../src/bound_store.js'
 import BindModule from '../src/bind_module.js'
+import { mock_prototype } from './test-utils.js'
 
 jest.mock('../src/bound_store.js')
 jest.mock('../src/bind_module.js')
@@ -27,24 +28,16 @@ describe("constructor", () => {
   });
 
   describe("returned function", () => {
-    let proto_config_store = null;
     let state = {
       bind : {
         watch_params : {}
       }
     };
 
+    let config_store = mock_prototype(BindPlugin, "config_store")
+
     store.subscribe = jest.fn();
     store.dispatch = jest.fn();
-
-    beforeAll(() => {
-      proto_config_store = BindPlugin.prototype.config_store;
-      BindPlugin.prototype.config_store = jest.fn();
-    });
-
-    afterAll(() => {
-      BindPlugin.prototype.config_store = proto_config_store;
-    });
 
     beforeEach(() => {
       store.subscribe.mockClear();
@@ -53,8 +46,8 @@ describe("constructor", () => {
 
     it("should configure store", () => {
       plugin(store);
-      expect(BindPlugin.prototype.config_store).toHaveBeenCalledTimes(1);
-      expect(BindPlugin.prototype.config_store).toHaveBeenCalledWith(store);
+      expect(config_store).toHaveBeenCalledTimes(1);
+      expect(config_store).toHaveBeenCalledWith(store);
     });
 
     it("should react to watched parameters", () => {

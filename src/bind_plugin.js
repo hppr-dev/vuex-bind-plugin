@@ -25,7 +25,7 @@ export default class BindPlugin {
     this.config.done_prefix    = done_prefix;
     this.config.load_prefix    = load_prefix;
     this.config.trigger_prefix = trigger_prefix;
-    return (store) => {
+    let init_func = (store) => {
       this.config_store(store);
       store.subscribe((mutation, state) => {
         let actions = state[this.config.namespace].watch_params[mutation.type];
@@ -34,6 +34,9 @@ export default class BindPlugin {
         }
       });
     };
+    init_func.config = this.config;
+    init_func.plugin_name   = "BindPlugin";
+    return init_func;
   }
   config_store(store){
     for( let module_name of Object.keys(store.modules) ) {
