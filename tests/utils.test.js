@@ -1,4 +1,4 @@
-import { reverse_map, map_endpoint_types, is_unset, match, is_type_match, get_default} from '../src/utils.js'
+import { reverse_map, map_endpoint_types, is_unset, match, is_type_match, get_default, query_mock_data } from '../src/utils.js'
 
 describe("reverse_map", () => {
   it("should create a map that values are keys and keys are values", () => {
@@ -166,6 +166,7 @@ describe("is_type_match", () => {
 });
 
 describe("get_default", () => {
+
   it("should get default for Array, Object, Number and String types", () => {
     expect(get_default(Array)).toStrictEqual(Array());
     expect(get_default(Object)).toStrictEqual(Object());
@@ -182,4 +183,17 @@ describe("get_default", () => {
     expect(get_default(match.All("hello"))).toBe("hello");
     expect(get_default(match.AnythingBut("world"))).toBe("world");
   });
+});
+
+describe("query_mock_data", () => {
+
+  it("should pull data from endpoint mock data", () => {
+    let endpoint = { mock_data : ({x, y}) => x * y }
+    let input_params = {x : 10, y: 12 };
+    expect(query_mock_data({ endpoint, input_params })).toBe(120);
+    input_params.x = 11;
+    input_params.y = 66;
+    expect(query_mock_data({ endpoint, input_params })).toBe(726);
+  });
+
 });

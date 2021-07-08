@@ -324,7 +324,7 @@ const plugin = new BindPlugin({
 If more complex logic is needed for mock data, include a `transform` function in the inital_state.
 
 ```
-import { MockRestDataSource } from "vuex-bind-plugin"
+import { query_mock_data } from "vuex-bind-plugin"
 
 const endpoints = {
   posts: {
@@ -346,14 +346,18 @@ const endpoints = {
 const plugin = new BindPlugin({
   initial_state : { 
     mock: true ,
-    transform : ({endpoint, input_params}) => endpoint.mock_data(input_params) 
+    transform : query_mock_data, 
   },
   endpoints : endpoints
 });
 ```
 
+`query_mock_data` is a utility function that passes param data into the mock_data function of your endpoint.
+
+A custom function may also be used for the transform.
 The tranform function is passed an object with `endpoint`, and `input_params` fields.
-The `endpoint` is a reference to the endpoint definition, `input_params` are the current parameter values.
+The `endpoint` is a reference to the endpoint definition, and `input_params` are the current parameter values that would have been pulled from the state.
+SA tranform to return the calculated params could be written as `tranform : ({ input_params }) => input_params`.
 
 *Not Implemented Yet* -- The additional `mock_data` can be excluded when building for production by adding `remove_mock_data` rule to your vue or webpack config.
 
@@ -371,30 +375,26 @@ TODO write example
 
 ## Endpoint Configuration
 
-Defines what endpoints are available to use.
+### General Endpoints
 
-Endpoint defaults:
+Endpoints define where data will be retreived from.
+
+Endpoints are data source specific, so the endpoint format may differ between different data sources.
+
+Regardless of data sources the `type` and params` fields are available on all endpoints:
 ```
 const endpoints = {
   ENDPOINT_NAME : {
-    url     : "/ENDPOINT_NAME",
-    method  : "get",
     type    : Object,
     params  : {},
-    get_url : null,
-    headers : null,
   }
 }
 ```
 
 | Config Key     | Default          | Description                                                                                                                                       |
 |----------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| url            | "/ENDPOINT_NAME" | Endpoint url. Used as url in axios query.                                                                                                         |
-| method         | "get"            | REST method. Used as method in axios query.                                                                                                       |
 | type           | Object           | Type of object returned in the responses data                                                                                                     |
 | params         | {}               | Endpoint parameters. See [Endpoint Parameters](#endpoint-parameters)                                                                              |
-| get_url        | null             | Url computation function. Use when parameters are needed in the url. When this is defined, the url setting is ignored.                            |
-| headers        | null             | Special headers to set for this request. These headers are added to the headers set in the plugin config and then used as headers in axios query. |
 
 ### Endpoint Parameters
 
@@ -419,7 +419,7 @@ This option should only be set in the development environment.
 
 ### Default Values
 
-Default values are gotten from the type given for the parameter or binding.
+Default values are retreived from the type given for the parameter or binding.
 
 For built in types the default value is `Array()`,`Number()`, `Object()`, etc.
 This value is also inferred to be the parameter in "unset" state.
@@ -463,6 +463,87 @@ const params = {
   value : greater_than_ten,
 }
 ```
+
+### Rest Endpoints
+
+Rest endpoints require extra fields pertaining to request configuration:
+
+```
+const endpoints = {
+  ENDPOINT_NAME : {
+    url     : "/ENDPOINT_NAME",
+    method  : "get",
+    get_url : undefined,
+    headers : undefined,
+    type    : Object,
+    params  : {},
+  }
+}
+```
+
+| Config Key     | Default          | Description                                                                                                                                       |
+|----------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| url            | "/ENDPOINT_NAME" | Endpoint url. Used as url in axios query.                                                                                                         |
+| method         | "get"            | REST method. Used as method in axios query.                                                                                                       |
+| get_url        | null             | Url computation function. Use when parameters are needed in the url. When this is defined, the url setting is ignored.                            |
+| headers        | null             | Special headers to set for this request. These headers are added to the headers set in the plugin config and then used as headers in axios query. |
+| type           | Object           | See [General Endpoints](#general-endpoints)                                                                                                     |
+| params         | {}               | See [Endpoint Parameters](#endpoint-parameters)                                                                              |
+
+### Storage Endpoints
+
+Storage endpoints define keys in browser storage that are accessed and bound into state.
+
+Each storage endpoint requires a single `value` param. This will hold the value that is written to the storage binding.
+
+```
+const endpoints = {
+  ENDPOINT_NAME : {
+    key     : "ENDPOINT_NAME",
+    scope   : "local",
+    type    : String,
+    params  : { value : String },
+  }
+}
+```
+
+| Config Key     | Default            | Description                                                                               |
+|----------------|--------------------|------------------------------------------------------------------                         |
+| key            | ""                 | Storage key, what the value is stored under                                               |
+| scope          | "local"            | Storage scope, one of "local", "session" or "cookie"                                      |
+| type           | Object             | See [General Endpoints](#general-endpoints)                                               |
+| params         | { value : String } | Must have a value parameter for storage parameters. By default it is a string. The only reason to set this on storage endpoints is to change the type. See [Endpoint Parameters](#endpoint-parameters) |            |
+
+A standard definition of a storage endpoint may look something like:
+
+```
+const endpoints = {
+  token   : { scope: "cookie" },
+  user_id : { scope : "local" },
+  static :  { scope : "session" },
+}
+```
+
+
+### WebAssembly Endpoints
+
+```
+const endpoints = {
+  ENDPOINT_NAME : {
+    func_name : "ENDPOINT_NAME",
+    order     : [],
+    type      : Object,
+    params    : {},
+  }
+}
+```
+
+| Config Key     | Default          | Description                                                                                                                                       |
+|----------------|------------------|------------------------------------------------------|
+| func_name | "ENDPOINT_NAME" | WebAssembly function name                                  |
+| order     | []              | Ordering of arguments to the function call                 |
+| type      | Object          | See [General Endpoints](#general-endpoints)                |
+| params    | {}              | See [Endpoint Parameters](#endpoint-parameters)            |
 
 ## Binding Configuration
 

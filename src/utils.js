@@ -94,3 +94,4 @@ export const match = {
   }),
 }
 
+export const query_mock_data = ({ endpoint, input_params }) => endpoint.mock_data(input_params);
