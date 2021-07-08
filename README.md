@@ -251,15 +251,16 @@ Defines how the plugin will function.
 Plugin defaults:
 ```
 const plugin = new BindPlugin({
-  initial_state  : { url: "", headers :{ "Content-Type" : "application/json" },  
-  endpoints      : {},
-  namespace      : "bind",
-  update_prefix  : "update_",
-  loading_prefix : "loading_",
-  done_prefix    : "done_",
-  load_prefix    : "load_",
-  trigger_prefix : "trigger_",
-  strict         : false,
+  initial_state     : { url: "", headers :{ "Content-Type" : "application/json" },  
+  endpoints         : {},
+  namespace         : "bind",
+  update_prefix     : "update_",
+  loading_prefix    : "loading_",
+  done_prefix       : "done_",
+  load_prefix       : "load_",
+  trigger_prefix    : "trigger_",
+  strict            : false,
+  log_blocked_binds : false,
 });
 ```
 
@@ -275,6 +276,8 @@ const plugin = new BindPlugin({
 | load_prefix    | "load_"                                 | Prefix of generated load actions.                                       | 
 | trigger_prefix | "trigger_"                              | Prefix of generated trigger actions.                                    |
 | strict         | false                                   | Check types where possible and log them to the console. Use in development only |
+| log_blocked_binds         | false                                   | Log when a bind was triggered, but not commited because of unset parameters. Use in development only |
+
 
 ## Data Sources
 
@@ -399,7 +402,7 @@ Endpoint parameters are set as an object in the form:
 
 ```
 params : {
-  name : type
+  name : TYPE_OR_MATCHER
 }
 ```
 
@@ -416,80 +419,52 @@ This option should only be set in the development environment.
 
 ### Default Values
 
-Default values are inferred from the type given for the parameter or binding.
+Default values are gotten from the type given for the parameter or binding.
 
-Specifically, the default value is `Array()`,`Number()`, `Object()`, etc.
+For built in types the default value is `Array()`,`Number()`, `Object()`, etc.
 This value is also inferred to be the parameter in "unset" state.
 
-In other words, if a parameter has the same value as the default value, it will be treated as unusable.
+### Parameter Matchers
 
-#### Nullable
+The plugin comes with utility functions to "match" values to parameters.
+For ease of understanding they are available in the match object.
 
-A way to get around needing to send an empty object is to use the `Nullable` function as the type.
-This is a special type that denotes that this parameter can be sent no matter it's value, even if it is empty, zero, etc.
+The match object provides the following parameter matchers:
 
-#### Zero
-
-If you need to set a different value to be treated as unset, use `Zero`.
-`Zero` signifies that the new default, and therefore "unset" value is different from the type default.
-
-This is different from setting an initial value in your state.
-Setting the type as `Zero(10)` with `create_params : true` will initialize the parameter to the value 10 and assume that you have not touched it until it changes.
-Setting a state variable in your store to a default value and binding it to a parameter will still run the binding.
-
-For example: 
 ```
-import { Zero } from "vuex-bind-plugin"
-
-const endpoints = {
-  bananas : {
-    url : "bananas/"
-    method : "get",
-    params : {
-      num : Zero(-1),
-    },
-  }
-}
-
-const store = new BoundStore {
-  state : {},
-  bananas : {
-    endpoint : "bananas",
-    bind_type: "change",
-  }
-}
+import { match } from 'vuex-bind-plugin'
+const params = {
+  id     : match.PositiveNumber()     // Matches any positive number or 0
+  cost   : match.NegativeNumber()     // Matches any negative number or 0
+  lat    : match.NumberRange(50,56)   // Matches a number with the given range. Inclusive, 50 and 56 would match.
+  coords : match.ArrayLength(2)       // Matches any array with the given length
+  dict   : match.ObjectKeys(["key"] ) // Matches any object with the given keys
+  extra  : match.All("hello")         // Matches everything. Sets the default to the given value.
+  bits   : match.AnythingBut("world") // Matches everything except for the given value
+};
 ```
 
-The above code WILL reach out to "bananas/" when 'update_num' is called with 0,1,2,3,-2,-3, etc.
-It will not reach out when 'start_bind' or 'update_name' is called with -1.
+To create custom matchers, create a function that returns an object with two fields: `is_set` and `default`.
 
-On the other hand:
+The `is_set` function is used to determine whether a parameter is set or not.
+The `default` value is used as the default value for the parameter.
+
+For example to match a number greater than 10 define:
 ```
-const endpoints = {
-  apples : {
-    url : "apples/"
-    method : "get",
-    params : {
-      num : Number,
-    },
-  }
-}
+const greater_than_ten = () => ({
+  is_set : (value) => value > 10,
+  default : 0,
+})
+```
 
-const store = new BoundStore {
-  state : {
-    num : 10,
-  },
-  apples : {
-    endpoint : "apples",
-    bind_type: "change",
-  }
+And use it in your endpoint parameters like:
+```
+const params = {
+  value : greater_than_ten,
 }
 ```
 
-The above code will reach out to "apples/?num=10" when "start_bind is called and will reach out again when num changes to any number that is not zero.
-
-
-## Binding Configutation
+## Binding Configuration
 
 Defines how to store endpoint data.
 

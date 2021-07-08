@@ -1,6 +1,6 @@
 import BindModule from '../src/bind_module.js'
 import BindPlugin from '../src/bind_plugin.js'
-import { Nullable, Zero } from '../src/utils.js'
+import { match } from '../src/utils.js'
 import { test_plugin_config, TestDataSource } from './test-utils.js'
 
 beforeAll(() => BindPlugin.config = test_plugin_config);
@@ -49,54 +49,76 @@ describe("constructor with custom data source", () => {
 });
 
 describe("pull_params_from", () => {
-  let param_map = { user_id : "user", date_str : "date" };
-  let params = { user: String, date: String }; 
-  let state = { user_id : "", date_str : "2020-01-01" };
+  let param_map = null;
+  let params = null;
+  let state = null;
+
+  let new_this = {
+    plugin_config : {}
+  };
+
+  let pull_params_from = BindModule.prototype.pull_params_from.bind(new_this);
+
+  beforeEach(() => {
+    param_map = { user_id : "user", date_str : "date" };
+    params = { user: String, date: String }; 
+    state = { user_id : "", date_str : "2020-01-01" };
+    new_this.plugin_config = {};
+  });
 
   it("should return falsey if params are unset", () => {
     state.user_id = "";
-    let pulled_params = BindModule.prototype.pull_params_from(state,  param_map, params, "output", false);
+    let pulled_params = pull_params_from(state,  param_map, params, "output");
     expect(pulled_params).toBeFalsy();
   });
   
   it("should return data when all params are set", () => {
     state.user_id = "honcho";
-    let pulled_params = BindModule.prototype.pull_params_from(state,  param_map, params, "output", false);
+    let pulled_params = pull_params_from(state,  param_map, params, "output");
     expect(pulled_params).toBeTruthy();
     expect(pulled_params.user).toBe("honcho");
     expect(pulled_params.date).toBe("2020-01-01");
   });
 
   it("should warn about bad types when strict mode is on", () => {
+    new_this.plugin_config.strict = true;
     state.user_id = 1000;
     console.warn = jest.fn();
-    let pulled_params = BindModule.prototype.pull_params_from(state,  param_map, params, "output", true);
+    let pulled_params = pull_params_from(state, param_map, params, "output");
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(expect.any(String));
   });
 
   it("should not warn about good types when strict mode is on", () => {
+    new_this.plugin_config.strict = true;
     state.user_id = "julia";
     console.warn = jest.fn();
-    let pulled_params = BindModule.prototype.pull_params_from(state,  param_map, params, "output", true);
+    let pulled_params = pull_params_from(state,  param_map, params, "output");
     expect(console.warn).toHaveBeenCalledTimes(0);
   });
 
-  it("should return ok if param is Nullable", () => {
-    let map = { user_id : "user", date_str : "date" };
-    let nullable_params = { user: Nullable, date: String }; 
-    let unset_state = { user_id : "", date_str : "2020-01-01" };
-    let pulled_params = BindModule.prototype.pull_params_from(unset_state, map, nullable_params, "out", true);
+  it("should return ok if param is match.All()", () => {
+    params.user = match.All();
+    state.user_id = "";
+    let pulled_params = pull_params_from(state, param_map, params, "out");
     expect(pulled_params.user).toBe("");
     expect(pulled_params.date).toBe("2020-01-01");
   });
 
-  it("should return flasey if param matches Zero", () => {
-    let map = { user_id : "user", date_str : "date" };
-    let zero_params = { user: Zero("unset"), date: String }; 
-    let zero_state = { user_id : "unset", date_str : "2020-01-01" };
-    let pulled_params = BindModule.prototype.pull_params_from(zero_state, map, zero_params, "out", true);
+  it("should return flasey if param is specified as unset", () => {
+    params.user = match.AnythingBut("unset");
+    state.user_id = "unset";
+    let pulled_params = pull_params_from(state, param_map, params, "out");
     expect(pulled_params).toBeFalsy();
+  });
+
+  it("should info log when log_unset is set in config and a state variable is unset", () => {
+    state.user_id = "";
+    console.info = jest.fn();
+    new_this.plugin_config.log_blocked_binds = true;
+    pull_params_from(state, param_map, params, "out");
+    expect(console.info).toHaveBeenCalledTimes(1);
+    expect(console.info).toHaveBeenCalledWith(expect.any(String));
   });
 });
 

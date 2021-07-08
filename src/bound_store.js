@@ -1,5 +1,5 @@
 import BindPlugin from './bind_plugin.js'
-import { map_endpoint_types } from './utils.js'
+import { map_endpoint_types, get_default } from './utils.js'
 
 export default class _BoundStore {
   constructor(store_config){
@@ -69,7 +69,7 @@ export default class _BoundStore {
   }
 
   create_variable(name, type) {
-    this.generated_state[name] = type instanceof Function? type() : Object();
+    this.generated_state[name] = get_default(type);
     this.generated_mutations[`${this.plugin_config.update_prefix}${name}`] = (state, payload) => state[name] = payload;
   }
 

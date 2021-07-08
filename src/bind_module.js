@@ -1,4 +1,4 @@
-import { map_endpoint_types } from './utils.js'
+import { map_endpoint_types, is_unset, check_types, check_set } from './utils.js'
 import BindPlugin from './bind_plugin.js'
 
 export default class BindModule {
@@ -64,23 +64,29 @@ export default class BindModule {
       }
     }
   }
-  pull_params_from(local_state, param_map, params, output, strict) {
+  pull_params_from(local_state, param_map, params, output) {
     let computed_params = {};
     let param_defs = map_endpoint_types(param_map, params);
     for ( let state_name of Object.keys(param_defs) ) {
       let param_name = param_map? param_map[state_name] : state_name;
       computed_params[param_name] = local_state[state_name];
-      if (param_defs[state_name]() !== "nullable" && JSON.stringify(computed_params[param_name]) === JSON.stringify(param_defs[state_name]())){
-        return false;
+    }
+
+    if ( this.plugin_config.strict ) {
+      let bad_param = check_types(computed_params, params);
+      if ( bad_param.length > 0 ) {
+        console.warn(`Bind ${output}: Received bad parameter type for ${bad_param}. Got bad types for ${JSON.stringify(bad_param)}`);
       }
     }
 
-    if ( strict ) {
-      let bad_param = Object.keys(computed_params).find((p) => typeof(computed_params[p]) !== typeof(params[p]()));
-      if ( bad_param ) {
-        console.warn(`Bind ${output}: Received bad parameter type for ${bad_param}. Got ${computed_params[bad_param]}, expected ${params[bad_param]}`);
+    let unset = null;
+    if ( unset = check_set(computed_params, params) ) {
+      if ( this.plugin_config.log_blocked_binds ) {
+        console.info(`Tried update for ${output} but ${unset} was unset as ${computed_params[unset]}`);
       }
+      return false;
     }
+
 
     return computed_params;
   }
