@@ -378,7 +378,8 @@ describe("create_load_action", () => {
     expect(ctx.dispatch).toHaveBeenCalledWith("mybind/bind", { 
       binding   : { name : "something", bind_type : "once" },
       endpoint  : { this_is : "an endpoint"},
-      namespace : "create"
+      namespace : "create",
+      output    : "output"
     }, { root : true });
   });
 
@@ -430,7 +431,7 @@ describe("create_start_bind_action", () => {
 
 describe("add_watch_params", () => {
   let new_this = {
-    namespace : "testing/",
+    namespace : "testing",
     watch_param_defs : {
       output  : {  param : Number },
       output2 : {  param : Number, param2: Number }

@@ -36,7 +36,6 @@ export default class _BoundStore {
   generate_modifications() {
     for ( let output_var of Object.keys(this.bindings) ) {
       let binding_spec  = this.bindings[output_var];
-      binding_spec.output = output_var;
       let endpoint_spec = this.plugin_config.endpoints[binding_spec.endpoint];
 
       if ( endpoint_spec === undefined ) {
@@ -93,6 +92,7 @@ export default class _BoundStore {
         binding  : binding_spec,
         endpoint : endpoint_spec,
         namespace: this.namespace,
+        output   : name,
       }, { root : true });
     };
   }
@@ -107,8 +107,8 @@ export default class _BoundStore {
   add_watch_params(commit) {
     for( let output_var of Object.keys(this.watch_param_defs) ) {
       commit(`${this.plugin_config.namespace}/watch_params`, {
-        action    : `${this.namespace}${this.plugin_config.load_prefix}${output_var}`,
-        mutations : Object.keys(this.watch_param_defs[output_var]).map((state_var) => `${this.namespace}${this.plugin_config.update_prefix}${state_var}`),
+        action    : `${this.namespace}/${this.plugin_config.load_prefix}${output_var}`,
+        mutations : Object.keys(this.watch_param_defs[output_var]).map((state_var) => `${this.namespace}/${this.plugin_config.update_prefix}${state_var}`),
       }, { root : true });
     }
   }

@@ -47,19 +47,20 @@ export default class BindModule {
             dispatch('once', payload );
           };
           commit('add_interval', { 
-            name: `${payload.namespace}${payload.output}`,
+            name: `${payload.namespace}/${payload.output}`,
             interval: setInterval( interval_func, payload.binding.period ) 
           });
           return dispatch('once', payload);
         },
         once    : ({state, rootState, commit}, { output , binding, endpoint, namespace }) => {
-          let local_state = namespace? rootState[namespace.slice(0,-1)] : rootState;
+          let local_state = namespace? rootState[namespace] : rootState;
+          let ns_prefix = namespace? `${namespace}/` : "";
           this.source.apply_defaults(output, endpoint);
           let computed_params = this.pull_params_from(local_state, binding.param_map, endpoint.params, output);
           return computed_params? this.source.module(
             ...this.source.args(state, computed_params, endpoint)
           ).then(
-            (data) => commit(`${namespace}${output}`, this.source.assign(data), { root : true }) 
+            (data) => commit(`${ns_prefix}${this.plugin_config.update_prefix}${output}`, this.source.assign(data), { root : true }) 
           ) : new Promise((_, reject) => reject({ message : "Not Updated" })) ;
         },
       }

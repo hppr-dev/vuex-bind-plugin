@@ -243,13 +243,13 @@ describe("actions", () => {
     };
 
     it("should commit data from data source when parameters are non-zero", () => {
-      payload.namespace = "test/";
+      payload.namespace = "test";
       payload.endpoint.params = { non_zero_param : Number };
-      return expect(module.actions.once(ctx, payload)).resolves.toStrictEqual(["test/output_var", { input: {non_zero_param : 10}, output: "from api" }, {root : true }]);
+      return expect(module.actions.once(ctx, payload)).resolves.toStrictEqual(["test/update_output_var", { input: {non_zero_param : 10}, output: "from api" }, {root : true }]);
     });
     
     it("should not commit data from data source when parameters are zero", () => {
-      payload.namespace = "test/";
+      payload.namespace = "test";
       payload.endpoint.params = { zero_param : Number };
       return expect(module.actions.once(ctx, payload)).rejects.toStrictEqual({ message : "Not Updated" });
     });
@@ -257,7 +257,7 @@ describe("actions", () => {
     it("should get and commit to/from rootState when no namespace", () => {
       payload.namespace = "";
       payload.endpoint.params = { non_zero_param : Number };
-      return expect(module.actions.once(ctx, payload)).resolves.toStrictEqual(["output_var", { input: {non_zero_param: 4444}, output: "from api" }, {root : true }]);
+      return expect(module.actions.once(ctx, payload)).resolves.toStrictEqual(["update_output_var", { input: {non_zero_param: 4444}, output: "from api" }, {root : true }]);
     });
 
     it("should apply data source endpoint defaults", () => {
@@ -314,7 +314,7 @@ describe("actions", () => {
     };
     let payload = {
       output    : "output_var",
-      namespace : "test/",
+      namespace : "test",
       binding   : {
         bind_type : "watch",
         period: 1000
