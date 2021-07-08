@@ -1,5 +1,5 @@
 import BindPlugin from './bind_plugin.js'
-import { map_endpoint_types, get_default } from './utils.js'
+import { map_endpoint_types, get_default, apply_binding_defaults } from './utils.js'
 
 export default class _BoundStore {
   constructor(store_config){
@@ -42,7 +42,8 @@ export default class _BoundStore {
         throw `Tried to bind to unknown endpoint : ${binding_spec.endpoint}`;
       }
 
-      let params = binding_spec.param_map? map_endpoint_types(binding_spec.param_map, endpoint_spec.params) : endpoint_spec.params;
+      apply_binding_defaults(output_var, binding_spec);
+      let params = map_endpoint_types(binding_spec.param_map, endpoint_spec.params);
 
       if ( binding_spec.bind_type === "watch" || binding_spec.bind_type === "change") {
         this.watch_param_defs[output_var] = params;

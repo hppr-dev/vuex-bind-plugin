@@ -3,21 +3,18 @@ export const reverse_map = function(str_map) {
   return Object.fromEntries(Object.keys(str_map).map( (key) => [ str_map[key], key ] ) );
 }
 
-export const map_endpoint_types = function(param_map, type_map) {
-  if ( param_map ) {
-    let reversed = reverse_map(param_map);
-    return Object.fromEntries(
-      Object.keys(type_map).map((param) => {
-        let param_type = type_map[param];
-        if ( reversed[param] ) {
-          return [ reversed[param], param_type ];
-        } 
-        return [ param, param_type ];
-      })
-    );
-  } else {
-    return type_map;
-  }
+export const map_endpoint_types = function(param_map={}, type_map={}) {
+  let reversed = reverse_map(param_map);
+  return Object.fromEntries(
+    Object.keys(type_map).map((param) => {
+      let param_type = type_map[param];
+      if ( reversed[param] ) {
+        return [ reversed[param], param_type ];
+      } 
+      return [ param, param_type ];
+    })
+  );
+  
 }
 
 export const is_unset = function(value, type) {
@@ -95,3 +92,9 @@ export const match = {
 }
 
 export const query_mock_data = ({ endpoint, input_params }) => endpoint.mock_data(input_params);
+
+export const apply_binding_defaults = (name, binding) => { 
+  binding.endpoint = binding.endpoint? binding.endpoint : name;
+  binding.bind_type = binding.bind_type? binding.bind_type : "once";
+  binding.param_map = binding.param_map? binding.param_map : {};
+}

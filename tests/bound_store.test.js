@@ -2,6 +2,7 @@ import BoundStore from '../src/bound_store.js'
 import BindPlugin from '../src/bind_plugin.js'
 import { test_plugin_config, mock_prototype } from './test-utils.js'
 
+
 beforeAll(() => BindPlugin.config = test_plugin_config);
 afterAll(() => BindPlugin.config = {});
 
