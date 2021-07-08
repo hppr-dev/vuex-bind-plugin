@@ -54,7 +54,8 @@ export default class BindModule {
         },
         once    : ({state, rootState, commit}, { output , binding, endpoint, namespace }) => {
           let local_state = namespace? rootState[namespace.slice(0,-1)] : rootState;
-          let computed_params = this.pull_params_from(local_state, binding.param_map, endpoint.params, output, this.plugin_config.strict);
+          this.source.apply_defaults(output, endpoint);
+          let computed_params = this.pull_params_from(local_state, binding.param_map, endpoint.params, output);
           return computed_params? this.source.module(
             ...this.source.args(state, computed_params, endpoint)
           ).then(

@@ -11,6 +11,7 @@ export class TestDataSource {
     this.state     = state;
     this.assign    = assign;
     this.mutations = mutations;
+    this.apply_defaults = jest.fn();
   }
 }
 

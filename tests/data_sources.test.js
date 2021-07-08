@@ -1,5 +1,30 @@
-import { RestDataSource, MockRestDataSource } from '../src/data_sources.js'
+import { DataSource, RestDataSource, MockRestDataSource } from '../src/data_sources.js'
 import axios from 'axios'
+
+describe("DataSource", () => {
+
+  it("should apply defaults", () => {
+    let data_source = new DataSource();
+    let default_endpoint = {};
+    data_source.apply_defaults("some_endpoint", default_endpoint);
+    expect(default_endpoint.type).toBe(Object);
+    expect(default_endpoint.params).toStrictEqual({});
+  });
+
+  it("should leave set values", () => {
+    let data_source = new DataSource();
+    let default_endpoint = {
+      type : String,
+      params : {
+        foo : "bar"
+      }
+    };
+    data_source.apply_defaults("some_endpoint", default_endpoint);
+    expect(default_endpoint.type).toBe(String);
+    expect(default_endpoint.params).toStrictEqual({foo: "bar"});
+  });
+
+});
 
 describe("RestDataSource", () => {
 
@@ -104,6 +129,30 @@ describe("RestDataSource", () => {
     expect(state.headers.header1).toBe("new thing");
     expect(state.headers.header2).toBe("something new");
   });
+
+  it("should apply endpoint defaults", () => {
+    let data_source = new RestDataSource({});
+    let default_endpoint = {};
+    data_source.apply_defaults("endpoint_name", default_endpoint);
+    expect(default_endpoint.url).toBe("/endpoint_name");
+    expect(default_endpoint.method).toBe("get");
+    expect(default_endpoint.type).toBe(Object);
+    expect(default_endpoint.params).toStrictEqual({});
+  });
+
+  it("should leave endpoint set values", () => {
+    let data_source = new RestDataSource({});
+    let default_endpoint = {
+      url    : "/my_url",
+      method : "post",
+    };
+    data_source.apply_defaults("endpoint_name", default_endpoint);
+    expect(default_endpoint.url).toBe("/my_url");
+    expect(default_endpoint.method).toBe("post");
+    expect(default_endpoint.type).toBe(Object);
+    expect(default_endpoint.params).toStrictEqual({});
+  });
+
 });
 
 describe("MockRestDataSource", () => {

@@ -1,6 +1,14 @@
 import axios from 'axios'
 
-export class RestDataSource {
+export class DataSource {
+  constructor() {}
+  apply_defaults(name, endpoint) {
+    endpoint.params = endpoint.params? endpoint.params : {};
+    endpoint.type = endpoint.type? endpoint.type : Object;
+  }
+}
+
+export class RestDataSource extends DataSource {
   module = axios;
   args   =  (bind_state, computed_params, endpoint) => [
     {
@@ -25,12 +33,18 @@ export class RestDataSource {
       url     = "",
       headers = { "Content-Type" : "application/json" },
   }) {
+    super();
     this.state.url = url;
     this.state.headers = headers;
   }
+  apply_defaults(name, endpoint) {
+    super.apply_defaults(name, endpoint);
+    endpoint.url    = endpoint.url? endpoint.url : `/${name}`;
+    endpoint.method = endpoint.method? endpoint.method : "get";
+  }
 }
 
-export class MockRestDataSource { 
+export class MockRestDataSource extends DataSource{ 
   args = ( bind_state, input_params, endpoint ) => [
     { 
       endpoint,
@@ -51,6 +65,7 @@ export class MockRestDataSource {
     headers   = {},
     transform = ({ endpoint }) => endpoint.mock_data 
   }) {
+    super();
     this.state.url = url;
     this.state.headers = headers;
     this.module = transform;

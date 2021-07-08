@@ -259,6 +259,15 @@ describe("actions", () => {
       payload.endpoint.params = { non_zero_param : Number };
       return expect(module.actions.once(ctx, payload)).resolves.toStrictEqual(["output_var", { input: {non_zero_param: 4444}, output: "from api" }, {root : true }]);
     });
+
+    it("should apply data source endpoint defaults", () => {
+      payload.namespace = "";
+      payload.endpoint.params = { something : Number };
+      test_plugin_config.data_source.apply_defaults.mockClear();
+      module.actions.once(ctx, payload)
+      expect(test_plugin_config.data_source.apply_defaults).toHaveBeenCalledTimes(1);
+      expect(test_plugin_config.data_source.apply_defaults).toHaveBeenCalledWith("output_var", payload.endpoint);
+    });
   });
   
   describe("bind action", () => {
