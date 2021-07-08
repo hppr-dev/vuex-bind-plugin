@@ -359,19 +359,6 @@ The tranform function is passed an object with `endpoint`, and `input_params` fi
 The `endpoint` is a reference to the endpoint definition, and `input_params` are the current parameter values that would have been pulled from the state.
 SA tranform to return the calculated params could be written as `tranform : ({ input_params }) => input_params`.
 
-*Not Implemented Yet* -- The additional `mock_data` can be excluded when building for production by adding `remove_mock_data` rule to your vue or webpack config.
-
-```
-// vue.config.js
-import { remove_mock_data } from 'vuex-bind-plugin'
-...
-
-TODO write example
-
-// webpack.config
-
-TODO write example
-```
 
 ## Endpoint Configuration
 
@@ -627,3 +614,81 @@ The param_map is in the format `{ STATE_VAR: ENDPOINT_PARAM }` and any missing p
 
 For example, if the endpoint has `params: { id: Number, text: String }` and the binding has `{ param_map: { some_id: "id" } }` then the state should have `{ some_id: 0, text: "" }`.
 
+# Webpack
+
+*Not Implemented Yet*
+
+## Preevaluating BoundStores
+
+By default, BoundStores are evaluated at run time in the user's browser.
+This is nice for development, but in production these are extra cycles that we don't need to happen at runtime.
+
+Since BoundStores evaluate to Vuex store configurations, it is possible to pre-load this configuration for the user.
+In other words, in the development environment we have:
+
+```
+const boundstore = new BoundStore({
+  namespace : "mystore",
+  state     : {...},
+  getters   : {...},
+  mutations : {...},
+  actions   : {...},
+  bindings  : {...},
+})
+
+const store = new Vuex.Store({
+  ...
+  modules : {
+    ...boundstore
+  }
+});
+```
+
+But in production we want to skip the transformation step and have:
+
+```
+const boundstore = {
+  state     : {...},
+  getters   : {...},
+  mutations : {...},
+  actions   : {...},
+}
+
+const store = new Vuex.Store({
+  ...
+  modules : {
+    "mystore" : boundstore,
+  },
+});
+```
+
+For this we can add the `vuex-bind-plugin-loader` to our webpack or vue.config.js file to precompile BoundStores.
+
+```
+// vue.config.js
+import { vuex-bind-plugin-loader } from 'vuex-bind-plugin'
+...
+
+TODO
+
+// webpack.config
+
+TODO
+```
+
+
+## Removing mock data
+
+The additional `mock_data` can be excluded when building for production by adding `remove_mock_data` rule to your vue or webpack config.
+
+```
+// vue.config.js
+import { remove_mock_data } from 'vuex-bind-plugin'
+...
+
+TODO
+
+// webpack.config
+
+TODO
+```
