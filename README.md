@@ -481,31 +481,29 @@ const endpoints = {
 
 Storage endpoints define keys in browser storage that are accessed and bound into state.
 
-Each storage endpoint requires a single `value` param. This will hold the value that is written to the storage binding.
-
 ```
 const endpoints = {
   ENDPOINT_NAME : {
     key     : "ENDPOINT_NAME",
     scope   : "local",
     type    : String,
-    params  : { value : String },
   }
 }
 ```
 
 | Config Key     | Default            | Description                                                                               |
-|----------------|--------------------|------------------------------------------------------------------                         |
-| key            | ""                 | Storage key, what the value is stored under                                               |
+|----------------|--------------------|-------------------------------------------------------------------------------------------|
+| key            | "ENDPOINT_NAME"    | Storage key, what the value is stored under                                               |
 | scope          | "local"            | Storage scope, one of "local", "session" or "cookie"                                      |
-| type           | Object             | See [General Endpoints](#general-endpoints)                                               |
-| params         | { value : String } | Must have a value parameter for storage parameters. By default it is a string. The only reason to set this on storage endpoints is to change the type. See [Endpoint Parameters](#endpoint-parameters) |            |
+| type           | String             | See [General Endpoints](#general-endpoints)                                               |
+
+Note: params are not used/required.
 
 A standard definition of a storage endpoint may look something like:
 
 ```
 const endpoints = {
-  token   : { scope: "cookie" },
+  token   : { scope : "cookie" },
   user_id : { scope : "local" },
   static :  { scope : "session" },
 }

@@ -190,7 +190,7 @@ describe("mutations", () => {
       let payload = {
         name : "interval1",
       };
-      clearInterval = jest.fn();
+      window.clearInterval = jest.fn();
       state.intervals = { interval1 : 1234, interval2 : 4321 };
       module.mutations.delete_interval(state, payload);
       expect(clearInterval).toHaveBeenCalledTimes(1);
@@ -207,7 +207,7 @@ describe("mutations", () => {
     });
 
     it("should clear all intervals", () => {
-      clearInterval = jest.fn();
+      window.clearInterval = jest.fn();
       state.intervals = { interval1 : 1234, interval2 : 4321 };
       module.mutations.clear_intervals(state);
       expect(clearInterval).toHaveBeenCalledTimes(2);

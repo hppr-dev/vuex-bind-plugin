@@ -1,4 +1,4 @@
-import { map_endpoint_types, is_unset, check_types, check_set } from './utils.js'
+import { map_endpoint_types, is_unset, check_types, check_unset } from './utils.js'
 import BindPlugin from './bind_plugin.js'
 
 export default class BindModule {
@@ -81,7 +81,7 @@ export default class BindModule {
     }
 
     let unset = null;
-    if ( unset = check_set(computed_params, params) ) {
+    if ( ( unset = check_unset(computed_params, params) ) && ! params[output] ) {
       if ( this.plugin_config.log_blocked_binds ) {
         console.info(`Tried update for ${output} but ${unset} was unset as ${computed_params[unset]}`);
       }

@@ -1,5 +1,8 @@
-import { DataSource, RestDataSource, MockRestDataSource } from '../src/data_sources.js'
+import { DataSource, RestDataSource, MockRestDataSource, StorageDataSource, WebAssemblyDataSource} from '../src/data_sources.js'
+import { storage_adapter, wasm_adapter } from '../src/adapters.js'
 import axios from 'axios'
+
+jest.mock('../src/adapters.js')
 
 describe("DataSource", () => {
 
@@ -215,5 +218,125 @@ describe("MockRestDataSource", () => {
     expect(state.url).toBe("new url");
     expect(state.headers.header1).toBe("new thing");
     expect(state.headers.header2).toBe("something new");
+  });
+});
+
+describe("StorageDataSource", () => {
+
+  let data_source = new StorageDataSource();
+
+  it("should use storage_adapter", () => {
+    expect(data_source.module).toBe(storage_adapter);
+  });
+
+  it("should not have state variables or mutations", () => {
+    expect(data_source.state).toStrictEqual({});
+    expect(data_source.mutations).toStrictEqual({});
+  });
+
+  it("should have args that returns key, value, type, scope", () => {
+    let input_params = { "out" : 123 };
+    let endpoint = { 
+      key: "out",
+      type: String,
+      scope: "scope"
+    };
+    expect(data_source.args({}, input_params, endpoint)).toStrictEqual(["out", 123, String, "scope"]);
+  });
+
+  it("should have an assign that returns the same data", () => {
+    expect(data_source.assign(1234)).toBe(1234);
+  });
+
+  it("should apply defaults", () => {
+    let def = {};
+    data_source.apply_defaults("mystorage", def);
+    expect(def.key).toBe("mystorage");
+    expect(def.params).toStrictEqual({ mystorage : String });
+    expect(def.type).toBe(String);
+    expect(def.scope).toBe("local");
+  });
+
+  it("should leave non-defaults", () => {
+    let def = {
+      key   : "something",
+      type  : Array,
+      scope : "session",
+    };
+    data_source.apply_defaults("mystorage", def);
+    expect(def.key).toBe("something");
+    expect(def.params).toStrictEqual({ something : Array });
+    expect(def.type).toBe(Array);
+    expect(def.scope).toBe("session");
+  });
+
+  it("should leave non-defaults with params", () => {
+    let def = {
+      key   : "something",
+      type  : Array,
+      scope : "session",
+      params : {
+        something : Array
+      },
+    };
+    data_source.apply_defaults("mystorage", def);
+    expect(def.key).toBe("something");
+    expect(def.params).toStrictEqual({ something : Array });
+    expect(def.type).toBe(Array);
+    expect(def.scope).toBe("session");
+  });
+});
+
+describe("WebAssemblyDataSource", () => {
+  let data_source = new WebAssemblyDataSource({wasm: "some.wasm"});
+
+  it("should default to application.wasm", () => {
+    let data_source = new WebAssemblyDataSource({});
+    expect(data_source.state.wasm_file).toBe("application.wasm");
+  });
+
+  it("should use wasm_adapter", () => {
+    expect(data_source.module).toBe(wasm_adapter);
+  });
+
+  it("should order arguments according to order field", () => {
+    let endpoint = {
+      order : [ "hello", "world", "foo", "bar"]
+    }
+    let input_params = {
+      bar   : 100,
+      hello : "world",
+      foo   : false,
+      world : 42
+    };
+    expect(data_source.args({}, input_params, endpoint)).toStrictEqual(["world", 42, false, 100]);
+  });
+
+  it("should give no arguments when order field is empty", () => {
+    let endpoint = {
+      order : []
+    }
+    let input_params = {
+      bar   : 100,
+      hello : "world",
+    };
+    expect(data_source.args({}, input_params, endpoint)).toStrictEqual([]);
+  });
+
+  it("should apply defaults", () => {
+    let def = {};
+    data_source.apply_defaults("myfunc", def);
+    expect(def.func_name).toBe("myfunc");
+    expect(def.order).toStrictEqual([]);
+  });
+
+  it("should leave non-defaults", () => {
+    let def = {
+      func_name : "expensive",
+      order : ["one", "two"]
+    };
+    data_source.apply_defaults("myfunc", def);
+    expect(def.func_name).toBe("expensive");
+    expect(def.order).toStrictEqual(["one", "two"]);
   });
 });

@@ -48,7 +48,7 @@ export const check_types = function(params, type_defs) {
   return Object.keys(type_defs).filter((name) => !is_type_match(params[name], type_defs[name]));
 }
 
-export const check_set = function(params, type_defs) {
+export const check_unset = function(params, type_defs) {
   return Object.keys(params).find((name) => is_unset(params[name], type_defs[name])) 
 }
 

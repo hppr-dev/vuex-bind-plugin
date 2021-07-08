@@ -29,6 +29,9 @@
       "@babel/plugin-transform-modules-commonjs"
     ]
   },
+  "jest": {
+    "testEnvironment": "jsdom"
+  },
   "bugs": {
     "url": "https://github.com/hppr-dev/vuex-bind-plugin/issues"
   },
