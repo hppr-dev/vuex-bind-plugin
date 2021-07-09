@@ -65,17 +65,20 @@ export default class BindModule {
               ...this.source.args(state, computed_params, endpoint)
             ).then(
               (data) => {
-                data = this.source.assign(binding.transform? binding.transform(data) : data);
+                data = this.source.assign(data);
+                data = binding.transform? binding.transform(data) : data;
 
                 if ( this.plugin_config.strict && ! is_type_match(data, endpoint.type)) {
                   console.warn(`Received bad type for ${ns_prefix}${output}. Expected ${endpoint.type.name} but got ${JSON.stringify(data)}.`);
                 }
 
+                let com =  commit(`${ns_prefix}${bind_out}`, data , { root : true }); 
+
                 if ( binding.side_effect ) {
                   dispatch(`${ns_prefix}${binding.side_effect}`, data, { root : true });
                 }
 
-                return commit(`${ns_prefix}${bind_out}`, data , { root : true }); 
+                return com;
               }
             );
           }

@@ -1,8 +1,5 @@
-import BoundStore from "./bound_store.js"
 import BindModule from "./bind_module.js"
 import { MockRestDataSource, RestDataSource } from "./data_sources.js"
-import { match, query_mock_data } from './utils.js'
-
 
 export default class BindPlugin {
   static config = {};
@@ -41,5 +38,3 @@ export default class BindPlugin {
     };
   }
 }
-
-export { BoundStore, match, query_mock_data }

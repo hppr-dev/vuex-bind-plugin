@@ -2,7 +2,7 @@
   "name": "vuex-bind-plugin",
   "version": "0.1.0-alpha.3",
   "description": "vuex plugin to automatically bind input state to output state",
-  "main": "lib/bind_plugin.js",
+  "main": "lib/exports.js",
   "scripts": {
     "test": "jest",
     "coverage": "jest --coverage",

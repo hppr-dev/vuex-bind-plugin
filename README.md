@@ -93,13 +93,12 @@ export default {
 }
 ```
 
-2. Create a BoundStore with namespace and binding information to your module store config
+2. Create a Bind.Store config with namespace and binding information to your module store config
 
 ```
 // user_store.js
-import BoundStore from 'vuex-bind-plugin'
 
-export default new BoundStore({
+export default {
   namespace : "user",
   state     : {...},
   mutations : {...},
@@ -110,24 +109,24 @@ export default new BoundStore({
       time      : 30000,
     },
   }
-});
+};
 
 ```
 
 3. Include the plugin with your vuex config:
 
 ```
-import BindPlugin from 'vuex-bind-plugin'
+import Bind from 'vuex-bind-plugin'
 import user_store from './user_store.js'
 import endpoints from './endpoint_config.js'
 
 ...
 
 const vuex_config = {
-  plugins   : [new BindPlugin({url: "http://myapi", endpoints})],
-  modules   : {
-    ...user_store       // Short for "user" : user_store["user"]
-  },
+  plugins   : [new Bind.Plugin({url: "http://myapi", endpoints})],
+  modules   : Bind.Modules({
+    user_store
+  }),
   state     : {...},
   mutations : {...},
   actions   : {...},
@@ -180,30 +179,30 @@ The bind module is responsible for keeping track of current bindings and the par
 Call `commit("bind/update_header", {key: "key", value: "value"})` to set custom request headers.
 Note that these headers will be set on all requests coming from the bind module.
 
-## BoundStore
+## Bind.Store
 
-A BoundStore generates state, mutations and actions for given bindings.
-The configuration for BoundStore is exactly the same as for a regular vuex store, but with two extra required fields:
+A Bind.Store generates state, mutations and actions for given bindings.
+The configuration for Bind.Store is exactly the same as for a regular vuex store, but with two extra required fields:
 
 - bindings  -- bindings configuration
 - namespace -- Namespace of the store. Not to be confused with the namespaced vuex option.
 
-vuex-bind-plugin requires BoundStores to be namespaced.
+vuex-bind-plugin requires Bind.Stores to be have a namespace.
 The resulting configuration automatically sets namespaced to true, even if it is set to false in the Boundstore config.
-An error will occur if namespace is not set or if a BoundStore is initialized before the BindPlugin.
+An error will occur if namespace is not set or if a Bind.Store is initialized before the Bind.Plugin.
 
 It is possible to configure the root store by setting the namespace to "":
 
 ```
 import Vuex from "vuex"
-import { BindPlugin, BoundStore } from "vuex-bind-plugin"
+import Bind from "vuex-bind-plugin"
 
-var rootStore = new Vuex.Store(new BoundStore({
-  plugins   : [new BindPlugin({ ... })],
+var rootStore = new Vuex.Store(new Bind.Store({
+  namespace : "",   //MUST BE SET
+  plugins   : [new Bind.Plugin({ ... })],
   state     : {...},
   mutations : {...},
   actions   : {...},
-  namespace : "",   //MUST BE SET
   bindings  : {...},
   } 
 );
@@ -250,7 +249,7 @@ Defines how the plugin will function.
 
 Plugin defaults:
 ```
-const plugin = new BindPlugin({
+const plugin = new Bind.Plugin({
   initial_state     : { url: "", headers :{ "Content-Type" : "application/json" },  
   endpoints         : {},
   namespace         : "bind",
@@ -315,7 +314,7 @@ To return the mock data instead of querying the data source set `mock : true` in
 ```
 import { MockRestDataSource } from "vuex-bind-plugin"
 
-const plugin = new BindPlugin({
+const plugin = new Bind.Plugin({
   ...
   initial_state : { mock : true }
 });
@@ -343,7 +342,7 @@ const endpoints = {
   },
 }
 
-const plugin = new BindPlugin({
+const plugin = new Bind.Plugin({
   initial_state : { 
     mock: true ,
     transform : query_mock_data, 
@@ -616,16 +615,16 @@ For example, if the endpoint has `params: { id: Number, text: String }` and the 
 
 *Not Implemented Yet*
 
-## Preevaluating BoundStores
+## Preevaluating Bind.Stores
 
-By default, BoundStores are evaluated at run time in the user's browser.
+By default, Bind.Stores are evaluated at run time in the user's browser.
 This is nice for development, but in production these are extra cycles that we don't need to happen at runtime.
 
-Since BoundStores evaluate to Vuex store configurations, it is possible to pre-load this configuration for the user.
+Since Bind.Stores evaluate to Vuex store configurations, it is possible to pre-load this configuration for the user.
 In other words, in the development environment we have:
 
 ```
-const boundstore = new BoundStore({
+const boundstore = new Bind.Store({
   namespace : "mystore",
   state     : {...},
   getters   : {...},
@@ -660,7 +659,7 @@ const store = new Vuex.Store({
 });
 ```
 
-For this we can add the `vuex-bind-plugin-loader` to our webpack or vue.config.js file to precompile BoundStores.
+For this we can add the `vuex-bind-plugin-loader` to our webpack or vue.config.js file to precompile Bind.Stores.
 
 ```
 // vue.config.js
