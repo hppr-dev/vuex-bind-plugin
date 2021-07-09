@@ -60,22 +60,27 @@ export const get_default = function(type) {
 
 export const match = {
   PositiveNumber : () => () => ({
-    is_set   : (value) => value >= 0,
+    name    : "match.PositiveNumber()",
+    is_set  : (value) => value >= 0,
     default : -1,
   }),
   NegativeNumber : () => () => ({
+    name    : "match.NegativeNumber()",
     is_set   : (value) => value <= 0,
     default : 1,
   }),
   NumberRange : (start, end) => () => ({
+    name    : "match.NumberRange()",
     is_set   : (value) => value >= start && value <= end,
     default : start - 1
   }),
   ArrayLength : (len) => () => ({
+    name    : "match.ArrayLength()",
     is_set   : (value) => value.length === len,
     default : [],
   }),
   ObjectKeys : (keys) => () => ({
+    name    : "match.ObjectKeys()",
     is_set   : (value) => {
       let value_keys = Object.keys(value);
       return keys.every((key) => value_keys.includes(key));
@@ -83,10 +88,12 @@ export const match = {
     default : {}
   }),
   All : (def) => () => ({
+    name    : "match.All()",
     is_set   : () => true,
     default : def,
   }),
   AnythingBut : (def) => () => ({
+    name    : "match.AnythingBut()",
     is_set   : (value) => def !== value,
     default : def,
   }),
@@ -99,3 +106,4 @@ export const apply_binding_defaults = (name, binding) => {
   binding.bind_type = binding.bind_type? binding.bind_type : ONCE;
   binding.param_map = binding.param_map? binding.param_map : {};
 }
+

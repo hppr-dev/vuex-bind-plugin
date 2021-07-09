@@ -68,7 +68,7 @@ export default class BindModule {
                 data = this.source.assign(binding.transform? binding.transform(data) : data);
 
                 if ( this.plugin_config.strict && ! is_type_match(data, endpoint.type)) {
-                  console.warn(`Received bad type for ${ns_prefix}${output}. Expected ${endpoint.type} but got ${JSON.stringify(data)}.`);
+                  console.warn(`Received bad type for ${ns_prefix}${output}. Expected ${endpoint.type.name} but got ${JSON.stringify(data)}.`);
                 }
 
                 if ( binding.side_effect ) {
@@ -95,7 +95,7 @@ export default class BindModule {
     if ( this.plugin_config.strict ) {
       let bad_param = check_types(computed_params, params);
       if ( bad_param.length > 0 ) {
-        console.warn(`Binding ${output}: Received bad parameter type for ${bad_param}, expected: ${bad_param.map((k) => param_defs[k])} got: ${bad_param.map((k) => computed_params[k])}`);
+        console.warn(`Binding ${output}: Received bad parameter type for ${bad_param}, expected: ${bad_param.map((k) => params[k].name)}, but got: ${bad_param.map((k) => computed_params[k])}`);
       }
     }
 
