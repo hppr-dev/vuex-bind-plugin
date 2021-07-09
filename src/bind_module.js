@@ -47,7 +47,7 @@ export default class BindModule {
           let interval_func = () => {
             dispatch(c.ONCE, payload );
           };
-          commit('add_interval', { 
+          commit(c.ADD_INTERVAL, { 
             name: `${payload.namespace}/${payload.output}`,
             interval: setInterval( interval_func, payload.binding.period ) 
           });
@@ -58,6 +58,8 @@ export default class BindModule {
           let ns_prefix = namespace? `${namespace}/` : "";
           this.source.apply_defaults(output, endpoint);
           let computed_params = this.pull_params_from(local_state, binding.param_map, endpoint.params, output);
+          let bind_out = binding.redirect? binding.redirect : `${this.plugin_config.update_prefix}${output}`;
+
           return computed_params? this.source.module(
             ...this.source.args(state, computed_params, endpoint)
           ).then(
@@ -65,7 +67,7 @@ export default class BindModule {
               data = binding.transform? binding.transform(data) : data;
 
               if ( this.plugin_config.strict && ! is_type_match(data, endpoint.type)) {
-                console.warn(`Received bad type for ${ns_prefix}${output}. Expected ${endpoint.type} but got ${data}.`);
+                console.warn(`Received bad type for ${ns_prefix}${output}. Expected ${endpoint.type} but got ${JSON.stringify(data)}.`);
               }
 
               if ( binding.side_effect ) {
@@ -73,35 +75,35 @@ export default class BindModule {
               }
 
               return commit(
-                `${ns_prefix}${this.plugin_config.update_prefix}${output}`,
+                `${ns_prefix}${bind_out}`,
                 this.source.assign( data ),
                 { root : true }
               ); 
             }
-          ) : new Promise((_, reject) => reject({ message : "Not Updated" })) ;
+          ) : new Promise((resolve) => resolve({ message : "Not Updated" })) ;
         },
       }
     }
   }
-  pull_params_from(local_state, param_map, params, output) {
+  pull_params_from(local_state, param_map={}, params, output) {
     let computed_params = {};
     let param_defs = map_endpoint_types(param_map, params);
     for ( let state_name of Object.keys(param_defs) ) {
-      let param_name = param_map? param_map[state_name] : state_name;
+      let param_name = param_map[state_name]? param_map[state_name] : state_name;
       computed_params[param_name] = local_state[state_name];
     }
 
     if ( this.plugin_config.strict ) {
       let bad_param = check_types(computed_params, params);
       if ( bad_param.length > 0 ) {
-        console.warn(`Bind ${output}: Received bad parameter type for ${bad_param}. Got bad types for ${JSON.stringify(bad_param)}`);
+        console.warn(`Binding ${output}: Received bad parameter type for ${bad_param}, expected: ${bad_param.map((k) => param_defs[k])} got: ${bad_param.map((k) => computed_params[k])}`);
       }
     }
 
     let unset = null;
     if ( ( unset = check_unset(computed_params, params) ) && ! params[output] ) {
       if ( this.plugin_config.log_blocked_binds ) {
-        console.info(`Tried update for ${output} but ${unset} was unset as ${computed_params[unset]}`);
+        console.info(`Binding ${output}: Received parameter ${unset} unset as ${computed_params[unset]}`);
       }
       return false;
     }

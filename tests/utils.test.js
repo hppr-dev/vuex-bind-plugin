@@ -26,6 +26,14 @@ describe("map_endpoint_types", () => {
     let results = map_endpoint_types({ user_id : "id", username: "user" }, {id: Number, user: String});
     expect(results).toStrictEqual({user_id: Number, username: String});
   });
+
+  it("should return empty object when both parameters are undefined", () => {
+    expect(map_endpoint_types()).toStrictEqual({});
+  });
+
+  it("should return empty object when parameters are undefined", () => {
+    expect(map_endpoint_types({something : 1})).toStrictEqual({});
+  });
 });
 
 describe("is_unset", () => {

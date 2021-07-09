@@ -12,6 +12,7 @@ export default class BindPlugin {
     camelCase         = false,
     namespace         = "bind",
     loading_prefix    = "loading_",
+    update_prefix     = "update_",
     done_prefix       = "done_",
     load_prefix       = "load_",
     trigger_prefix    = "trigger_",
@@ -23,6 +24,7 @@ export default class BindPlugin {
     BindPlugin.config.camelCase         = camelCase;
     BindPlugin.config.namespace         = namespace;
     BindPlugin.config.loading_prefix    = loading_prefix;
+    BindPlugin.config.update_prefix     = update_prefix;
     BindPlugin.config.done_prefix       = done_prefix;
     BindPlugin.config.load_prefix       = load_prefix;
     BindPlugin.config.trigger_prefix    = trigger_prefix;

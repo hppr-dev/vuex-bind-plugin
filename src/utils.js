@@ -23,7 +23,7 @@ export const is_unset = function(value, type) {
     case Object :
     case Array  :
     case String :
-      return Object.keys(value).length === 0;
+      return value == null || Object.keys(value).length === 0;
     case Number:
       return value === 0;
   }

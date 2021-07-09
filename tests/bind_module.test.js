@@ -260,7 +260,7 @@ describe("actions", () => {
     it("should not commit data from data source when parameters are zero", () => {
       payload.namespace = "test";
       payload.endpoint.params = { zero_param : Number };
-      return expect(once(ctx, payload)).rejects.toStrictEqual({ message : "Not Updated" });
+      return expect(once(ctx, payload)).resolves.toStrictEqual({ message : "Not Updated" });
     });
 
     it("should get and commit to/from rootState when no namespace", () => {
@@ -304,6 +304,13 @@ describe("actions", () => {
       payload.binding.transform = (data) => data["input"];
       payload.endpoint.params = { non_zero_param : Number };
       return expect(once(ctx, payload)).resolves.toStrictEqual(["test/update_output_var",{non_zero_param : 10}, {root : true }]);
+    });
+
+    it("should commit to redirect in namespace when given", () => {
+      payload.namespace = "test";
+      payload.binding.redirect = "update_something_else";
+      payload.endpoint.params = { non_zero_param : Number };
+      return expect(once(ctx, payload)).resolves.toStrictEqual(["test/update_something_else", expect.any(Object), {root : true }]);
     });
   });
   
