@@ -1,6 +1,6 @@
-import BindModule from '../src/bind_module.js'
-import BindPlugin from '../src/bind_plugin.js'
-import { match } from '../src/utils.js'
+import BindModule from '@src/bind_module.js'
+import BindPlugin from '@src/bind_plugin.js'
+import { match } from '@src/utils.js'
 import { test_plugin_config, TestDataSource } from './test-utils.js'
 
 beforeAll(() => BindPlugin.config = test_plugin_config);

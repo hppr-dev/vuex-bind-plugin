@@ -1,4 +1,4 @@
-import { reverse_map, map_endpoint_types, is_unset, match, is_type_match, get_default, query_mock_data, apply_binding_defaults } from '../src/utils.js'
+import { reverse_map, map_endpoint_types, is_unset, match, is_type_match, get_default, query_mock_data, apply_binding_defaults } from '@src/utils.js'
 
 describe("reverse_map", () => {
   it("should create a map that values are keys and keys are values", () => {

@@ -1,8 +1,8 @@
-import { DataSource, RestDataSource, MockRestDataSource, StorageDataSource, WebAssemblyDataSource} from '../src/data_sources.js'
-import { storage_adapter, wasm_adapter } from '../src/adapters.js'
+import { DataSource, RestDataSource, MockRestDataSource, StorageDataSource, WebAssemblyDataSource} from '@src/data_sources.js'
+import { storage_adapter, wasm_adapter } from '@src/adapters.js'
 import axios from 'axios'
 
-jest.mock('../src/adapters.js')
+jest.mock('@src/adapters.js')
 
 describe("DataSource", () => {
 

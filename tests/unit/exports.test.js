@@ -1,8 +1,8 @@
-import Bind from '../src/exports.js'
-import BindPlugin from '../src/bind_plugin.js'
-import BoundStore from '../src/bound_store.js'
+import Bind from '@src/exports.js'
+import BindPlugin from '@src/bind_plugin.js'
+import BoundStore from '@src/bound_store.js'
 
-jest.mock('../src/bound_store.js');
+jest.mock('@src/bound_store.js');
 
 describe("Bind.Plugin", () => {
   it("should be BindPlugin", () => {

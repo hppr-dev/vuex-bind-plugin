@@ -5,8 +5,11 @@
   "main": "lib/exports.js",
   "scripts": {
     "test": "jest",
-    "coverage": "jest --coverage",
-    "makelib": "babel src --out-dir lib"
+    "coverage": "jest unit --coverage",
+    "unit": "jest unit",
+    "integration": "jest integration",
+    "prepare": "babel src --out-dir lib",
+    "prepublishOnly" : "jest unit && jest unit --coverage && jest integration"
   },
   "repository": {
     "type": "git",
@@ -30,7 +33,18 @@
     ]
   },
   "jest": {
-    "testEnvironment": "jsdom"
+    "testEnvironment": "jsdom",
+    "moduleNameMapper": {
+      "^@src/(.*)$": "<rootDir>/src/$1"
+    },  
+    "coverageThreshold" : {
+      "global" :{
+        "lines" : 99
+      },
+      "src/adapters.js" : {
+        "lines" : 0
+      }
+    }
   },
   "bugs": {
     "url": "https://github.com/hppr-dev/vuex-bind-plugin/issues"

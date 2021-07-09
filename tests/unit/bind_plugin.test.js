@@ -1,11 +1,11 @@
-import BindPlugin from '../src/bind_plugin.js'
-import { RestDataSource, MockRestDataSource } from '../src/data_sources.js'
-import BoundStore from '../src/bound_store.js'
-import BindModule from '../src/bind_module.js'
+import BindPlugin from '@src/bind_plugin.js'
+import { RestDataSource, MockRestDataSource } from '@src/data_sources.js'
+import BoundStore from '@src/bound_store.js'
+import BindModule from '@src/bind_module.js'
 import { mock_prototype } from './test-utils.js'
 
-jest.mock('../src/bound_store.js')
-jest.mock('../src/bind_module.js')
+jest.mock('@src/bound_store.js')
+jest.mock('@src/bind_module.js')
 
 describe("constructor", () => {
   let config = {};
