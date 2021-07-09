@@ -1,4 +1,4 @@
-import { reverse_map, map_endpoint_types, is_unset, match, is_type_match, get_default, query_mock_data } from '../src/utils.js'
+import { reverse_map, map_endpoint_types, is_unset, match, is_type_match, get_default, query_mock_data, apply_binding_defaults } from '../src/utils.js'
 
 describe("reverse_map", () => {
   it("should create a map that values are keys and keys are values", () => {
@@ -197,3 +197,30 @@ describe("query_mock_data", () => {
   });
 
 });
+
+describe("apply_binding_defaults", () => {
+
+  it("should apply binding_defaults", () => {
+    let binding = {};
+    apply_binding_defaults("ENDPOINT_NAME", binding);
+    expect(binding.endpoint).toBe("/ENDPOINT_NAME/");
+    expect(binding.bind_type).toBe("once");
+    expect(binding.param_map).toStrictEqual({});
+  })
+
+  it("should keep binding_values", () => {
+    let binding = {
+      bind_type : "watch",
+      endpoint  : "/something/else",
+      redirect  : "update_something",
+      period    : 10000,
+      param_map : { one : "two" }
+    };
+    apply_binding_defaults("ENDPOINT_NAME", binding);
+    expect(binding.endpoint).toBe("/something/else");
+    expect(binding.bind_type).toBe("watch");
+    expect(binding.param_map).toStrictEqual({ one : "two" });
+    expect(binding.period).toBe(10000);
+    expect(binding.redirect).toBe("update_something");
+  })
+})
