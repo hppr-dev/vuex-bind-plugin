@@ -255,15 +255,41 @@ describe("generate_modifications", () => {
     expect(new_this.create_variable).toHaveBeenCalledWith("out", undefined);
   });
 
-  it("should throw an error if an when an binding endpoing is not defined", () => {
+  it("should throw a nice error when an binding endpoint is not defined and strict is true", () => {
+    new_this.plugin_config.strict = true;
+    new_this.bindings.abcdef = {
+      bind_type : "once",
+      endpoint  : "no_param_endpoint",
+      create_params : true
+    };
+    expect(() => generate_modifications()).toThrow("abcdef");
+    expect(() => generate_modifications()).toThrow("no_param_endpoint");
+    expect(() => generate_modifications()).toThrow("once");
+  });
+
+  it("should throw a bad error when an binding endpoint is not defined and strict is false", () => {
+    new_this.plugin_config.strict = false;
     new_this.bindings.out = {
       bind_type : "once",
       endpoint  : "no_param_endpoint",
       create_params : true
     };
-    expect(() => generate_modifications()).toThrow();
+    expect(() => generate_modifications()).not.toThrow("no_param_endpoint");
   });
-  
+
+  it("should throw a nice error when a bad bind_type is used and strict is true", () => {
+    new_this.plugin_config.strict = true;
+    new_this.plugin_config.endpoints.do_something = {
+    };
+    new_this.bindings.some_outxyz = {
+      bind_type : "badtype",
+      endpoint  : "do_something",
+    };
+    expect(() => generate_modifications()).toThrow("badtype");
+    expect(() => generate_modifications()).toThrow("do_something");
+    expect(() => generate_modifications()).toThrow("some_outxyz");
+  });
+
 });
 
 describe("create_variable", () => {

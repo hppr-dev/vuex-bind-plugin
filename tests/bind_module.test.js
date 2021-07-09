@@ -227,46 +227,83 @@ describe("actions", () => {
         zero_param     : 0,
       }
     },
-    commit : (...args) => args
+    commit : (...args) => args,
+    dispatch : jest.fn()
   };
 
   describe("once", () => {
-    let payload = {
-      output    : "output_var",
-      binding   : {
-        bind_type : "once",
-      },
-      endpoint  : {
-        type : String,
-        data : (params) => ({input : params, output: "from api"}),
-      },
-    };
+    let payload = {};
+
+    let once = null;
+
+    beforeAll(() => once = module.actions.once);
+
+    beforeEach(() => {
+      payload = {
+        output    : "output_var",
+        binding   : {
+          bind_type : "once",
+        },
+        endpoint  : {
+          type : String,
+          data : (params) => ({input : params, output: "from api"}),
+        },
+      };
+    });
 
     it("should commit data from data source when parameters are non-zero", () => {
       payload.namespace = "test";
       payload.endpoint.params = { non_zero_param : Number };
-      return expect(module.actions.once(ctx, payload)).resolves.toStrictEqual(["test/update_output_var", { input: {non_zero_param : 10}, output: "from api" }, {root : true }]);
+      return expect(once(ctx, payload)).resolves.toStrictEqual(["test/update_output_var", { input: {non_zero_param : 10}, output: "from api" }, {root : true }]);
     });
     
     it("should not commit data from data source when parameters are zero", () => {
       payload.namespace = "test";
       payload.endpoint.params = { zero_param : Number };
-      return expect(module.actions.once(ctx, payload)).rejects.toStrictEqual({ message : "Not Updated" });
+      return expect(once(ctx, payload)).rejects.toStrictEqual({ message : "Not Updated" });
     });
 
     it("should get and commit to/from rootState when no namespace", () => {
       payload.namespace = "";
       payload.endpoint.params = { non_zero_param : Number };
-      return expect(module.actions.once(ctx, payload)).resolves.toStrictEqual(["update_output_var", { input: {non_zero_param: 4444}, output: "from api" }, {root : true }]);
+      return expect(once(ctx, payload)).resolves.toStrictEqual(["update_output_var", { input: {non_zero_param: 4444}, output: "from api" }, {root : true }]);
     });
 
     it("should apply data source endpoint defaults", () => {
       payload.namespace = "";
       payload.endpoint.params = { something : Number };
       test_plugin_config.data_source.apply_defaults.mockClear();
-      module.actions.once(ctx, payload)
+      once(ctx, payload)
       expect(test_plugin_config.data_source.apply_defaults).toHaveBeenCalledTimes(1);
       expect(test_plugin_config.data_source.apply_defaults).toHaveBeenCalledWith("output_var", payload.endpoint);
+    });
+
+    it("should warn on bad type from api when strict mode is on", () => {
+      console.warn = jest.fn();
+      payload.endpoint.params = { non_zero_param : Number };
+      test_plugin_config.strict = true;
+      return once(ctx, payload).then( () => {
+        expect(console.warn).toHaveBeenCalledTimes(1);
+        test_plugin_config.strict = false;
+      });
+    });
+
+    it("should dispatch binding side effect when given", () => {
+      payload.namespace = "test";
+      payload.binding.side_effect = "do_something_else";
+      payload.endpoint.params = { non_zero_param : Number };
+      ctx.dispatch.mockClear();
+      return once(ctx, payload).then( () => {
+        expect(ctx.dispatch).toHaveBeenCalledTimes(1);
+        expect(ctx.dispatch).toHaveBeenCalledWith("test/do_something_else", expect.any(Object), {root : true});
+      });
+    });
+
+    it("should use binding transform when given", () => {
+      payload.namespace = "test";
+      payload.binding.transform = (data) => data["input"];
+      payload.endpoint.params = { non_zero_param : Number };
+      return expect(once(ctx, payload)).resolves.toStrictEqual(["test/update_output_var",{non_zero_param : 10}, {root : true }]);
     });
   });
   

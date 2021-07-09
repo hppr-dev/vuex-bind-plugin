@@ -555,12 +555,12 @@ const bindings = {
 |  endpoint      | OUTPUT_NAME | Name of the endpoint to bind to. Should match an entry in endpoint configs. Defaults to the name of the output variable.                                   |
 |  bind_type     | "once"     | Binding type. One of "watch", "trigger", or "once". See [Binding Types](#binding-types)                                                                    |
 |  param_map     | {}        | Parameter mapping. Defines which state variables to use as parameters to the api. See [Parameter Mapping](#parameter-mapping)                              |
-|  side_effect   | ""          | The name of an action to call when REST data is commited to this binding. The action must be within the current namespace.                                 |
-|  redirect      | ""          | Redirects the output to another mutation. Instead of updating the data in OUTPUT_NAME, commit the data here.                                               |
-|  transform     | null        | Function that takes the (data) from the api and tranforms it before committing it to state.                                                                |
+|  side_effect   | N/A          | The name of an action to call when REST data is commited to this binding. The action must be within the current namespace.                                 |
+|  redirect      | N/A          | Redirects the output to another mutation. Instead of updating the data in OUTPUT_NAME, commit the data here.                                               |
+|  transform     | N/A        | Function that takes the (data) from the api and tranforms it before committing it to state.                                                                |
 |  create_params | false       | Set to true to automatically create state variables for the parameters in the param_map.                                                                   |
 |  loading       | false       | Set to true to create state variables that track when the data is being loaded                                                                             |
-|  period        | 0           | Time interval in milliseconds to check for new api data. Only used for "watch" bindings                                                                    |
+|  period        | N/A           | Time interval in milliseconds to check for new api data. Only used for "watch" bindings                                                                    |
 
 ### Binding Types
 

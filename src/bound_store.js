@@ -1,17 +1,18 @@
 import BindPlugin from './bind_plugin.js'
-import { map_endpoint_types, get_default, apply_binding_defaults } from './utils.js'
+import { map_endpoint_types, get_default, apply_binding_defaults, check_bindings } from './utils.js'
+import * as c from  './constants.js'
 
 export default class _BoundStore {
   constructor(store_config){
+    this.plugin_config = BindPlugin.config;
+
     if ( store_config.namespace === undefined ) {
       throw `BoundStore initialized without namespace: ${JSON.stringify(store_config)}`; 
     }
-    if ( BindPlugin.config.endpoints === undefined ) {
+    if ( this.plugin_config.endpoints === undefined ) {
       throw `BoundStore created before plugin was configured: ${JSON.stringify(store_config)}`;
     }
 
-    this.store_config = store_config;
-    this.plugin_config = BindPlugin.config;
     this.namespace = store_config.namespace;
     this.bindings = store_config.bindings;
     this.generated_state = {};
@@ -38,14 +39,18 @@ export default class _BoundStore {
       let binding_spec  = this.bindings[output_var];
       let endpoint_spec = this.plugin_config.endpoints[binding_spec.endpoint];
 
-      if ( endpoint_spec === undefined ) {
-        throw `Tried to bind to unknown endpoint : ${binding_spec.endpoint}`;
+      if ( this.plugin_config.strict && endpoint_spec === undefined ) {
+        throw `Tried to bind to unknown endpoint ${output_var}<->${binding_spec.endpoint} bind_type ${binding_spec.bind_type}`;
+      }
+
+      if  ( this.plugin_config.strict && ! c.BINDING_TYPES.includes(binding_spec.bind_type) ) {
+        throw `Unknown binding type for ${output_var}<->${binding_spec.endpoint} bind_type ${binding_spec.bind_type}`;
       }
 
       apply_binding_defaults(output_var, binding_spec);
       let params = map_endpoint_types(binding_spec.param_map, endpoint_spec.params);
 
-      if ( binding_spec.bind_type === "watch" || binding_spec.bind_type === "change") {
+      if ( binding_spec.bind_type == c.WATCH || binding_spec.bind_type == c.CHANGE ) {
         this.watch_param_defs[output_var] = params;
       }
 
@@ -83,12 +88,12 @@ export default class _BoundStore {
 
   create_load_action(name, binding_spec, endpoint_spec) {
     let action_name = `${this.plugin_config.trigger_prefix}${name}`;
-    if(binding_spec.bind_type !== "trigger" ){
+    if(binding_spec.bind_type !== c.TRIGGER ){
       action_name = `${this.plugin_config.load_prefix}${name}`;
       this.all_load_actions.push(action_name);
     }
     this.generated_actions[action_name] = ({ dispatch }) => {
-      dispatch(`${this.plugin_config.namespace}/bind`, 
+      dispatch(`${this.plugin_config.namespace}/${c.BIND}`, 
       { 
         binding  : binding_spec,
         endpoint : endpoint_spec,
@@ -99,7 +104,7 @@ export default class _BoundStore {
   }
 
   create_start_bind_action(name) {
-    this.generated_actions["start_bind"] = ({ dispatch, commit }) => {
+    this.generated_actions[c.START_BIND] = ({ dispatch, commit }) => {
       this.add_watch_params(commit);
       this.all_load_actions.map((action) => dispatch(action));
     };
@@ -107,7 +112,7 @@ export default class _BoundStore {
 
   add_watch_params(commit) {
     for( let output_var of Object.keys(this.watch_param_defs) ) {
-      commit(`${this.plugin_config.namespace}/watch_params`, {
+      commit(`${this.plugin_config.namespace}/${c.WATCH_PARAMS}`, {
         action    : `${this.namespace}/${this.plugin_config.load_prefix}${output_var}`,
         mutations : Object.keys(this.watch_param_defs[output_var]).map((state_var) => `${this.namespace}/${this.plugin_config.update_prefix}${state_var}`),
       }, { root : true });

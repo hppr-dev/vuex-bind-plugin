@@ -1,5 +1,6 @@
-import { map_endpoint_types, is_unset, check_types, check_unset } from './utils.js'
+import { map_endpoint_types, is_unset, check_types, check_unset, is_type_match } from './utils.js'
 import BindPlugin from './bind_plugin.js'
+import * as c from  './constants.js'
 
 export default class BindModule {
   constructor() {
@@ -14,7 +15,7 @@ export default class BindModule {
       },
       mutations: {
         ...this.source.mutations,
-        watch_params : ( state,{ action, mutations } ) => {
+        [c.WATCH_PARAMS] : ( state,{ action, mutations } ) => {
           mutations.forEach((mutation) => {
             if ( state.watch_params[mutation] ) {
               state.watch_params[mutation].push(action);
@@ -23,15 +24,15 @@ export default class BindModule {
             }
           });
         },
-        add_interval : (state, { name, interval } ) => {
+        [c.ADD_INTERVAL] : (state, { name, interval } ) => {
           clearInterval(state.intervals[name]);
           state.intervals[name] = interval;
         },
-        delete_interval : (state, { name }) => {
+        [c.DELETE_INTERVAL] : (state, { name }) => {
           clearInterval(state.intervals[name]);
           delete state.intervals[name];
         },
-        clear_intervals : (state) => {
+        [c.CLEAR_INTERVALS] : (state) => {
           for( let [, interval] of Object.entries(state.intervals)) {
             clearInterval(interval);
           }
@@ -39,20 +40,20 @@ export default class BindModule {
         }
       },
       actions: {
-        bind    : ({ dispatch }, payload) => {
-          return payload.binding.bind_type === "watch"? dispatch("watch", payload) : dispatch("once", payload);
+        [c.BIND]    : ({ dispatch }, payload) => {
+          return payload.binding.bind_type === c.WATCH? dispatch(c.WATCH, payload) : dispatch(c.ONCE, payload);
         },
-        watch   : ({ dispatch, commit }, payload) => {
+        [c.WATCH]   : ({ dispatch, commit }, payload) => {
           let interval_func = () => {
-            dispatch('once', payload );
+            dispatch(c.ONCE, payload );
           };
           commit('add_interval', { 
             name: `${payload.namespace}/${payload.output}`,
             interval: setInterval( interval_func, payload.binding.period ) 
           });
-          return dispatch('once', payload);
+          return dispatch(c.ONCE, payload);
         },
-        once    : ({state, rootState, commit}, { output , binding, endpoint, namespace }) => {
+        [c.ONCE]    : ({ state, rootState, commit, dispatch },{ output , binding, endpoint, namespace }) => {
           let local_state = namespace? rootState[namespace] : rootState;
           let ns_prefix = namespace? `${namespace}/` : "";
           this.source.apply_defaults(output, endpoint);
@@ -60,7 +61,23 @@ export default class BindModule {
           return computed_params? this.source.module(
             ...this.source.args(state, computed_params, endpoint)
           ).then(
-            (data) => commit(`${ns_prefix}${this.plugin_config.update_prefix}${output}`, this.source.assign(data), { root : true }) 
+            (data) => {
+              data = binding.transform? binding.transform(data) : data;
+
+              if ( this.plugin_config.strict && ! is_type_match(data, endpoint.type)) {
+                console.warn(`Received bad type for ${ns_prefix}${output}. Expected ${endpoint.type} but got ${data}.`);
+              }
+
+              if ( binding.side_effect ) {
+                dispatch(`${ns_prefix}${binding.side_effect}`, data, { root : true });
+              }
+
+              return commit(
+                `${ns_prefix}${this.plugin_config.update_prefix}${output}`,
+                this.source.assign( data ),
+                { root : true }
+              ); 
+            }
           ) : new Promise((_, reject) => reject({ message : "Not Updated" })) ;
         },
       }
