@@ -25,18 +25,24 @@ export default class _BoundStore {
     delete store_config.bindings;
     delete store_config.namespace;
 
+    store_config.state = store_config.state ?? {};
+    store_config.mutations = store_config.mutations ?? {};
+    store_config.actions = store_config.actions ?? {};
+
     Object.assign(store_config.state, this.generated_state);
     Object.assign(store_config.mutations, this.generated_mutations);
     Object.assign(store_config.actions, this.generated_actions);
 
     store_config.namespaced = true;
 
-    return this.namespace === ""? store_config : { [this.namespace] : store_config }
+    return store_config;
   }
 
   generate_modifications() {
     for ( let output_var of Object.keys(this.bindings) ) {
       let binding_spec  = this.bindings[output_var];
+      apply_binding_defaults(output_var, binding_spec);
+
       let endpoint_spec = this.plugin_config.endpoints[binding_spec.endpoint];
 
       if ( this.plugin_config.strict && endpoint_spec === undefined ) {
@@ -47,7 +53,6 @@ export default class _BoundStore {
         throw `Unknown binding type for ${output_var}<->${binding_spec.endpoint} bind_type ${binding_spec.bind_type}`;
       }
 
-      apply_binding_defaults(output_var, binding_spec);
       let params = map_endpoint_types(binding_spec.param_map, endpoint_spec.params);
 
       if ( binding_spec.bind_type == c.WATCH || binding_spec.bind_type == c.CHANGE ) {

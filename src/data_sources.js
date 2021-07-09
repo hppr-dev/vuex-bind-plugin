@@ -46,7 +46,7 @@ export class RestDataSource extends DataSource {
 
   apply_defaults(name, endpoint) {
     super.apply_defaults(name, endpoint);
-    endpoint.url    = endpoint.url? endpoint.url : `/${name}`;
+    endpoint.url    = endpoint.url? endpoint.url : `/${name}/`;
     endpoint.method = endpoint.method? endpoint.method : "get";
   }
 }
