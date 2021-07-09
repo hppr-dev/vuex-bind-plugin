@@ -60,27 +60,26 @@ export default class BindModule {
           let computed_params = this.pull_params_from(local_state, binding.param_map, endpoint.params, output);
           let bind_out = binding.redirect? binding.redirect : `${this.plugin_config.update_prefix}${output}`;
 
-          return computed_params? this.source.module(
-            ...this.source.args(state, computed_params, endpoint)
-          ).then(
-            (data) => {
-              data = binding.transform? binding.transform(data) : data;
+          if ( computed_params ) {
+            return this.source.module(
+              ...this.source.args(state, computed_params, endpoint)
+            ).then(
+              (data) => {
+                data = this.source.assign(binding.transform? binding.transform(data) : data);
 
-              if ( this.plugin_config.strict && ! is_type_match(data, endpoint.type)) {
-                console.warn(`Received bad type for ${ns_prefix}${output}. Expected ${endpoint.type} but got ${JSON.stringify(data)}.`);
+                if ( this.plugin_config.strict && ! is_type_match(data, endpoint.type)) {
+                  console.warn(`Received bad type for ${ns_prefix}${output}. Expected ${endpoint.type} but got ${JSON.stringify(data)}.`);
+                }
+
+                if ( binding.side_effect ) {
+                  dispatch(`${ns_prefix}${binding.side_effect}`, data, { root : true });
+                }
+
+                return commit(`${ns_prefix}${bind_out}`, data , { root : true }); 
               }
-
-              if ( binding.side_effect ) {
-                dispatch(`${ns_prefix}${binding.side_effect}`, data, { root : true });
-              }
-
-              return commit(
-                `${ns_prefix}${bind_out}`,
-                this.source.assign( data ),
-                { root : true }
-              ); 
-            }
-          ) : new Promise((resolve) => resolve({ message : "Not Updated" })) ;
+            );
+          }
+          return new Promise((resolve) => resolve({ message : "Not Updated" })) ;
         },
       }
     }
