@@ -137,7 +137,7 @@ describe("RestDataSource", () => {
     let data_source = new RestDataSource({});
     let default_endpoint = {};
     data_source.apply_defaults("endpoint_name", default_endpoint);
-    expect(default_endpoint.url).toBe("/endpoint_name");
+    expect(default_endpoint.url).toBe("/endpoint_name/");
     expect(default_endpoint.method).toBe("get");
     expect(default_endpoint.type).toBe(Object);
     expect(default_endpoint.params).toStrictEqual({});

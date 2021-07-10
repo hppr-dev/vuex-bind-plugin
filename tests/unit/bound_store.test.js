@@ -25,13 +25,13 @@ describe("constructor", () => {
 
   let generate_modifications = mock_prototype(BoundStore, "generate_modifications");
 
-  it('should return a namespaced module config', () => {
+  it('should return a module config', () => {
     store = init_store({}, "test");
-    expect(store.test.namespaced).toBe(true);
-    expect(store.test.state.regular_state_var).toBe("hello");
-    expect(store.test.mutations.regular_mutation).toBe("mutate a thing");
-    expect(store.test.actions.regular_action).toBe("some action");
-    expect(store.test.bindings).toBeUndefined();
+    expect(store.namespaced).toBe(true);
+    expect(store.state.regular_state_var).toBe("hello");
+    expect(store.mutations.regular_mutation).toBe("mutate a thing");
+    expect(store.actions.regular_action).toBe("some action");
+    expect(store.bindings).toBeUndefined();
     expect(generate_modifications).toHaveBeenCalledTimes(1);
   });
 
