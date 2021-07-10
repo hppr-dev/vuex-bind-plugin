@@ -24,6 +24,42 @@ export default class BlackBox {
     }
     plugin(this);
   }
+  input_state(ns, state) {
+    for ( let state_var of Object.keys(state) ){
+      if ( this.state[ns][state_var]  == null ){
+        throw `${ns}/${state_var} is undefined`;
+      }
+      this.state[ns][state_var] = state[state_var];
+    }
+  }
+  output_state(ns, state) {
+    return this.resolve_axios().then(() => {
+      return new Promise((resolve) => {
+        for ( let state_var of Object.keys(state) ){
+          try {
+            expect(this.state[ns][state_var]).toBeDefined();
+            expect(this.state[ns][state_var]).toStrictEqual(state[state_var]);
+          } catch(e) {
+            throw `Output state ${ns}/${state_var} was not what was expected.\n${e}`;
+          }
+        }
+        resolve();
+      });
+    });
+  }
+  resolve_axios() {
+    let results = this.axios.mock.results;
+    if (results.length === 0 ) {
+      return Promise.resolve();
+    }
+    let recurse = () => Promise.resolve(this.resolve_axios());
+    let chain = results[0].value.then(recurse);
+    for ( let i = 1 ; i < results.length ; i++){
+      chain.then(() => results[i].value.then(recurse));
+    }
+    this.axios.mockClear();
+    return chain;
+  }
   subscribe(func) {
     this.mutation_watch = func;
   }
@@ -65,8 +101,7 @@ export default class BlackBox {
     let local_actions = ns === ""? this.actions : this.actions[ns];
     let local_state = ns === ""? this.state : this.state[ns];
     if ( ! local_actions || ! local_actions[action] ) {
-      console.log("NS:",ns,"ACT:", action,"PAY:", payload);
-      throw `No action ${action} in namespace "${ns}"`
+      throw `No action ${action} in namespace "${ns}", called with ${payload}`
     }
     return local_actions[action]({ 
       state : local_state,
@@ -82,8 +117,7 @@ export default class BlackBox {
     let local_mutations = ns === ""? this.mutations : this.mutations[ns];
     let local_state = ns === ""? this.state : this.state[ns];
     if ( ! local_mutations || ! local_mutations[mutation] ) {
-      console.log("NS:",ns,"MUT:", mutation,"PAY:", payload);
-      throw `No mutation ${mutation} in namespace ${ns}`
+      throw `No mutation ${mutation} in namespace ${ns}, called with ${payload}`
     }
     local_mutations[mutation](local_state, payload);
     this.mutation_watch({type : `${ns}/${mutation}`}, this.state);
