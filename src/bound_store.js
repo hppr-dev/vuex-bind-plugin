@@ -9,12 +9,30 @@ export default class _BoundStore {
     if ( store_config.namespace === undefined ) {
       throw `BoundStore initialized without namespace: ${JSON.stringify(store_config)}`; 
     }
-    if ( this.plugin_config.endpoints === undefined ) {
+    if ( this.plugin_config === undefined ) {
       throw `BoundStore created before plugin was configured: ${JSON.stringify(store_config)}`;
     }
 
     this.namespace = store_config.namespace;
     this.bindings = store_config.bindings;
+
+    for ( let [ output_var, binding ] of Object.entries(this.bindings) ) {
+      apply_binding_defaults(output_var, binding);
+      if ( typeof binding.endpoint === "string") {
+        let endpoint_name = binding.endpoint;
+        binding.endpoint = this.plugin_config.endpoints?.[endpoint_name] ?? store_config.endpoints?.[endpoint_name];
+
+        if ( this.plugin_config.strict && binding.endpoint == null ) {
+          throw `Tried to bind to unknown endpoint ${output_var}<->${binding.endpoint} bind_type ${binding.bind_type}`;
+        }
+
+      }
+
+      if  ( this.plugin_config.strict && ! c.BINDING_TYPES.includes(binding.bind_type) ) {
+        throw `Unknown binding type for ${output_var}<->${binding.endpoint} bind_type ${binding.bind_type}`;
+      }
+    }
+
     this.generated_state = {};
     this.generated_mutations = {};
     this.generated_actions = {};
@@ -40,40 +58,29 @@ export default class _BoundStore {
 
   generate_modifications() {
     for ( let output_var of Object.keys(this.bindings) ) {
-      let binding_spec  = this.bindings[output_var];
-      apply_binding_defaults(output_var, binding_spec);
+      let binding  = this.bindings[output_var];
 
-      let endpoint_spec = this.plugin_config.endpoints[binding_spec.endpoint];
+      let params = map_endpoint_types(binding.param_map, binding.endpoint.params);
 
-      if ( this.plugin_config.strict && endpoint_spec === undefined ) {
-        throw `Tried to bind to unknown endpoint ${output_var}<->${binding_spec.endpoint} bind_type ${binding_spec.bind_type}`;
-      }
-
-      if  ( this.plugin_config.strict && ! c.BINDING_TYPES.includes(binding_spec.bind_type) ) {
-        throw `Unknown binding type for ${output_var}<->${binding_spec.endpoint} bind_type ${binding_spec.bind_type}`;
-      }
-
-      let params = map_endpoint_types(binding_spec.param_map, endpoint_spec.params);
-
-      if ( binding_spec.bind_type == c.WATCH || binding_spec.bind_type == c.CHANGE ) {
+      if ( binding.bind_type == c.WATCH || binding.bind_type == c.CHANGE ) {
         this.watch_param_defs[output_var] = params;
       }
 
-      if ( ! binding_spec.redirect ) {
-        this.create_variable(output_var, endpoint_spec.type);
+      if ( ! binding.redirect ) {
+        this.create_variable(output_var, binding.type);
       }
 
-      if ( params && binding_spec.create_params ) {
+      if ( params && binding.create_params ) {
         for ( let [state_var, type] of Object.entries(params) ) {
           this.create_variable(state_var, type);
         }
       }
 
-      if ( binding_spec.loading ) {
+      if ( binding.loading ) {
         this.create_loading_variable(output_var);
       }
 
-      this.create_load_action(output_var, binding_spec, endpoint_spec);
+      this.create_load_action(output_var, binding);
     }
     this.create_start_bind_action();
   }
@@ -91,17 +98,16 @@ export default class _BoundStore {
     this.generated_mutations[done_name] = (state) => state[loading_name] = false;
   }
 
-  create_load_action(name, binding_spec, endpoint_spec) {
+  create_load_action(name, binding) {
     let action_name = `${this.plugin_config.trigger_prefix}${name}`;
-    if(binding_spec.bind_type !== c.TRIGGER ){
+    if(binding.bind_type !== c.TRIGGER ){
       action_name = `${this.plugin_config.load_prefix}${name}`;
       this.all_load_actions.push(action_name);
     }
     this.generated_actions[action_name] = ({ dispatch }) => {
       dispatch(`${this.plugin_config.namespace}/${c.BIND}`, 
       { 
-        binding  : binding_spec,
-        endpoint : endpoint_spec,
+        binding  : binding,
         namespace: this.namespace,
         output   : name,
       }, { root : true });

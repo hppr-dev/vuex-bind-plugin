@@ -53,23 +53,23 @@ export default class BindModule {
           });
           return dispatch(c.ONCE, payload);
         },
-        [c.ONCE]    : ({ state, rootState, commit, dispatch },{ output , binding, endpoint, namespace }) => {
+        [c.ONCE]    : ({ state, rootState, commit, dispatch },{ output , binding, namespace }) => {
           let local_state = namespace? rootState[namespace] : rootState;
           let ns_prefix = namespace? `${namespace}/` : "";
-          this.source.apply_defaults(output, endpoint);
-          let computed_params = this.pull_params_from(local_state, binding.param_map, endpoint.params, output);
+          this.source.apply_defaults(output, binding.endpoint);
+          let computed_params = this.pull_params_from(local_state, binding.param_map, binding.endpoint.params, output);
           let bind_out = binding.redirect? binding.redirect : `${this.plugin_config.update_prefix}${output}`;
 
           if ( computed_params ) {
             return this.source.module(
-              ...this.source.args(state, computed_params, endpoint)
+              ...this.source.args(state, computed_params, binding.endpoint)
             ).then(
               (data) => {
                 data = this.source.assign(data);
                 data = binding.transform? binding.transform(data) : data;
 
-                if ( this.plugin_config.strict && ! is_type_match(data, endpoint.type)) {
-                  console.warn(`Received bad type for ${ns_prefix}${output}. Expected ${endpoint.type.name} but got ${JSON.stringify(data)}.`);
+                if ( this.plugin_config.strict && ! is_type_match(data, binding.endpoint.type)) {
+                  console.warn(`Received bad type for ${ns_prefix}${output}. Expected ${binding.endpoint.type.name} but got ${JSON.stringify(data)}.`);
                 }
 
                 let com =  commit(`${ns_prefix}${bind_out}`, data , { root : true }); 
