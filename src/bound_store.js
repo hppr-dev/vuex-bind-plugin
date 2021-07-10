@@ -59,27 +59,22 @@ export default class _BoundStore {
   generate_modifications() {
     for ( let output_var of Object.keys(this.bindings) ) {
       let binding  = this.bindings[output_var];
-
       let params = map_endpoint_types(binding.param_map, binding.endpoint.params);
 
       if ( binding.bind_type == c.WATCH || binding.bind_type == c.CHANGE ) {
         this.watch_param_defs[output_var] = params;
       }
-
       if ( ! binding.redirect ) {
-        this.create_variable(output_var, binding.type);
+        this.create_variable(output_var, binding.endpoint.type);
       }
-
       if ( params && binding.create_params ) {
         for ( let [state_var, type] of Object.entries(params) ) {
           this.create_variable(state_var, type);
         }
       }
-
       if ( binding.loading ) {
         this.create_loading_variable(output_var);
       }
-
       this.create_load_action(output_var, binding);
     }
     this.create_start_bind_action();

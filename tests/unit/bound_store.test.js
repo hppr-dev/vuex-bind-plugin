@@ -51,7 +51,7 @@ describe("constructor", () => {
   });
 
   it('should throw an error if plugin not configured', () => {
-    BindPlugin.config = {};
+    BindPlugin.config = undefined;
     expect(() => init_store({}, "mystore")).toThrow();
     BindPlugin.config = test_plugin_config;
   });
@@ -88,15 +88,14 @@ describe("generate_modifications", () => {
   });
 
   it("should map state variables to parameters when param_map is set", () => {
-    new_this.plugin_config.endpoints.loading = {
-      params : {
-        id: Number,
-        name: String,
-      },
-    };
     new_this.bindings.out = {
       bind_type : "once",
-      endpoint  : "loading",
+      endpoint  : {
+        params : {
+          id: Number,
+          name: String,
+        },
+      },
       param_map : {
         user_id : "id",
         username: "name",
@@ -111,12 +110,9 @@ describe("generate_modifications", () => {
   });
 
   it("should create loading variable when loading is set", () => {
-    new_this.plugin_config.endpoints.loading = {
-      params : {},
-    };
     new_this.bindings.out = {
       bind_type : "once",
-      endpoint  : "loading",
+      endpoint  : { params : {} },
       loading   : true,
     };
     generate_modifications();
@@ -125,18 +121,17 @@ describe("generate_modifications", () => {
   });
 
   it("should create parameter variables when create_params is set", () => {
-    new_this.plugin_config.endpoints.create_params = {
-      params : {
-        id : Number,
-        user : String,
-      },
-      type: Array
-    };
     new_this.bindings.out = {
       bind_type : "once",
-      endpoint  : "create_params",
+      endpoint  : {
+        params : {
+          id : Number,
+          user : String,
+        },
+        type: Array
+      },
       create_params : true,
-    };
+    }
     generate_modifications();
     expect(new_this.create_variable).toHaveBeenCalledTimes(3);
     expect(new_this.create_variable).toHaveBeenCalledWith("out", Array);
@@ -145,15 +140,14 @@ describe("generate_modifications", () => {
   });
 
   it("should not create output variable when redirect is set", () => {
-    new_this.plugin_config.endpoints.redirecter = {
-      params : {
-        id : Number,
-        user : String,
-      },
-    };
     new_this.bindings.out = {
       bind_type : "once",
-      endpoint  : "redirecter",
+      endpoint  : {
+        params : {
+          id : Number,
+          user : String,
+        },
+      },
       create_params : true,
       redirect : "to_something_else",
     };
@@ -168,12 +162,9 @@ describe("generate_modifications", () => {
       day : Number,
       month : String,
     };
-    new_this.plugin_config.endpoints.changing_thing = {
-      params,
-    };
     new_this.bindings.out = {
       bind_type : "change",
-      endpoint  : "changing_thing",
+      endpoint  : { params },
     };
     generate_modifications();
     expect(new_this.watch_param_defs).toStrictEqual({"out" : params});
@@ -184,12 +175,9 @@ describe("generate_modifications", () => {
       day : Number,
       month : String,
     };
-    new_this.plugin_config.endpoints.changing_thing = {
-      params,
-    };
     new_this.bindings.out = {
       bind_type : "watch",
-      endpoint  : "changing_thing",
+      endpoint  : { params }
     };
     generate_modifications();
     expect(new_this.watch_param_defs).toStrictEqual({"out" : params});
@@ -200,94 +188,48 @@ describe("generate_modifications", () => {
       day : Number,
       month : String,
     };
-    new_this.plugin_config.endpoints.static_thing = {
-      params,
-    };
     new_this.bindings.out = {
       bind_type : "once",
-      endpoint  : "static_thing",
+      endpoint  :  { params },
     };
     generate_modifications();
     expect(new_this.watch_param_defs).toStrictEqual({});
   });
 
   it("should create load action for each binding", () => {
-    new_this.plugin_config.endpoints.load_me = {
-      params : {},
-    };
     new_this.bindings.out = {
       bind_type : "once",
-      endpoint  : "load_me",
+      endpoint  : { params : {} },
     };
     new_this.bindings.out2 = {
       bind_type : "change",
-      endpoint  : "load_me",
+      endpoint  : { params : {} },
       redirect  : "out",
     };
     generate_modifications();
     expect(new_this.create_load_action).toHaveBeenCalledTimes(2);
-    expect(new_this.create_load_action).toHaveBeenCalledWith("out", new_this.bindings.out, new_this.plugin_config.endpoints.load_me );
-    expect(new_this.create_load_action).toHaveBeenCalledWith("out2", new_this.bindings.out2, new_this.plugin_config.endpoints.load_me );
+    expect(new_this.create_load_action).toHaveBeenCalledWith("out", new_this.bindings.out);
+    expect(new_this.create_load_action).toHaveBeenCalledWith("out2", new_this.bindings.out2);
   });
 
   it("should create a start_bind action", () => {
-    new_this.plugin_config.endpoints.load_me = {
-      params : {},
-    };
     new_this.bindings.out = {
       bind_type : "once",
-      endpoint  : "load_me",
+      endpoint  : { params : {} },
     };
     generate_modifications();
     expect(new_this.create_start_bind_action).toHaveBeenCalledTimes(1);
   });
 
   it("should handle when endpoint does not have params and create_params is true", () => {
-    new_this.plugin_config.endpoints.no_param_endpoint = {
-    };
     new_this.bindings.out = {
       bind_type : "once",
-      endpoint  : "no_param_endpoint",
+      endpoint  : {},
       create_params : true
     };
     generate_modifications();
     expect(new_this.create_variable).toHaveBeenCalledTimes(1);
     expect(new_this.create_variable).toHaveBeenCalledWith("out", undefined);
-  });
-
-  it("should throw a nice error when an binding endpoint is not defined and strict is true", () => {
-    new_this.plugin_config.strict = true;
-    new_this.bindings.abcdef = {
-      bind_type : "once",
-      endpoint  : "no_param_endpoint",
-      create_params : true
-    };
-    expect(() => generate_modifications()).toThrow("abcdef");
-    expect(() => generate_modifications()).toThrow("no_param_endpoint");
-    expect(() => generate_modifications()).toThrow("once");
-  });
-
-  it("should throw a bad error when an binding endpoint is not defined and strict is false", () => {
-    new_this.plugin_config.strict = false;
-    new_this.bindings.out = {
-      bind_type : "once",
-      endpoint  : "no_param_endpoint",
-      create_params : true
-    };
-    expect(() => generate_modifications()).not.toThrow("no_param_endpoint");
-  });
-
-  it("should throw a nice error when a bad bind_type is used and strict is true", () => {
-    new_this.plugin_config.strict = true;
-    new_this.plugin_config.endpoints.do_something = {
-    };
-    new_this.bindings.some_outxyz = {
-      bind_type : "badtype",
-      endpoint  : "do_something",
-    };
-    expect(() => generate_modifications()).toThrow("badtype");
-    expect(() => generate_modifications()).toThrow("do_something");
-    expect(() => generate_modifications()).toThrow("some_outxyz");
   });
 
 });
@@ -396,15 +338,14 @@ describe("create_load_action", () => {
   });
 
   it("should create load action that dispatches bind module bind action", () => {
-    create_load_action("output", { name : "something", bind_type : "once"}, { this_is : "an endpoint" });
+    create_load_action("output", { name : "something", bind_type : "once", endpoint : { this_is : "an endpoint" }});
     let ctx = {
       dispatch : jest.fn()
     };
     new_this.generated_actions.load_output(ctx);
     expect(ctx.dispatch).toHaveBeenCalledTimes(1);
     expect(ctx.dispatch).toHaveBeenCalledWith("mybind/bind", { 
-      binding   : { name : "something", bind_type : "once" },
-      endpoint  : { this_is : "an endpoint"},
+      binding   : { name : "something", bind_type : "once", endpoint : { this_is : "an endpoint"} },
       namespace : "create",
       output    : "output"
     }, { root : true });
