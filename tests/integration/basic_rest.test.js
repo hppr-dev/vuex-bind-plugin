@@ -1,12 +1,13 @@
 import BlackBox from "./blackbox.js"
-import { plugin_config, store_config } from './basic_rest_config.js'
+import { plugin_config, store_config, resolve_data } from './basic_rest_config.js'
 import Bind from "@src/exports.js"
 
 describe("basic scenario", () => {
 
   let bb = new BlackBox({
     plugin_config, 
-    store_config
+    store_config,
+    resolve_data
   });
 
   beforeEach(() => {
@@ -14,7 +15,6 @@ describe("basic scenario", () => {
   });
 
   it("should start bindings when start bind is called", () => {
-    bb.axios.mockResolvedValue({ data: { my_users_data : [1,2,3,4] } });
     bb.dispatch("profile/start_bind");
     expect(bb.axios).toHaveBeenCalledTimes(1);
     expect(bb.axios).toHaveBeenCalledWith({
@@ -25,10 +25,12 @@ describe("basic scenario", () => {
       params  : {},
       headers : { "Content-Type" : "application/json" }
     });
+    return bb.axios.mock.results[0].value.then(() => {
+      expect(bb.state.profile.users).toStrictEqual(resolve_data["/users/"].data);
+    });
   });
 
   it("should trigger login", () => {
-    bb.axios.mockResolvedValue({ data : { message : "logged in" }});
     bb.state.profile.username = "james";
     bb.state.profile.password = "brond";
     bb.dispatch("profile/trigger_login");
@@ -41,14 +43,15 @@ describe("basic scenario", () => {
       params  : {},
       headers : { "Content-Type" : "application/json" }
     });
+    return bb.axios.mock.results[0].value.then(() => {
+      expect(bb.state.profile.login).toStrictEqual(resolve_data["/login"].data);
+    });
   });
 
   describe("After start_bind has been called", () => {
-    bb.axios.mockResolvedValue({ data : { users : {}}});
     bb.dispatch("profile/start_bind");
 
     it("should call get data when selected_user_id is updated", () => {
-      bb.axios.mockResolvedValue({ data : { message : "logged in" }});
       bb.commit("profile/update_selected_user_id", 10);
       expect(bb.axios).toHaveBeenCalledTimes(2);
       expect(bb.axios).toHaveBeenLastCalledWith({
@@ -69,7 +72,9 @@ describe("basic scenario", () => {
         params  : { user_id : 10 },
         headers : { "Content-Type" : "application/json" },
       });
+      return bb.axios.mock.results[0].value.then(() => {
+        expect(bb.state.profile.user_data).toStrictEqual(resolve_data["/user/data/"].data);
+      });
     });
-
   });
 });

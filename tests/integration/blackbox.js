@@ -1,11 +1,13 @@
 import Bind from '@src/exports.js'
 
 export default class BlackBox { 
-  constructor({ plugin_config , store_config }) {
+  constructor({ plugin_config , store_config, resolve_data}) {
 
     let plugin = new Bind.Plugin(plugin_config);
 
-    this.axios = jest.fn((args) => new Promise((resolve, reject) =>  resolve("data")));
+    this.axios = jest.fn().mockImplementation((args) => {
+      return Promise.resolve(resolve_data[args.url]);
+    });
     Bind.Plugin.config.data_source.module = this.axios;
 
     let modules = Bind.Modules(store_config);
@@ -66,7 +68,7 @@ export default class BlackBox {
       console.log("NS:",ns,"ACT:", action,"PAY:", payload);
       throw `No action ${action} in namespace "${ns}"`
     }
-    local_actions[action]({ 
+    return local_actions[action]({ 
       state : local_state,
       rootState : this.state,
       dispatch  : (a,p,e={}) => this.dispatch_from(a, p, e, ns),

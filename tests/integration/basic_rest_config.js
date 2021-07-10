@@ -4,7 +4,9 @@ export const plugin_config = {
     url : "http://myapi.hppr.dev/api",
   },
   endpoints : {
-    users : {}, //default endpoint
+    users : {
+      type : Array
+    },
     user_data : {
       url       : "/user/data/",
       params    : {
@@ -20,6 +22,12 @@ export const plugin_config = {
       },
     }
   }
+};
+
+export const resolve_data = {
+    '/users/'     : { data : ["jenkins", "flores", "jamie"] },
+    '/user/data/' : { data : { posts : ["just posted this", "partaay"] , friend_ids : [1,2,3] } },
+    '/login'      : { data : { token : "somesecuritytoken" }},
 };
 
 export const store_config = {
@@ -41,7 +49,7 @@ export const store_config = {
         period    : 10000,
         param_map : {
           selected_user_id : "user_id",
-        }
+        },
       },
       users : {
         bind_type : "once"
