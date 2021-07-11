@@ -10,6 +10,7 @@ export class Naming {
 }
 
 export class SnakeCase extends Naming {
+  start = "start_bind"
   update(name) {
     return `${this.prefixes.update}_${name}`;
   }
@@ -28,6 +29,7 @@ export class SnakeCase extends Naming {
 }
 
 export class CamelCase extends Naming {
+  start = "startBind"
   update(name) {
     return `${this.prefixes.update}${capitalize(name)}`;
   }

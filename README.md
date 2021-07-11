@@ -253,11 +253,7 @@ const plugin = new Bind.Plugin({
   initial_state     : { url: "", headers :{ "Content-Type" : "application/json" },  
   endpoints         : {},
   namespace         : "bind",
-  update_prefix     : "update_",
-  loading_prefix    : "loading_",
-  done_prefix       : "done_",
-  load_prefix       : "load_",
-  trigger_prefix    : "trigger_",
+  naming            : Bind.SnakeCase(),
   strict            : false,
   log_blocked_binds : false,
 });
@@ -268,12 +264,7 @@ const plugin = new Bind.Plugin({
 | initial_state  | { url: "", headers :{ "Content-Type" : "application/json" } | The inital state of the data source. See [Data Source](#data-source) |
 | endpoints      | {}                                      | Endpoints config. See [Endpoint Configuration](#endpoint-configuration) |
 | namespace      | "bind"                                  | Namespace of the plugins "bind" store.                                  |
-| camelCase*      | false                                  | Use camelCase instead of snake_case. *Future version             |
-| update_prefix  | "update_"                               | Prefix of generated update mutations.                                   |
-| loading_prefix | "loading_"                              | Prefix of generated loading mutations.                                  |
-| done_prefix    | "done_"                                 | Prefix of generated done loading mutations.                             |
-| load_prefix    | "load_"                                 | Prefix of generated load actions.                                       | 
-| trigger_prefix | "trigger_"                              | Prefix of generated trigger actions.                                    |
+| naming         | Bind.SnakeCase()                        | Naming scheme. See [Naming](#naming)                                    |
 | strict         | false                                   | Check types where possible and log them to the console. Use in development only |
 | log_blocked_binds         | false                                   | Log when a bind was triggered, but not commited because of unset parameters. Use in development only |
 
@@ -358,6 +349,92 @@ The tranform function is passed an object with `endpoint`, and `input_params` fi
 The `endpoint` is a reference to the endpoint definition, and `input_params` are the current parameter values that would have been pulled from the state.
 SA tranform to return the calculated params could be written as `tranform : ({ input_params }) => input_params`.
 
+## Naming
+
+The names of generated mutations, and actions are fully configurable.
+Use the `naming` option to specify which naming scheme to use.
+The two included schemes are `Bind.SnakeCase` and `Bind.CamelCase`.
+
+The naming scheme only affects the generated portions of the vuex config and not configuration values associated with the plugin.
+Care has been taken to not use multi-word options, but when they do show up they will be in snake case.
+
+### Why snake_case default?
+
+Short Answer: It's easier: `prefix + '_' + name` requires less computation than `prefix + name.slice(0,1).toUpperCase() + name.slice(1)`.
+
+It's also what is used internally in the plugin.
+Actions, mutations, etc in snake case also separates them from regular functions.
+It further drives home the idea that we are working with strings with dispatch and commit.
+That being said, naming conventions are project/personal specific, so the configuration is left to the user.
+
+### camelCase
+
+To use camelCase for actions, mutations, etc use the `Bind.CamelCase()` setting in the naming option:
+
+```
+import Bind from 'vuex-bind-plugin'
+
+const plugin = Bind.Plugin({
+  ...
+  naming : Bind.CamelCase(),
+})
+```
+
+### Custom naming scheme
+
+Naming schemes are fully customizable.
+The schemes use prefixes to distinguish between generated actions.
+Schemes have the following prefixes available which default to the string of their name (i.e. update defaults to "update"):
+
+- update  -> prefix for the mutations to update values
+- load    -> prefix for the actions load in data from endpoints
+- loading -> prefix for the loading state and mutations
+- done    -> prefix for the done mutation
+- trigger -> prefix for the trigger actions for trigger bindings
+
+The scheme also defines `start` which defines the main action name for starting the binding.
+It defaults to start_bind for snake case or startBind for camel case.
+
+These values can be changed to whatever is desired by modifying the instance in the naming optino:
+
+```
+import Bind from "vuex-bind-plugin"
+
+const naming = Bind.CamelCase();
+
+naming.prefixes.update  = "mutate";
+naming.prefixes.loading = "pulling";
+naming.prefixes.trigger = "activate";
+naming.start = "begin"
+
+const plugin = Bind.Plugin({
+  naming,
+  ...
+});
+
+const bindings = {
+/**
+  * Generated Mutations:
+  *                        CamelCase default
+  * - mutateCustom      |  updateCustom
+  * - mutateId          |  updateId
+  * - pullingCustom     |  loadingCustom
+  * - donePullingCustom |  doneLoadingCustom
+  *
+  * Generated Actions:
+  * - activateCustom    |  triggerCustom
+  * - begin             |  startBind      
+**/
+  custom : {
+    bind_type : "trigger",
+    loading   : true,
+    params    : {
+      id : Number
+    },
+    create_params : true
+  }
+};
+```
 
 ## Endpoint Configuration
 
