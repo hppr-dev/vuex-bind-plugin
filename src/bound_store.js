@@ -9,6 +9,7 @@ export default class _BoundStore {
     if ( store_config.namespace === undefined ) {
       throw `BoundStore initialized without namespace: ${JSON.stringify(store_config)}`; 
     }
+
     if ( this.plugin_config === undefined ) {
       throw `BoundStore created before plugin was configured: ${JSON.stringify(store_config)}`;
     }
@@ -18,12 +19,13 @@ export default class _BoundStore {
 
     for ( let [ output_var, binding ] of Object.entries(this.bindings) ) {
       apply_binding_defaults(output_var, binding);
+
       if ( typeof binding.endpoint === "string") {
         let endpoint_name = binding.endpoint;
         binding.endpoint = this.plugin_config.endpoints?.[endpoint_name] ?? store_config.endpoints?.[endpoint_name];
 
         if ( this.plugin_config.strict && binding.endpoint == null ) {
-          throw `Tried to bind to unknown endpoint ${output_var}<->${binding.endpoint} bind_type ${binding.bind_type}`;
+          throw `Tried to bind to unknown endpoint ${output_var}<->${endpoint_name} bind_type ${binding.bind_type}`;
         }
 
       }

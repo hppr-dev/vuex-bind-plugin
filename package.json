@@ -8,6 +8,7 @@
     "coverage": "jest unit --coverage",
     "unit": "jest unit",
     "int": "jest integration",
+    "intcoverage": "jest integration --coverage",
     "prepare": "babel src --out-dir lib",
     "prepublishOnly" : "jest unit && jest unit --coverage && jest integration"
   },

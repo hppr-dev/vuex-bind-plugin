@@ -1,10 +1,12 @@
 import BoundStore from '@src/bound_store.js'
 import BindPlugin from '@src/bind_plugin.js'
+import * as utils from '@src/utils.js'
 import { test_plugin_config, mock_prototype } from './test-utils.js'
 
 
+jest.spyOn(utils, "apply_binding_defaults");
 beforeAll(() => BindPlugin.config = test_plugin_config);
-afterAll(() => BindPlugin.config = {});
+afterAll(() => BindPlugin.config = null);
 
 describe("constructor", () => {
   let store = null
@@ -22,6 +24,7 @@ describe("constructor", () => {
     },
     ...extras
   });
+
 
   let generate_modifications = mock_prototype(BoundStore, "generate_modifications");
 
@@ -54,6 +57,30 @@ describe("constructor", () => {
     BindPlugin.config = undefined;
     expect(() => init_store({}, "mystore")).toThrow();
     BindPlugin.config = test_plugin_config;
+  });
+
+  it('should apply binding defaults',  () => {
+    store = init_store({ some : { }, thing: { } }, "ns");
+    expect(utils.apply_binding_defaults).toHaveBeenCalledTimes(2);
+    expect(utils.apply_binding_defaults).toHaveBeenCalledWith("some",  { endpoint: undefined, bind_type:"once", param_map: {} });
+    expect(utils.apply_binding_defaults).toHaveBeenCalledWith("thing", { endpoint: undefined, bind_type:"once", param_map: {} });
+  });
+
+  it("should throw when initializing a bind to a named unknown endpoint and strict is on", () => {
+    BindPlugin.config.strict = true;
+    expect(() => init_store({ some : { endpoint : "asdf" } }, "ns")).toThrow("some");
+    expect(() => init_store({ some : { endpoint : "asdf" } }, "ns")).toThrow("asdf");
+  });
+
+  it("should throw when initializing a bind with bad bind_type and strict is on", () => {
+    BindPlugin.config.strict = true;
+    expect(() => init_store({ some : { bind_type : "asdf", endpoint: {} } }, "ns")).toThrow("some");
+    expect(() => init_store({ some : { bind_type : "asdf", endpoint: {} } }, "ns")).toThrow("asdf");
+  });
+
+  it("should handle empty state, mutations, etc", () => {
+    store = new BoundStore({ namespace: "empty", bindings : {} });
+    expect(store).toBeDefined();
   });
   
 });

@@ -2,7 +2,7 @@ import BindModule from "./bind_module.js"
 import { MockRestDataSource, RestDataSource } from "./data_sources.js"
 
 export default class BindPlugin {
-  static config = {};
+  static config = null;
   constructor({
     initial_state     = { url: "", headers: "application/json" },
     endpoints         = {},
@@ -16,6 +16,7 @@ export default class BindPlugin {
     strict            = false,
     log_blocked_binds = false,
   }) {
+    BindPlugin.config = {};
     BindPlugin.config.data_source       = initial_state.mock? new MockRestDataSource(initial_state) : new RestDataSource(initial_state);
     BindPlugin.config.endpoints         = endpoints;
     BindPlugin.config.camelCase         = camelCase;
