@@ -272,7 +272,7 @@ describe("create_variable", () => {
   };
 
   let create_variable = BoundStore.prototype.create_variable.bind(new_this);
-  create_variable("some_variable", Number);
+  beforeAll(() => create_variable("some_variable", Number));
 
   it("should create state variable with default type", () => {
     expect(new_this.generated_state.some_variable).toBe(0);
@@ -308,7 +308,7 @@ describe("create_loading_variable", () => {
   };
 
   let create_loading_variable = BoundStore.prototype.create_loading_variable.bind(new_this);
-  create_loading_variable("some_var");
+  beforeAll(() => create_loading_variable("some_var"));
 
   it("should create loading state variable", () => {
     expect(new_this.generated_state.loading_some_var).toBeDefined();
@@ -336,11 +336,6 @@ describe("create_load_action", () => {
     generated_actions   : {},
     namespace : "create",
     all_load_actions : [],
-    plugin_config : {
-      namespace : "mybind",
-      load_prefix : "load_",
-      trigger_prefix : "trigger_",
-    },
   };
 
   let create_load_action = BoundStore.prototype.create_load_action.bind(new_this);
@@ -349,6 +344,9 @@ describe("create_load_action", () => {
     new_this.generated_actions = {};
     new_this.all_load_actions = [];
   });
+
+  beforeAll(() => BindPlugin.config.namespace = "mybind");
+  afterAll(() => BindPlugin.config.namespace = "bind");
 
   it("should create load action when bind_type is once", () => {
     create_load_action("output", {bind_type : "once"}, { endpoint_spec : "is this" });
@@ -393,8 +391,10 @@ describe("create_start_bind_action", () => {
   beforeEach(() => {
     new_this.add_watch_params.mockClear();
   });
+
   let create_start_bind_action = BoundStore.prototype.create_start_bind_action.bind(new_this);
-  create_start_bind_action();
+
+  beforeAll(()=> create_start_bind_action());
 
   it("should create a start_bind action", () => {
     expect(new_this.generated_actions.start_bind).toBeDefined();
@@ -440,7 +440,7 @@ describe("add_watch_params", () => {
   let commit = jest.fn();
 
   let add_watch_params = BoundStore.prototype.add_watch_params.bind(new_this);
-  add_watch_params(commit);
+  beforeAll(() => add_watch_params(commit));
 
   it("should commit all watch params", () => {
     expect(commit).toHaveBeenCalledTimes(2);

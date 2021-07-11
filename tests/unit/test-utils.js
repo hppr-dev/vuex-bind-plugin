@@ -1,3 +1,5 @@
+import { SnakeCase } from '@src/naming.js'
+
 export class TestDataSource { 
   constructor({
     module = (data) => new Promise((resolve) => resolve(data)),
@@ -16,18 +18,13 @@ export class TestDataSource {
 }
 
 export const test_plugin_config = {
-  data_source    : new TestDataSource({}),
-  endpoints      : {
+  data_source : new TestDataSource({}),
+  endpoints   : {
     test : { data : "Got Data" }
   },
-  camelCase      : false,
-  namespace      : "bind",
-  update_prefix  : "update_",
-  loading_prefix : "loading_",
-  done_prefix    : "done_",
-  load_prefix    : "load_",
-  trigger_prefix : "trigger_",
-  strict         : false,
+  naming      : new SnakeCase(),
+  namespace   : "bind",
+  strict      : false,
 };
 
 export const mock_prototype = (clazz, name, test) => {

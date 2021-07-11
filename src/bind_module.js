@@ -58,7 +58,7 @@ export default class BindModule {
           let ns_prefix = namespace? `${namespace}/` : "";
           this.source.apply_defaults(output, binding.endpoint);
           let computed_params = this.pull_params_from(local_state, binding.param_map, binding.endpoint.params, output);
-          let bind_out = binding.redirect? binding.redirect : `${this.plugin_config.update_prefix}${output}`;
+          let bind_out = binding.redirect? binding.redirect : `${BindPlugin.config.naming.update(output)}`;
 
           if ( computed_params ) {
             return this.source.module(
