@@ -1,5 +1,7 @@
 import axios from 'axios'
+import BindPlugin from './bind_plugin.js'
 import { wasm_adapter, storage_adapter } from './adapters.js'
+import { REST, STORAGE, WASM } from './constants.js'
 
 export class DataSource {
   state     = {};
@@ -32,16 +34,13 @@ export class RestDataSource extends DataSource {
 
   assign = (response) => response.data? response.data : null ;
 
-  mutations = {
-    update_header : (state, {key, value}) =>  state.headers[key] = value,
-    update_url    : (state, url)  => state.url = url
-  }
-
   constructor({ 
       url     = "",
       headers = { "Content-Type" : "application/json" },
   }) {
     super({url, headers});
+    this.mutations[BindPlugin.config.naming.update("header")] = (state, { key, value }) => state.headers[key] = value;
+    this.mutations[BindPlugin.config.naming.update("url")] = (state, value ) => state.url = value;
   }
 
   apply_defaults(name, endpoint) {
@@ -81,11 +80,20 @@ export class StorageDataSource extends DataSource {
     endpoint.key,
     input_params[endpoint.key],
     endpoint.type,
-    endpoint.scope
+    endpoint.scope,
+    {
+      expires : endpoint.cookie ?? bind_state.cookies.expires,
+      path    : endpoint.path ?? bind_state.cookies.path,
+    }
   ];
 
-  constructor() {
-    super({})
+  constructor({ 
+    cookies = {
+      expires : 720000,
+      path    : "/"
+    }
+  }) {
+    super({ cookies })
   }
 
   apply_defaults(name, endpoint ) {
@@ -112,5 +120,62 @@ export class WebAssemblyDataSource extends DataSource {
     super.apply_defaults(name, endpoint);
     endpoint.func_name = endpoint.func_name? endpoint.func_name : name;
     endpoint.order = endpoint.order? endpoint.order : [] ;
+  }
+}
+
+export class MultDataSource extends DataSource {
+  module(source, params) {
+    return this.sources[source].module(...params);
+  }
+
+  args(bind_state, input_params, endpoint) {
+    return [
+      endpoint.source,
+      this.sources[endpoint.source].args(bind_state, input_params, endpoint)
+    ];
+  }
+
+  constructor({
+    url     = null,
+    headers = null,
+    storage = false,
+    cookies = null,
+    wasm    = null,
+  }) {
+    super();
+    this.sources = {};
+    if ( url != null ) {
+      this.sources[REST] = new RestDataSource({ url, headers });
+    }
+    if ( storage ) {
+      this.sources[STORAGE] = new StorageDataSource({ cookies } );
+    }
+    if ( wasm != null ) {
+      this.sources[WASM] = new WebAssemblyDataSource({ wasm });
+    }
+    if ( Object.keys(this.sources).length === 1 ){
+      return this.sources[Object.keys(this.sources)[0]];
+    }
+  }
+
+  apply_defaults(name, endpoint) {
+    endpoint.source = this.infer_source(endpoint);
+    if ( BindPlugin.config.strict && endpoint.source == null ) {
+      throw `Could not infer source for ${name} : ${JSON.stringify(endpoint)}`;
+    }
+    this.sources[endpoint.source].apply_defaults(endpoint);
+  }
+
+  infer_source(endpoint) {
+    if ( endpoint.source ) {
+     return endpoint.source;
+    } else if ( endpoint.url !== "" || endpoint.method !== "") {
+      return  REST;
+    } else if ( endpoint.key !== "" || endpoint.scope !== "" ) {
+      return  STORAGE;
+    } else if ( endpoint.func !== "") {
+      return WASM
+    }
+    return null;
   }
 }

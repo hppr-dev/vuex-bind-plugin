@@ -4,20 +4,21 @@ const storage_scopes = {
   "local"   : window.localStorage,
   "session" : window.sessionStorage,
   "cookie"  : {
-    getItem : (key) => {
+    getItem(key) {
       return Object.fromEntries(document.cookie.split(';').map((c) => c.trim().split("=")))[key];
     },
-    setItem : (key, value) => {
+    setItem(key, value) {
       document.cookie = value? 
-        `${key}=${value};expires=${Date.now() + BindPlugin.config.cookies_expire};path=${BindPlugin.config.cookies_path}` :
+        `${key}=${value};expires=${Date.now() + this.cookie_config.expires};path=${this.cookie_config.path}` :
         `${key}=;Max-Age=0`;
     }
   }
 }
 
-export const storage_adapter = (key, value, type, scope) => {
+export const storage_adapter = (key, value, type, scope, cookie_config={}) => {
   let storage = storage_scopes[scope];
-  return new Promise((resolve, reject) => {
+  storage._cookie_config = cookie_config;
+  return new Promise((resolve) => {
     if(is_unset(value, type)) {
       resolve(storage.getItem(key));
     } else {

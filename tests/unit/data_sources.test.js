@@ -1,6 +1,11 @@
 import { DataSource, RestDataSource, MockRestDataSource, StorageDataSource, WebAssemblyDataSource} from '@src/data_sources.js'
+import BindPlugin from '@src/bind_plugin.js'
+import { test_plugin_config } from './test-utils.js'
 import { storage_adapter, wasm_adapter } from '@src/adapters.js'
 import axios from 'axios'
+
+beforeAll(() => BindPlugin.config = test_plugin_config);
+afterAll(() => BindPlugin.config = null);
 
 jest.mock('@src/adapters.js')
 
@@ -272,25 +277,31 @@ describe("MockRestDataSource", () => {
 
 describe("StorageDataSource", () => {
 
-  let data_source = new StorageDataSource();
+  let data_source = new StorageDataSource({});
 
   it("should use storage_adapter", () => {
     expect(data_source.module).toBe(storage_adapter);
   });
 
-  it("should not have state variables or mutations", () => {
-    expect(data_source.state).toStrictEqual({});
+  it("should have cookies state variables and no mutations", () => {
+    expect(data_source.state).toStrictEqual({ cookies: { expires : 720000, path: "/" } });
     expect(data_source.mutations).toStrictEqual({});
   });
 
-  it("should have args that returns key, value, type, scope", () => {
+  it("should have args that returns key, value, type, scope, cookie_config", () => {
+    let bind_state = {
+      cookies : {
+        expires : 1111,
+        path    : "somepath",
+      }
+    }
     let input_params = { "out" : 123 };
     let endpoint = { 
       key: "out",
       type: String,
       scope: "scope"
     };
-    expect(data_source.args({}, input_params, endpoint)).toStrictEqual(["out", 123, String, "scope"]);
+    expect(data_source.args(bind_state, input_params, endpoint)).toStrictEqual(["out", 123, String, "scope", { expires : 1111, path :"somepath" }]);
   });
 
   it("should have an assign that returns the same data", () => {

@@ -1,6 +1,6 @@
 export const plugin_config = {
   strict        : true,
-  initial_state : {
+  sources : {
     url : "http://myapi.hppr.dev/api",
   },
   endpoints : {

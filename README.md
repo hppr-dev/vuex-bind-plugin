@@ -261,7 +261,7 @@ const plugin = new Bind.Plugin({
 
 | Config Key     | Default                                 | Description                                                             |
 |----------------|-----------------------------------------|-------------------------------------------------------------------------|
-| initial_state  | { url: "", headers :{ "Content-Type" : "application/json" } | The inital state of the data source. See [Data Source](#data-source) |
+| sources        | {...}                                   | Configuration for data sources. See [Data Sources](#data-sources)         |
 | endpoints      | {}                                      | Endpoints config. See [Endpoint Configuration](#endpoint-configuration) |
 | namespace      | "bind"                                  | Namespace of the plugins "bind" store.                                  |
 | naming         | Bind.SnakeCase()                        | Naming scheme. See [Naming](#naming)                                    |
@@ -271,14 +271,51 @@ const plugin = new Bind.Plugin({
 
 ## Data Sources
 
-The intial_state is used when initializing the data source.
-By default, the plugin uses the rest data source, which takes an object in the form:
+The plugin does not use any data source by default.
+You will need to add configuration values to the sources option to enable them.
+Each data source has it's own configuration keys.
+
+Configure the rest data source by include the url option.
+You may also configure headers for your requests here.
 ```
 {
-  url     : "http://api_url", // Base url of all requests
-  headers : request_headers   // Request headers for requests
+  url : "http://api_url", // Base url of rest requests
+  headers : some_headers, // Optional request headers
 }
 ```
+
+Configure the WebAssembly data source by including the wasm option
+```
+{
+  wasm : "application.wasm" // url of the wasm file to load
+}
+```
+
+Configure the storage data source by setting `storage` to `true`.
+The `cookies` options is also available to set the default expiration and path of cookies.
+```
+{
+  storage : true,
+  cookies : {         // Optional default cookie configuration
+    expires : 720000,
+    path    : '/',
+  },
+}
+```
+
+
+```
+const plugin = Bind.Plugin({
+  sources : {
+    url     : "http://my_api",
+    wasm    : "functions.wasm",
+    storage : true,
+  }
+  ...
+});
+```
+
+
 In most cases, setting the url in the initial_state will be all you need.
 
 ### Using Mock Data
@@ -446,6 +483,7 @@ Regardless of data sources the `type` and params` fields are available on all en
 ```
 const endpoints = {
   ENDPOINT_NAME : {
+    source  : "",    // Inferred
     type    : Object,
     params  : {},
   }
@@ -454,8 +492,43 @@ const endpoints = {
 
 | Config Key     | Default          | Description                                                                                                                                       |
 |----------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| source         | ""               | Data source to use, one of "rest", "storage", or "wasm". See [Inferring Source](#inferring-source). |
 | type           | Object           | Type of object returned in the responses data                                                                                                     |
 | params         | {}               | Endpoint parameters. See [Endpoint Parameters](#endpoint-parameters)                                                                              |
+
+### Inferring Source
+
+The source of the data for the endpoint is inferred from the options provided for the endpoint and the plugin.
+If only one source is configured, it uses that.
+If multiple sources are configured, parameters use the presence of an "inference" option to decide which to use:
+
+- the rest data source uses `url` and `method`
+- the storage data source uses `scope` and `key`
+- the wasm data source uses `func`
+
+A source necessarily needs to be inferred to properly apply default values to the endpoint.
+Adding an explicit source to your endpoint config improves clarity, but it is not necessary.
+
+For example:
+```
+const endpoints = {
+  token : { // Infers source : storage
+    scope : "cookie",
+  },
+  resul : { // Infers source : storage
+    key : "results",
+  },
+  posts : { // Infers source : rest
+    url : "/posts/",
+  },
+  users : { // Infers source : rest
+    method : "get",
+  },
+  fract : { // Infers source : wasm
+    func : "mandelbrot"
+  }
+}
+```
 
 ### Endpoint Parameters
 
@@ -576,6 +649,8 @@ const endpoints = {
   ENDPOINT_NAME : {
     key     : "ENDPOINT_NAME",
     scope   : "local",
+    expires : 720000,
+    path    : "/",
     type    : String,
   }
 }
@@ -585,6 +660,8 @@ const endpoints = {
 |----------------|--------------------|-------------------------------------------------------------------------------------------|
 | key            | "ENDPOINT_NAME"    | Storage key, what the value is stored under                                               |
 | scope          | "local"            | Storage scope, one of "local", "session" or "cookie"                                      |
+| expires        | 720000             | Expiration time. For cookies only. Overrides the cookies.expires plugin option.           |
+| path           | "/"                | Cookie path. For cookies only. Overrides the cookies.path plugin option.                   |
 | type           | String             | See [General Endpoints](#general-endpoints)                                               |
 
 Note: params are not used/required.
