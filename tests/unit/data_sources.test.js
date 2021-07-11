@@ -1,4 +1,4 @@
-import { DataSource, RestDataSource, MockRestDataSource, StorageDataSource, WebAssemblyDataSource} from '@src/data_sources.js'
+import { DataSource, RestDataSource, MockRestDataSource, StorageDataSource, WebAssemblyDataSource, MultDataSource } from '@src/data_sources.js'
 import BindPlugin from '@src/bind_plugin.js'
 import { test_plugin_config } from './test-utils.js'
 import { storage_adapter, wasm_adapter } from '@src/adapters.js'
@@ -399,4 +399,105 @@ describe("WebAssemblyDataSource", () => {
     expect(def.func_name).toBe("expensive");
     expect(def.order).toStrictEqual(["one", "two"]);
   });
+});
+
+describe("MultDataSource", () => {
+ 
+  it("should configure all datsources", () => {
+    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm" });
+    expect(source.sources).toStrictEqual({
+      "rest"    : expect.any(RestDataSource),
+      "storage" : expect.any(StorageDataSource),
+      "wasm"    : expect.any(WebAssemblyDataSource),
+    });
+  });
+
+  it("should configure rest, storage datsources", () => {
+    let source = new MultDataSource({ url: "myurl", storage : true });
+    expect(source.sources).toStrictEqual({
+      "rest"    : expect.any(RestDataSource),
+      "storage" : expect.any(StorageDataSource),
+    });
+  });
+
+  it("should return a single rest datasource when it is only present", () => {
+    let source = new MultDataSource({ url: "myurl" });
+    expect(source).toBeInstanceOf(RestDataSource);
+  });
+
+  it("should return a single storage datasource when it is only present", () => {
+    let source = new MultDataSource({ storage: true });
+    expect(source).toBeInstanceOf(StorageDataSource);
+  });
+
+  it("should forward args to rest on rest source on datasource", () => {
+    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm" });
+    let bind_state = { };
+    let params = { some_param : 10 };
+    let endpoint = { source : "rest"};
+    source.sources.rest.args = jest.fn(() => "args called");
+    expect(source.args(bind_state, params, endpoint)).toStrictEqual(["rest", "args called"]);
+    expect(source.sources.rest.args).toHaveBeenCalledTimes(1);
+    expect(source.sources.rest.args).toHaveBeenCalledWith(bind_state, params, endpoint);
+  });
+
+  it("should forward module call to rest on rest source on datasource", () => {
+    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm" });
+    let bind_state = { };
+    let params = { some_param : 10 };
+    let endpoint = { source : "rest"};
+    source.sources.rest.module = jest.fn(() => "module called");
+    expect(source.module("rest", ["rest", "parameters", "here"])).toStrictEqual("module called");
+    expect(source.sources.rest.module).toHaveBeenCalledTimes(1);
+    expect(source.sources.rest.module).toHaveBeenCalledWith("rest", "parameters", "here");
+  });
+
+  it("should apply defaults depending on source", () => {
+    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm" });
+    let endpoint = {};
+    source.sources.rest.apply_defaults = jest.fn();
+    source.infer_source = jest.fn(() => "rest");
+    source.apply_defaults("myend", endpoint);
+    expect(endpoint.source).toBe("rest");
+    expect(source.infer_source).toHaveBeenCalledTimes(1);
+    expect(source.infer_source).toHaveBeenCalledWith(endpoint);
+    expect(source.sources.rest.apply_defaults).toHaveBeenCalledTimes(1);
+    expect(source.sources.rest.apply_defaults).toHaveBeenCalledWith(endpoint);
+  });
+
+  it("should infer source is rest when url or method is set", () => {
+    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm" });
+    let endpoint = { url : "someurl" };
+    expect(source.infer_source(endpoint)).toBe("rest");
+    endpoint = { method : "post" };
+    expect(source.infer_source(endpoint)).toBe("rest");
+  });
+
+  it("should keep source when set", () => {
+    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm" });
+    let endpoint = { source : "somesource" };
+    expect(source.infer_source(endpoint)).toBe("somesource");
+  });
+
+  it("should infer source is storage when scope or key is set", () => {
+    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm" });
+    let endpoint = { scope : "session" };
+    expect(source.infer_source(endpoint)).toBe("storage");
+    endpoint = { key : "something" };
+    expect(source.infer_source(endpoint)).toBe("storage");
+  });
+
+  it("should infer source is wasm when func is set", () => {
+    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm" });
+    let endpoint = { func : "madelbro" };
+    expect(source.infer_source(endpoint)).toBe("wasm");
+  });
+
+  it("should default to plugin default when unable to infer", () => {
+    BindPlugin.config.default_source = "rest";
+    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm" });
+    let endpoint = { };
+    expect(source.infer_source(endpoint)).toBe("rest");
+  });
+
 });

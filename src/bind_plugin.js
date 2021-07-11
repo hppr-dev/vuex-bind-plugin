@@ -10,6 +10,7 @@ export default class BindPlugin {
     namespace         = "bind",
     naming            = new SnakeCase(),
     strict            = false,
+    default_source    = "rest",
     log_blocked_binds = false,
   }) {
     BindPlugin.config = {};
@@ -18,7 +19,8 @@ export default class BindPlugin {
     BindPlugin.config.endpoints         = endpoints;
     BindPlugin.config.namespace         = namespace;
     BindPlugin.config.strict            = strict;
-    BindPlugin.config.log_blocked_binds = log_blocked_binds
+    BindPlugin.config.log_blocked_binds = log_blocked_binds;
+    BindPlugin.config.default_source    = default_source;
     return (store) => {
       store.registerModule(BindPlugin.config.namespace, new BindModule());
       store.subscribe((mutation, state) => {

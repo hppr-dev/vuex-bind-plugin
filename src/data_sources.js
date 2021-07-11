@@ -160,22 +160,19 @@ export class MultDataSource extends DataSource {
 
   apply_defaults(name, endpoint) {
     endpoint.source = this.infer_source(endpoint);
-    if ( BindPlugin.config.strict && endpoint.source == null ) {
-      throw `Could not infer source for ${name} : ${JSON.stringify(endpoint)}`;
-    }
     this.sources[endpoint.source].apply_defaults(endpoint);
   }
 
   infer_source(endpoint) {
     if ( endpoint.source ) {
      return endpoint.source;
-    } else if ( endpoint.url !== "" || endpoint.method !== "") {
+    } else if ( endpoint.url || endpoint.method ) {
       return  REST;
-    } else if ( endpoint.key !== "" || endpoint.scope !== "" ) {
+    } else if ( endpoint.key || endpoint.scope ) {
       return  STORAGE;
-    } else if ( endpoint.func !== "") {
+    } else if ( endpoint.func ) {
       return WASM
     }
-    return null;
+    return BindPlugin.config.default_source;
   }
 }

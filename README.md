@@ -250,11 +250,12 @@ Defines how the plugin will function.
 Plugin defaults:
 ```
 const plugin = new Bind.Plugin({
-  initial_state     : { url: "", headers :{ "Content-Type" : "application/json" },  
+  sources           : { ... },  
   endpoints         : {},
   namespace         : "bind",
   naming            : Bind.SnakeCase(),
   strict            : false,
+  default_source    : "rest",
   log_blocked_binds : false,
 });
 ```
@@ -266,6 +267,7 @@ const plugin = new Bind.Plugin({
 | namespace      | "bind"                                  | Namespace of the plugins "bind" store.                                  |
 | naming         | Bind.SnakeCase()                        | Naming scheme. See [Naming](#naming)                                    |
 | strict         | false                                   | Check types where possible and log them to the console. Use in development only |
+| default_source | "rest"                                  | The default source to use when endpoint source can't be inferred. See [Inferring Source](#inferring-source) |
 | log_blocked_binds         | false                                   | Log when a bind was triggered, but not commited because of unset parameters. Use in development only |
 
 
@@ -529,6 +531,10 @@ const endpoints = {
   }
 }
 ```
+
+If a source can not be inferred, then it will default to "rest".
+This may be changed by setting the `default_source` option in [Plugin Configuration](#plugin-configuration).
+This setting may be useful if a project starts with a single source configured, but moves to uses more.
 
 ### Endpoint Parameters
 
