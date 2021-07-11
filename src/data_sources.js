@@ -1,5 +1,6 @@
 import axios from 'axios'
 import BindPlugin from './bind_plugin.js'
+import { get_default } from './utils.js'
 import { wasm_adapter, storage_adapter } from './adapters.js'
 import { REST, STORAGE, WASM } from './constants.js'
 
@@ -47,29 +48,6 @@ export class RestDataSource extends DataSource {
     super.apply_defaults(name, endpoint);
     endpoint.url    = endpoint.url? endpoint.url : `/${name}/`;
     endpoint.method = endpoint.method? endpoint.method : "get";
-  }
-}
-
-export class MockRestDataSource extends DataSource { 
-  args = ( bind_state, input_params, endpoint ) => [
-    { 
-      endpoint,
-      input_params,
-    }
-  ];
-
-  mutations = {
-    update_header : (state, {key, value}) =>  state.headers[key] = value,
-    update_url    : (state, url)  => state.url = url
-  }
-
-  constructor({ 
-    url       = "",
-    headers   = {},
-    transform = ({ endpoint }) => endpoint.mock_data 
-  }) {
-    super({url, headers});
-    this.module = transform;
   }
 }
 
@@ -136,22 +114,30 @@ export class MultDataSource extends DataSource {
   }
 
   constructor({
-    url     = null,
-    headers = null,
-    storage = false,
-    cookies = null,
-    wasm    = null,
+    url       = null,
+    headers   = null,
+    storage   = false,
+    cookies   = null,
+    wasm      = null,
+    mock      = {},
+    transform = undefined,
   }) {
     super();
     this.sources = {};
+    let conf = {
+      url,
+      headers,
+      cookies,
+      wasm
+    };
     if ( url != null ) {
-      this.sources[REST] = new RestDataSource({ url, headers });
+      this.sources[REST] = mock === true || mock[REST] ? new MockRestDataSource(conf, transform) : new RestDataSource(conf);
     }
     if ( storage ) {
-      this.sources[STORAGE] = new StorageDataSource({ cookies } );
+      this.sources[STORAGE] = mock === true || mock[STORAGE] ? new MockStorageDataSource(conf, transform) : new StorageDataSource(conf);
     }
     if ( wasm != null ) {
-      this.sources[WASM] = new WebAssemblyDataSource({ wasm });
+      this.sources[WASM] = mock === true || mock[WASM] ? new MockWebAssemblyDataSource(conf, transform) : new WebAssemblyDataSource({ wasm });
     }
     if ( Object.keys(this.sources).length === 1 ){
       return this.sources[Object.keys(this.sources)[0]];
@@ -174,5 +160,59 @@ export class MultDataSource extends DataSource {
       return WASM
     }
     return BindPlugin.config.default_source;
+  }
+}
+
+export class MockDataSource extends DataSource {
+  args = ( bind_state, input_params, endpoint ) => [
+    { 
+      input_params,
+      endpoint,
+    }
+  ];
+
+  constructor(
+    config,
+    transform 
+  ) {
+    super(config);
+    this.module = ({ input_params, endpoint }) => {
+      let result = transform({ input_params, endpoint });
+      return Promise.resolve(result != null? result : get_default(endpoint.type));
+    };
+  }
+}
+
+export class MockRestDataSource extends MockDataSource { 
+  constructor({
+      url     = "",
+      headers = {},
+    }, 
+    transform = ({ endpoint }) => endpoint.mock,
+  ) {
+    super({url, headers}, transform);
+    this.mutations[BindPlugin.config.naming.update("header")] = (state, { key, value }) => state.headers[key] = value;
+    this.mutations[BindPlugin.config.naming.update("url")] = (state, value ) => state.url = value;
+  }
+}
+
+export class MockStorageDataSource extends MockDataSource {
+  constructor({
+      cookies = {
+        expires : 720000,
+        path    : "/"
+      }
+    },
+    transform = ({ endpoint }) => endpoint.mock,
+  ) {
+    super({ cookies }, transform);
+  }
+}
+
+export class MockWebAssemblyDataSource extends MockDataSource {
+  constructor({
+    wasm
+  }, transform ) {
+    super( { wasm_file : wasm }, transform );
   }
 }

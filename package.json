@@ -41,9 +41,6 @@
     "coverageThreshold" : {
       "global" :{
         "lines" : 99
-      },
-      "src/adapters.js" : {
-        "lines" : 0
       }
     }
   },

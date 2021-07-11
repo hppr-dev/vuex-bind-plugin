@@ -4,13 +4,8 @@ export default class BlackBox {
   constructor({ plugin_config , store_config, resolve_data}) {
 
     let plugin = new Bind.Plugin(plugin_config);
-
-    this.axios = jest.fn().mockImplementation((args) => {
-      return Promise.resolve(resolve_data[args.url]);
-    });
-    Bind.Plugin.config.data_source.module = this.axios;
-
     let modules = Bind.Modules(store_config);
+    this.resolve_data = resolve_data;
 
     jest.useFakeTimers();
 
@@ -24,6 +19,16 @@ export default class BlackBox {
     }
     plugin(this);
   }
+  mock_axios() {
+    this.module = jest.fn().mockImplementation((args) => {
+      return Promise.resolve(this.resolve_data[args.url]);
+    });
+    Bind.Plugin.config.data_source.module = this.module;
+  }
+  spy_module() {
+    let module = Bind.Plugin.config.data_source.module;
+    this.module = jest.fn().mockImplementation((...args) => module(...args));
+  }
   input_state(ns, state) {
     for ( let state_var of Object.keys(state) ){
       if ( this.state[ns][state_var]  == null ){
@@ -33,31 +38,35 @@ export default class BlackBox {
     }
   }
   output_state(ns, state) {
-    return this.resolve_axios().then(() => {
+    return this.resolve_all_module_promises().then(() => {
       return new Promise((resolve) => {
         for ( let state_var of Object.keys(state) ){
           try {
             expect(this.state[ns][state_var]).toBeDefined();
             expect(this.state[ns][state_var]).toStrictEqual(state[state_var]);
           } catch(e) {
-            throw `Output state ${ns}/${state_var} was not what was expected.\n${e}`;
+            throw `Output state ${ns}/${state_var} was not what was expected in ${JSON.stringify(state,null,4)}\n${e}`;
           }
         }
         resolve();
       });
     });
   }
-  resolve_axios() {
-    let results = this.axios.mock.results;
+  resolve_all_module_promises() {
+    // For some reason this needs to be here.
+    return this.resolve_module().then( () => null );
+  }
+  resolve_module() {
+    let results = this.module.mock.results;
     if (results.length === 0 ) {
       return Promise.resolve();
     }
-    let recurse = () => Promise.resolve(this.resolve_axios());
+    let recurse = () => Promise.resolve(this.resolve_module());
     let chain = results[0].value.then(recurse);
     for ( let i = 1 ; i < results.length ; i++){
       chain.then(() => results[i].value.then(recurse));
     }
-    this.axios.mockClear();
+    this.module.mockClear();
     return chain;
   }
   subscribe(func) {

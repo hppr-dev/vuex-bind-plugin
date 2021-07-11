@@ -231,9 +231,9 @@ describe("MockRestDataSource", () => {
   it("module should extract mock_data by default", () => {
     let data_source = new MockRestDataSource({});
     let endpoint = {
-      mock_data : "some mock data"
+      mock : "some mock data"
     }
-    expect(data_source.module({endpoint})).toBe("some mock data");
+    return expect(data_source.module({endpoint})).resolves.toBe("some mock data");
   });
   
   it("args should have endpoint and input_params in argument", () => {
@@ -253,11 +253,13 @@ describe("MockRestDataSource", () => {
   });
   
   it("constructor should set url, headers and module(transform)", () => {
-    let transform_fun = (obj) => obj;
-    let data_source = new MockRestDataSource({url : "my_url", headers : "my headers", transform : transform_fun });
+    console.log("1234");
+    let transform_fun = ({endpoint}) => endpoint+"world";
+    let data_source = new MockRestDataSource({url : "my_url", headers : "my headers",}, transform_fun);
     expect(data_source.state.url).toBe("my_url");
     expect(data_source.state.headers).toBe("my headers");
-    expect(data_source.module).toBe(transform_fun);
+    expect(data_source.module).toStrictEqual(expect.any(Function));
+    return expect(data_source.module({endpoint: "hello"})).resolves.toBe("helloworld");
   });
   
   it("mutations should have url and headers updates", () => {
