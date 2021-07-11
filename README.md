@@ -438,8 +438,6 @@ const bindings = {
 
 ## Endpoint Configuration
 
-### General Endpoints
-
 Endpoints define where data will be retreived from.
 
 Endpoints are data source specific, so the endpoint format may differ between different data sources.
@@ -536,7 +534,6 @@ const endpoints = {
   ENDPOINT_NAME : {
     url     : "/ENDPOINT_NAME",
     method  : "get",
-    get_url : undefined,
     headers : undefined,
     type    : Object,
     params  : {},
@@ -546,12 +543,29 @@ const endpoints = {
 
 | Config Key     | Default          | Description                                                                                                                                       |
 |----------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| url            | "/ENDPOINT_NAME" | Endpoint url. Used as url in axios query.                                                                                                         |
+| url            | "/ENDPOINT_NAME" | Endpoint url. Used as url in axios query. May be a function that takes params and returns the resulting url.                             |
 | method         | "get"            | REST method. Used as method in axios query.                                                                                                       |
-| get_url        | null             | Url computation function. Use when parameters are needed in the url. When this is defined, the url setting is ignored.                            |
 | headers        | null             | Special headers to set for this request. These headers are added to the headers set in the plugin config and then used as headers in axios query. |
 | type           | Object           | See [General Endpoints](#general-endpoints)                                                                                                     |
 | params         | {}               | See [Endpoint Parameters](#endpoint-parameters)                                                                              |
+
+#### Computed url
+
+The url option in the endpoint may be a function.
+This is for when the url depends on some params.
+
+```
+const endpoints = {
+  post : {
+    url : (params) => `/posts/${params.id}`, // i.e. '/posts/10'
+    params : {
+      id : Number
+    },
+  }
+}
+```
+
+Note that the params are still sent in post data or get params.
 
 ### Storage Endpoints
 
@@ -591,17 +605,17 @@ const endpoints = {
 ```
 const endpoints = {
   ENDPOINT_NAME : {
-    func_name : "ENDPOINT_NAME",
-    order     : [],
-    type      : Object,
-    params    : {},
+    func   : "ENDPOINT_NAME",
+    order  : [],
+    type   : Object,
+    params : {},
   }
 }
 ```
 
 | Config Key     | Default          | Description                                                                                                                                       |
 |----------------|------------------|------------------------------------------------------|
-| func_name | "ENDPOINT_NAME" | WebAssembly function name                                  |
+| func      | "ENDPOINT_NAME" | WebAssembly function name                                  |
 | order     | []              | Ordering of arguments to the function call                 |
 | type      | Object          | See [General Endpoints](#general-endpoints)                |
 | params    | {}              | See [Endpoint Parameters](#endpoint-parameters)            |

@@ -23,10 +23,10 @@ export class RestDataSource extends DataSource {
     {
       method  : endpoint.method,
       baseURL : bind_state.url,
-      url     : endpoint.url,
+      url     : typeof(endpoint.url) === "string"? endpoint.url : endpoint.url(computed_params),
       params  : endpoint.method === "get"? computed_params : {},
       data    : endpoint.method === "get"? {} : computed_params,
-      headers : bind_state.headers,
+      headers : {...bind_state.headers, ...endpoint.headers},
     }
   ];
 

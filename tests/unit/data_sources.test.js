@@ -49,7 +49,7 @@ describe("RestDataSource", () => {
     let data_source = new RestDataSource({});
     let bind_state = {
       url : "my_api",
-      headers : "my_headers"
+      headers : { state_headers : "my_headers" },
     };
     let computed_params = {
       id       : 1000,
@@ -65,7 +65,7 @@ describe("RestDataSource", () => {
       url : "get_user_things",
       params : computed_params,
       data   : {},
-      headers : "my_headers"
+      headers : { state_headers : "my_headers" },
     }]);
   });
 
@@ -73,7 +73,7 @@ describe("RestDataSource", () => {
     let data_source = new RestDataSource({});
     let bind_state = {
       url : "my_api",
-      headers : "my_headers"
+      headers : { state_headers : "my_headers" },
     };
     let computed_params = {
       id       : 1000,
@@ -89,7 +89,56 @@ describe("RestDataSource", () => {
       url : "post_user_things",
       data : computed_params,
       params  : {},
-      headers : "my_headers"
+      headers : { state_headers : "my_headers" },
+    }]);
+  });
+
+  it("args should translate url if it is a function", () => {
+    let data_source = new RestDataSource({});
+    let bind_state = {
+      url : "my_api",
+      headers : { state_headers : "my_headers" },
+    };
+    let computed_params = {
+      id       : 1234,
+      username : "chungus"
+    };
+    let endpoint = {
+      method : "post",
+      url : (params) => `id is ${params.id}`,
+    };
+    expect(data_source.args(bind_state, computed_params, endpoint)).toStrictEqual([{
+      method : "post",
+      baseURL : "my_api",
+      url : "id is 1234",
+      data : computed_params,
+      params  : {},
+      headers : { state_headers : "my_headers" },
+    }]);
+  });
+
+  it("args should add headers endpoint headers", () => {
+    let data_source = new RestDataSource({});
+    let bind_state = {
+      url : "my_api",
+      headers : { state_headers : "my_headers" },
+    };
+    let computed_params = {
+      id       : 4444,
+      username : "chungus"
+    };
+    let endpoint = {
+      method : "post",
+      url : "/endpoint",
+      headers : { endpoint_headers : "per_point" },
+    };
+    expect(data_source.args(bind_state, computed_params, endpoint)).toStrictEqual([{
+      method : "post",
+      baseURL : "my_api",
+      url : "/endpoint",
+      data : computed_params,
+      params  : {},
+      headers : { endpoint_headers : "per_point", state_headers : "my_headers" },
     }]);
   });
   
