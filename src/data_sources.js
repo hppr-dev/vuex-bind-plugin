@@ -173,7 +173,7 @@ export class MockDataSource extends DataSource {
 
   constructor(
     config,
-    transform 
+    transform = ({ endpoint }) => endpoint.mock,
   ) {
     super(config);
     this.module = ({ input_params, endpoint }) => {
@@ -188,7 +188,7 @@ export class MockRestDataSource extends MockDataSource {
       url     = "",
       headers = {},
     }, 
-    transform = ({ endpoint }) => endpoint.mock,
+    transform = undefined,
   ) {
     super({url, headers}, transform);
     this.mutations[BindPlugin.config.naming.update("header")] = (state, { key, value }) => state.headers[key] = value;
@@ -203,7 +203,7 @@ export class MockStorageDataSource extends MockDataSource {
         path    : "/"
       }
     },
-    transform = ({ endpoint }) => endpoint.mock,
+    transform = undefined,
   ) {
     super({ cookies }, transform);
   }
@@ -211,8 +211,10 @@ export class MockStorageDataSource extends MockDataSource {
 
 export class MockWebAssemblyDataSource extends MockDataSource {
   constructor({
-    wasm
-  }, transform ) {
+      wasm = "app.wasm",
+    },
+    transform = undefined,
+  ) {
     super( { wasm_file : wasm }, transform );
   }
 }

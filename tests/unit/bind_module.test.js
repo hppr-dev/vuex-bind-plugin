@@ -251,6 +251,15 @@ describe("actions", () => {
       };
     });
 
+    it("shouldn't commit data from data source if parameters would trigger self referencing loops", () => {
+      console.log("start")
+      payload.namespace = "test";
+      payload.output = "non_zero_param";
+      payload.binding.endpoint.params = { non_zero_param : Number };
+      ctx.dispatch.mockClear();
+      return expect(once(ctx, payload)).resolves.toStrictEqual({ message : "committed" });
+    });
+
     it("should commit data from data source when parameters are non-zero", () => {
       payload.namespace = "test";
       payload.binding.endpoint.params = { non_zero_param : Number };

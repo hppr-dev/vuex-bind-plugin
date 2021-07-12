@@ -1,4 +1,14 @@
-import { DataSource, RestDataSource, MockRestDataSource, StorageDataSource, WebAssemblyDataSource, MultDataSource } from '@src/data_sources.js'
+import { 
+  DataSource,
+  MockDataSource,
+  RestDataSource,
+  MockRestDataSource,
+  StorageDataSource,
+  MockStorageDataSource,
+  WebAssemblyDataSource,
+  MockWebAssemblyDataSource,
+  MultDataSource
+} from '@src/data_sources.js'
 import BindPlugin from '@src/bind_plugin.js'
 import { test_plugin_config } from './test-utils.js'
 import { storage_adapter, wasm_adapter } from '@src/adapters.js'
@@ -501,4 +511,68 @@ describe("MultDataSource", () => {
     expect(source.infer_source(endpoint)).toBe("rest");
   });
 
+  it("should use mock datasources when mock is set to true", () => {
+    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm", mock : true });
+    expect(source.sources.rest).toBeInstanceOf(MockRestDataSource);
+    expect(source.sources.storage).toBeInstanceOf(MockStorageDataSource);
+    expect(source.sources.wasm).toBeInstanceOf(MockWebAssemblyDataSource);
+  });
+
+  it("should use selected mock datasources when mock is set to object", () => {
+    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm", mock : { rest: true, wasm: true } });
+    expect(source.sources.rest).toBeInstanceOf(MockRestDataSource);
+    expect(source.sources.storage).toBeInstanceOf(StorageDataSource);
+    expect(source.sources.wasm).toBeInstanceOf(MockWebAssemblyDataSource);
+  });
+
+});
+
+describe("MockDataSource", () => {
+
+  it("should set module", () => {
+    let source = new MockDataSource({});
+    expect(source.module).toBeDefined();
+  });
+
+  it("should have module that returns mock data in promise by default", () => {
+    let source = new MockDataSource({});
+    return expect(source.module({ endpoint : { mock :"hello" } })).resolves.toBe("hello");
+  });
+
+  it("should have module that is defined by transform", () => {
+    let source = new MockDataSource({}, ({endpoint}) => endpoint.mock+"world");
+    return expect(source.module({ endpoint : { mock :"hello" } })).resolves.toBe("helloworld");
+  });
+
+  it("should have module that returns mock data if defined", () => {
+    let source = new MockDataSource({});
+    return expect(source.module({ endpoint : { type : Array } })).resolves.toStrictEqual([]);
+  });
+})
+
+describe("MockStorageDataSource", () => {
+  it("should set the default transform", () => {
+    let source = new MockStorageDataSource({});
+    expect(source.module).toBeDefined();
+    return expect(source.module({ endpoint : { mock : "mocked" } })).resolves.toBe("mocked");
+  });
+  it("should set cookie options", () => {
+    let source = new MockStorageDataSource({});
+    expect(source.state.cookies).toBeDefined();
+    expect(source.state.cookies.expires).toBe(720000);
+    expect(source.state.cookies.path).toBe("/");
+  });
+});
+
+describe("MockWebAssemblyDataSource", () => {
+  it("should set the default tranform", () => {
+    let source = new MockWebAssemblyDataSource({});
+    expect(source.module).toBeDefined();
+    return expect(source.module({ endpoint : { mock : "mocked" } })).resolves.toBe("mocked");
+  });
+  it("should set wasm_file", () => {
+    let source = new MockWebAssemblyDataSource({});
+    expect(source.state.wasm_file).toBeDefined();
+    expect(source.state.wasm_file).toBe("app.wasm");
+  });
 });

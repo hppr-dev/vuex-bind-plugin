@@ -72,8 +72,8 @@ export default class BindModule {
                   console.warn(`Received bad type for ${ns_prefix}${output}. Expected ${binding.endpoint.type.name} but got ${JSON.stringify(data)}.`);
                 }
 
-                if(binding.endpoint[bind_out] && ! is_unset(data, binding.endpoint.type) ) {
-                  return Promise.resolve({ message : "committed" });
+                if(binding.endpoint.params[output] && ! is_unset(data, binding.endpoint.type) ) {
+                  return { message : "committed" };
                 }
 
                 let com =  commit(`${ns_prefix}${bind_out}`, data , { root : true }); 
