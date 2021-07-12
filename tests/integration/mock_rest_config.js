@@ -1,4 +1,4 @@
-import { store_config } from './basic_rest_config.js'
+import { scenarios } from './basic_rest_config.js'
 
 export const plugin_config = {
   strict        : true,
@@ -49,4 +49,4 @@ export const plugin_config = {
   }
 };
 
-export { store_config };
+export const store_config = scenarios[0][2];

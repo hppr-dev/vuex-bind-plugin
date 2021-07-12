@@ -252,7 +252,6 @@ describe("actions", () => {
     });
 
     it("shouldn't commit data from data source if parameters would trigger self referencing loops", () => {
-      console.log("start")
       payload.namespace = "test";
       payload.output = "non_zero_param";
       payload.binding.endpoint.params = { non_zero_param : Number };

@@ -99,7 +99,7 @@ export const match = {
   }),
 }
 
-export const query_mock_data = ({ endpoint, input_params }) => endpoint.mock_data(input_params);
+export const lookup_mock = ({ endpoint, input_params }) => endpoint.mock_data(input_params);
 
 export const apply_binding_defaults = (name, binding) => {
   binding.endpoint = binding.endpoint? binding.endpoint : `${name}`;

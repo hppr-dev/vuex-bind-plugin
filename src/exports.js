@@ -1,9 +1,9 @@
 import BindPlugin from "./bind_plugin.js"
 import BoundStore from "./bound_store.js"
-import { match, query_mock_data } from './utils.js'
+import { match, lookup_mock } from './utils.js'
 
 
-export { match, query_mock_data }
+export { match, lookup_mock }
 
 export default {
   Plugin  : BindPlugin,
