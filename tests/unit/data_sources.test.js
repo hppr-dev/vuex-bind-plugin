@@ -253,7 +253,6 @@ describe("MockRestDataSource", () => {
   });
   
   it("constructor should set url, headers and module(transform)", () => {
-    console.log("1234");
     let transform_fun = ({endpoint}) => endpoint+"world";
     let data_source = new MockRestDataSource({url : "my_url", headers : "my headers",}, transform_fun);
     expect(data_source.state.url).toBe("my_url");

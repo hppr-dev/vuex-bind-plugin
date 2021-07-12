@@ -51,7 +51,6 @@ describe("storage_adapter", () => {
   });
 
   it("should get from session storage", () => {
-    console.log("sessom");
     sessionStorage.setItem("session_get_key", "in_session");
     return expect(storage_adapter("session_get_key", "", String, "session")).resolves.toBe("in_session").then(() => {
       expect(storage_get).toHaveBeenCalledTimes(1);

@@ -60,7 +60,7 @@ export class StorageDataSource extends DataSource {
     endpoint.type,
     endpoint.scope,
     {
-      expires : endpoint.cookie ?? bind_state.cookies.expires,
+      expires : endpoint.expires ?? bind_state.cookies.expires,
       path    : endpoint.path ?? bind_state.cookies.path,
     }
   ];
@@ -71,7 +71,7 @@ export class StorageDataSource extends DataSource {
       path    : "/"
     }
   }) {
-    super({ cookies })
+    super({ cookies });
   }
 
   apply_defaults(name, endpoint ) {
@@ -114,11 +114,11 @@ export class MultDataSource extends DataSource {
   }
 
   constructor({
-    url       = null,
-    headers   = null,
+    url       = undefined,
+    headers   = undefined,
     storage   = false,
-    cookies   = null,
-    wasm      = null,
+    cookies   = undefined,
+    wasm      = undefined,
     mock      = {},
     transform = undefined,
   }) {
