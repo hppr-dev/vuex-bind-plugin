@@ -103,7 +103,7 @@ export const lookup_mock = ({ endpoint, input_params }) => endpoint.mock_data(in
 
 export const apply_binding_defaults = (name, binding) => {
   binding.endpoint = binding.endpoint? binding.endpoint : `${name}`;
-  binding.bind_type = binding.bind_type? binding.bind_type : ONCE;
+  binding.bind = binding.bind? binding.bind : ONCE;
   binding.param_map = binding.param_map? binding.param_map : {};
 }
 

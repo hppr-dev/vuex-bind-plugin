@@ -24,13 +24,13 @@ export default class _BoundStore {
         binding.endpoint = BindPlugin.config.endpoints?.[endpoint_name] ?? store_config.endpoints?.[endpoint_name];
 
         if ( BindPlugin.config.strict && binding.endpoint == null ) {
-          throw `Tried to bind to unknown endpoint ${output_var}<->${endpoint_name} bind_type ${binding.bind_type}`;
+          throw `Tried to bind to unknown endpoint ${output_var}<-${binding.bind}->${endpoint_name}`;
         }
 
       }
 
-      if  ( BindPlugin.config.strict && ! c.BINDING_TYPES.includes(binding.bind_type) ) {
-        throw `Unknown binding type for ${output_var}<->${binding.endpoint} bind_type ${binding.bind_type}`;
+      if  ( BindPlugin.config.strict && ! c.BINDING_TYPES.includes(binding.bind) ) {
+        throw `Unknown binding type for ${output_var}<-${binding.bind}->${binding.endpoint}`;
       }
     }
 
@@ -63,7 +63,7 @@ export default class _BoundStore {
       let binding  = this.bindings[output_var];
       let params = map_endpoint_types(binding.param_map, binding.endpoint.params);
 
-      if ( binding.bind_type == c.WATCH || binding.bind_type == c.CHANGE ) {
+      if ( binding.bind == c.WATCH || binding.bind == c.CHANGE ) {
         this.watch_param_defs[output_var] = params;
       }
       if ( ! binding.redirect ) {
@@ -98,7 +98,7 @@ export default class _BoundStore {
   create_load_action(name, binding) {
     let action_name = BindPlugin.config.naming.trigger(name);
 
-    if(binding.bind_type !== c.TRIGGER ){
+    if(binding.bind !== c.TRIGGER ){
       action_name = BindPlugin.config.naming.load(name);
       this.all_load_actions.push(action_name);
     }

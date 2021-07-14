@@ -62,8 +62,8 @@ describe("constructor", () => {
   it('should apply binding defaults',  () => {
     store = init_store({ some : { }, thing: { } }, "ns");
     expect(utils.apply_binding_defaults).toHaveBeenCalledTimes(2);
-    expect(utils.apply_binding_defaults).toHaveBeenCalledWith("some",  { endpoint: undefined, bind_type:"once", param_map: {} });
-    expect(utils.apply_binding_defaults).toHaveBeenCalledWith("thing", { endpoint: undefined, bind_type:"once", param_map: {} });
+    expect(utils.apply_binding_defaults).toHaveBeenCalledWith("some",  { endpoint: undefined, bind:"once", param_map: {} });
+    expect(utils.apply_binding_defaults).toHaveBeenCalledWith("thing", { endpoint: undefined, bind:"once", param_map: {} });
   });
 
   it("should throw when initializing a bind to a named unknown endpoint and strict is on", () => {
@@ -72,10 +72,10 @@ describe("constructor", () => {
     expect(() => init_store({ some : { endpoint : "asdf" } }, "ns")).toThrow("asdf");
   });
 
-  it("should throw when initializing a bind with bad bind_type and strict is on", () => {
+  it("should throw when initializing a bind with bad bind and strict is on", () => {
     BindPlugin.config.strict = true;
-    expect(() => init_store({ some : { bind_type : "asdf", endpoint: {} } }, "ns")).toThrow("some");
-    expect(() => init_store({ some : { bind_type : "asdf", endpoint: {} } }, "ns")).toThrow("asdf");
+    expect(() => init_store({ some : { bind : "asdf", endpoint: {} } }, "ns")).toThrow("some");
+    expect(() => init_store({ some : { bind : "asdf", endpoint: {} } }, "ns")).toThrow("asdf");
   });
 
   it("should handle empty state, mutations, etc", () => {
@@ -116,7 +116,7 @@ describe("generate_modifications", () => {
 
   it("should map state variables to parameters when param_map is set", () => {
     new_this.bindings.out = {
-      bind_type : "once",
+      bind : "once",
       endpoint  : {
         params : {
           id: Number,
@@ -138,7 +138,7 @@ describe("generate_modifications", () => {
 
   it("should create loading variable when loading is set", () => {
     new_this.bindings.out = {
-      bind_type : "once",
+      bind : "once",
       endpoint  : { params : {} },
       loading   : true,
     };
@@ -149,7 +149,7 @@ describe("generate_modifications", () => {
 
   it("should create parameter variables when create_params is set", () => {
     new_this.bindings.out = {
-      bind_type : "once",
+      bind : "once",
       endpoint  : {
         params : {
           id : Number,
@@ -168,7 +168,7 @@ describe("generate_modifications", () => {
 
   it("should not create output variable when redirect is set", () => {
     new_this.bindings.out = {
-      bind_type : "once",
+      bind : "once",
       endpoint  : {
         params : {
           id : Number,
@@ -190,7 +190,7 @@ describe("generate_modifications", () => {
       month : String,
     };
     new_this.bindings.out = {
-      bind_type : "change",
+      bind : "change",
       endpoint  : { params },
     };
     generate_modifications();
@@ -203,7 +203,7 @@ describe("generate_modifications", () => {
       month : String,
     };
     new_this.bindings.out = {
-      bind_type : "watch",
+      bind : "watch",
       endpoint  : { params }
     };
     generate_modifications();
@@ -216,7 +216,7 @@ describe("generate_modifications", () => {
       month : String,
     };
     new_this.bindings.out = {
-      bind_type : "once",
+      bind : "once",
       endpoint  :  { params },
     };
     generate_modifications();
@@ -225,11 +225,11 @@ describe("generate_modifications", () => {
 
   it("should create load action for each binding", () => {
     new_this.bindings.out = {
-      bind_type : "once",
+      bind : "once",
       endpoint  : { params : {} },
     };
     new_this.bindings.out2 = {
-      bind_type : "change",
+      bind : "change",
       endpoint  : { params : {} },
       redirect  : "out",
     };
@@ -241,7 +241,7 @@ describe("generate_modifications", () => {
 
   it("should create a start_bind action", () => {
     new_this.bindings.out = {
-      bind_type : "once",
+      bind : "once",
       endpoint  : { params : {} },
     };
     generate_modifications();
@@ -250,7 +250,7 @@ describe("generate_modifications", () => {
 
   it("should handle when endpoint does not have params and create_params is true", () => {
     new_this.bindings.out = {
-      bind_type : "once",
+      bind : "once",
       endpoint  : {},
       create_params : true
     };
@@ -350,36 +350,36 @@ describe("create_load_action", () => {
   beforeAll(() => BindPlugin.config.namespace = "mybind");
   afterAll(() => BindPlugin.config.namespace = "bind");
 
-  it("should create load action when bind_type is once", () => {
-    create_load_action("output", {bind_type : "once"});
+  it("should create load action when bind is once", () => {
+    create_load_action("output", {bind : "once"});
     expect(new_this.generated_actions.load_output).toBeDefined();
     expect(new_this.generated_actions.load_output).toStrictEqual(expect.any(Function));
     expect(new_this.all_load_actions).toStrictEqual(["load_output"]);
   });
 
-  it("should create trigger action when bind_type is trigger", () => {
-    create_load_action("output", {bind_type : "trigger"});
+  it("should create trigger action when bind is trigger", () => {
+    create_load_action("output", {bind : "trigger"});
     expect(new_this.generated_actions.trigger_output).toBeDefined();
     expect(new_this.generated_actions.trigger_output).toStrictEqual(expect.any(Function));
     expect(new_this.all_load_actions).toStrictEqual([]);
   });
 
   it("should create load action that dispatches bind module bind action", () => {
-    create_load_action("output", { name : "something", bind_type : "once", endpoint : { this_is : "an endpoint" }});
+    create_load_action("output", { name : "something", bind : "once", endpoint : { this_is : "an endpoint" }});
     let ctx = {
       dispatch : jest.fn()
     };
     new_this.generated_actions.load_output(ctx);
     expect(ctx.dispatch).toHaveBeenCalledTimes(1);
     expect(ctx.dispatch).toHaveBeenCalledWith("mybind/bind", { 
-      binding   : { name : "something", bind_type : "once", endpoint : { this_is : "an endpoint"} },
+      binding   : { name : "something", bind : "once", endpoint : { this_is : "an endpoint"} },
       namespace : "create",
       output    : "output"
     }, { root : true });
   });
 
   it("should generate an action that returns a the promise from dispatch", () => {
-    create_load_action("output", { name : "something", bind_type : "once", endpoint : { this_is : "an endpoint" }});
+    create_load_action("output", { name : "something", bind : "once", endpoint : { this_is : "an endpoint" }});
     let ctx = {
       dispatch : jest.fn()
     };
@@ -388,12 +388,12 @@ describe("create_load_action", () => {
   });
 
   it("should add variables to commit_on_start if loading is set", () => {
-    create_load_action("output", { name : "something", bind_type : "once", loading: true, endpoint : { this_is : "an endpoint" }});
+    create_load_action("output", { name : "something", bind : "once", loading: true, endpoint : { this_is : "an endpoint" }});
     expect(new_this.commit_on_start).toStrictEqual(["loading_output"]);
   });
 
   it("should create action that sets loading when loading is set to each", () => {
-    create_load_action("output", { name : "something", bind_type : "change", loading: "each", endpoint : { this_is : "an endpoint" }});
+    create_load_action("output", { name : "something", bind : "change", loading: "each", endpoint : { this_is : "an endpoint" }});
     let ctx = {
       dispatch : jest.fn(),
       commit   : jest.fn()

@@ -41,7 +41,7 @@ export default class BindModule {
       },
       actions: {
         [c.BIND]    : ({ dispatch }, payload) => {
-          return payload.binding.bind_type === c.WATCH? dispatch(c.WATCH, payload) : dispatch(c.ONCE, payload);
+          return payload.binding.bind === c.WATCH? dispatch(c.WATCH, payload) : dispatch(c.ONCE, payload);
         },
         [c.WATCH]   : ({ dispatch, commit }, payload) => {
           let interval_func = () => {

@@ -63,29 +63,29 @@ export const scenarios = [
       },
       bindings : {
         login : {
-          bind_type : "trigger",
+          bind : "trigger",
           redirect  : "update_token",
           create_params : true,
         },
         user_data : {
-          bind_type : "watch",
+          bind : "watch",
           period    : 10000,
           param_map : {
             selected_user_id : "user_id",
           },
         },
         users : {
-          bind_type : "once"
+          bind : "once"
         },
         posts : {
-          bind_type     : "trigger",
+          bind     : "trigger",
           create_params : true,
           redirect      : "update_posts_and_meta_ids",
           side_effect   : "trigger_post_meta_data",
         },
         post_meta_data : {
           endpoint  : "post_meta",
-          bind_type : "trigger",
+          bind : "trigger",
           param_map : {
             post_ids : "ids"
           },
@@ -156,29 +156,29 @@ export const scenarios = [
       },
       bindings : {
         login : {
-          bind_type : "trigger",
+          bind : "trigger",
           redirect  : "update_token",
           create_params : true,
         },
         user_data : {
-          bind_type : "watch",
+          bind : "watch",
           period    : 10000,
           param_map : {
             selected_user_id : "user_id",
           },
         },
         users : {
-          bind_type : "once"
+          bind : "once"
         },
         posts : {
-          bind_type     : "trigger",
+          bind     : "trigger",
           create_params : true,
           redirect      : "update_posts_and_meta_ids",
           side_effect   : "trigger_post_meta_data",
         },
         post_meta_data : {
           endpoint  : "post_meta",
-          bind_type : "trigger",
+          bind : "trigger",
           param_map : {
             post_ids : "ids"
           },
@@ -217,7 +217,7 @@ export const scenarios = [
       },
       bindings : {
         login : {
-          bind_type : "trigger",
+          bind : "trigger",
           redirect  : "update_token",
           create_params : true,
           endpoint : {
@@ -230,7 +230,7 @@ export const scenarios = [
           },
         },
         user_data : {
-          bind_type : "watch",
+          bind : "watch",
           period    : 10000,
           param_map : {
             selected_user_id : "user_id",
@@ -246,10 +246,10 @@ export const scenarios = [
           endpoint : {
             type : Array
           },
-          bind_type : "once"
+          bind : "once"
         },
         posts : {
-          bind_type     : "trigger",
+          bind     : "trigger",
           create_params : true,
           redirect      : "update_posts_and_meta_ids",
           side_effect   : "trigger_post_meta_data",
@@ -263,7 +263,7 @@ export const scenarios = [
         },
         post_meta_data : {
           endpoint  : "post_meta",
-          bind_type : "trigger",
+          bind : "trigger",
           param_map : {
             post_ids : "ids"
           },

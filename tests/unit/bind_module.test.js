@@ -244,7 +244,7 @@ describe("actions", () => {
       payload = {
         output    : "output_var",
         binding   : {
-          bind_type : "once",
+          bind : "once",
           endpoint  : {
             type : String,
             data : (params) => ({input : params, output: "from api"}),
@@ -357,23 +357,23 @@ describe("actions", () => {
       },
     };
 
-    it("bind action should dispatch once action with bind_type is trigger", () => {
-      payload.binding.bind_type = "trigger";
+    it("bind action should dispatch once action with bind is trigger", () => {
+      payload.binding.bind = "trigger";
       expect(module.actions.bind(ctx, payload)).toStrictEqual(["once", payload]);
     });
 
-    it("bind action should dispatch once action with bind_type is once", () => {
-      payload.binding.bind_type = "once";
+    it("bind action should dispatch once action with bind is once", () => {
+      payload.binding.bind = "once";
       expect(module.actions.bind(ctx, payload)).toStrictEqual(["once", payload]);
     });
 
-    it("bind action should dispatch once action with bind_type is change", () => {
-      payload.binding.bind_type = "change";
+    it("bind action should dispatch once action with bind is change", () => {
+      payload.binding.bind = "change";
       expect(module.actions.bind(ctx, payload)).toStrictEqual(["once", payload]);
     });
     
-    it("bind action should dispatch watch action when bind_type is watch", () => {
-      payload.binding.bind_type = "watch";
+    it("bind action should dispatch watch action when bind is watch", () => {
+      payload.binding.bind = "watch";
       expect(module.actions.bind(ctx, payload)).toStrictEqual(["watch", payload]);
     });
   });
@@ -395,7 +395,7 @@ describe("actions", () => {
       namespace : "test",
       binding   : {
         endpoint  : {},
-        bind_type : "watch",
+        bind : "watch",
         period: 1000
       },
     };

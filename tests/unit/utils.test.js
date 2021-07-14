@@ -221,13 +221,13 @@ describe("apply_binding_defaults", () => {
     let binding = {};
     apply_binding_defaults("ENDPOINT_NAME", binding);
     expect(binding.endpoint).toBe("ENDPOINT_NAME");
-    expect(binding.bind_type).toBe("once");
+    expect(binding.bind).toBe("once");
     expect(binding.param_map).toStrictEqual({});
   })
 
   it("should keep binding_values", () => {
     let binding = {
-      bind_type : "watch",
+      bind : "watch",
       endpoint  : "somethingelse",
       redirect  : "update_something",
       period    : 10000,
@@ -235,7 +235,7 @@ describe("apply_binding_defaults", () => {
     };
     apply_binding_defaults("ENDPOINT_NAME", binding);
     expect(binding.endpoint).toBe("somethingelse");
-    expect(binding.bind_type).toBe("watch");
+    expect(binding.bind).toBe("watch");
     expect(binding.param_map).toStrictEqual({ one : "two" });
     expect(binding.period).toBe(10000);
     expect(binding.redirect).toBe("update_something");
