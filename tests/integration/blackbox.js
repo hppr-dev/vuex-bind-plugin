@@ -38,7 +38,7 @@ export default class BlackBox {
     }
   }
   output_state(ns, state) {
-    return this.resolve_all_module_promises().then(() => {
+    return this.resolve_module().then(() => {
       return new Promise((resolve) => {
         for ( let state_var of Object.keys(state) ){
           try {
@@ -51,10 +51,6 @@ export default class BlackBox {
         resolve();
       });
     });
-  }
-  resolve_all_module_promises() {
-    // For some reason this needs to be here.
-    return this.resolve_module().then( () => null );
   }
   resolve_module() {
     let results = this.module.mock.results;

@@ -15,9 +15,10 @@ describe("mocked rest scenario", () => {
     bb.input_state("profile", {
       users: ["something","here"]
     });
-    bb.dispatch("profile/start_bind");
-    return bb.output_state("profile", {
-      users : []
+    return bb.dispatch("profile/start_bind").then( () => {
+      return bb.output_state("profile", {
+        users : []
+      });
     });
   });
 
@@ -27,11 +28,12 @@ describe("mocked rest scenario", () => {
       password : "brond",
       token    : ""
     });
-    bb.dispatch("profile/trigger_login");
-    return bb.output_state("profile", {
-      username : "james",
-      password : "",
-      token    : "12345fdsa"
+    bb.dispatch("profile/trigger_login").then( () => {
+      return bb.output_state("profile", {
+        username : "james",
+        password : "",
+        token    : "12345fdsa"
+      });
     });
   });
 
@@ -41,29 +43,31 @@ describe("mocked rest scenario", () => {
       password : "brond",
       token    : {}
     });
-    bb.dispatch("profile/trigger_login");
-    return bb.output_state("profile", {
-      username : "",
-      password : "brond",
-      token    : {}
-    })
+    return bb.dispatch("profile/trigger_login").then( () => {
+      return bb.output_state("profile", {
+        username : "",
+        password : "brond",
+        token    : {}
+      });
+    });
   });
 
   it("should trigger posts and then pull post_meta data", () => {
     bb.input_state("profile", {
       date : "2020-01-02" 
     });
-    bb.dispatch("profile/trigger_posts");
-    return bb.output_state("profile", { 
-      date : "2020-01-02",
-      post_meta_data : { post_meta_data : "mocked" },
-      post_ids : [1,2,3,4],
-      posts : [
-        {id: 1, text: "hello"},
-        {id: 2, text: "world"},
-        {id: 3, text: "foo"},
-        {id: 4, text: "bar"}
-      ],
+    return bb.dispatch("profile/trigger_posts").then( () => {
+      return bb.output_state("profile", { 
+        date : "2020-01-02",
+        post_meta_data : { post_meta_data : "mocked" },
+        post_ids : [1,2,3,4],
+        posts : [
+          {id: 1, text: "hello"},
+          {id: 2, text: "world"},
+          {id: 3, text: "foo"},
+          {id: 4, text: "bar"}
+        ],
+      });
     });
   });
 

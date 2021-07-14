@@ -336,6 +336,7 @@ describe("create_load_action", () => {
     generated_actions   : {},
     namespace : "create",
     all_load_actions : [],
+    commit_on_start : [],
   };
 
   let create_load_action = BoundStore.prototype.create_load_action.bind(new_this);
@@ -343,20 +344,21 @@ describe("create_load_action", () => {
   beforeEach(() => {
     new_this.generated_actions = {};
     new_this.all_load_actions = [];
+    new_this.commit_on_start = [];
   });
 
   beforeAll(() => BindPlugin.config.namespace = "mybind");
   afterAll(() => BindPlugin.config.namespace = "bind");
 
   it("should create load action when bind_type is once", () => {
-    create_load_action("output", {bind_type : "once"}, { endpoint_spec : "is this" });
+    create_load_action("output", {bind_type : "once"});
     expect(new_this.generated_actions.load_output).toBeDefined();
     expect(new_this.generated_actions.load_output).toStrictEqual(expect.any(Function));
     expect(new_this.all_load_actions).toStrictEqual(["load_output"]);
   });
 
   it("should create trigger action when bind_type is trigger", () => {
-    create_load_action("output", {bind_type : "trigger"}, { endpoint_spec : "is this" });
+    create_load_action("output", {bind_type : "trigger"});
     expect(new_this.generated_actions.trigger_output).toBeDefined();
     expect(new_this.generated_actions.trigger_output).toStrictEqual(expect.any(Function));
     expect(new_this.all_load_actions).toStrictEqual([]);
@@ -376,6 +378,16 @@ describe("create_load_action", () => {
     }, { root : true });
   });
 
+  it("should generate an action that returns a the promise from dispatch", () => {
+    create_load_action("output", { name : "something", bind_type : "once", endpoint : { this_is : "an endpoint" }});
+    let ctx = {
+      dispatch : jest.fn()
+    };
+    ctx.dispatch.mockReturnValue("this is returned from dispatch");
+    expect(new_this.generated_actions.load_output(ctx)).toBe("this is returned from dispatch");
+  });
+
+
 });
 
 describe("create_start_bind_action", () => {
@@ -385,7 +397,8 @@ describe("create_start_bind_action", () => {
     plugin_config : {
       load_prefix : "load_",
     },
-    add_watch_params : jest.fn()
+    add_watch_params : jest.fn(),
+    commit_on_start : [ "loading_pizza", "loading_pasta" ],
   };
 
   beforeEach(() => {
@@ -401,27 +414,49 @@ describe("create_start_bind_action", () => {
     expect(new_this.generated_actions.start_bind).toStrictEqual(expect.any(Function));
   });
 
+  it("should create action that returns a promise", () => {
+    let ctx = {
+      dispatch : jest.fn(),
+      commit   : jest.fn(),
+    };
+    expect(new_this.generated_actions.start_bind(ctx)).toBeInstanceOf(Promise);
+  });
+
   it("should create start_bind action that dispatches all load actions", () => {
     let ctx = {
       dispatch : jest.fn(),
-      commit   : "some function"
+      commit   : jest.fn(),
     };
-    new_this.generated_actions.start_bind(ctx)
-    expect(ctx.dispatch).toHaveBeenCalledTimes(3);
-    expect(ctx.dispatch).toHaveBeenCalledWith("pizza");
-    expect(ctx.dispatch).toHaveBeenCalledWith("pasta");
-    expect(ctx.dispatch).toHaveBeenCalledWith("pepperoni");
+    return new_this.generated_actions.start_bind(ctx).then(() => {
+      expect(ctx.dispatch).toHaveBeenCalledTimes(3);
+      expect(ctx.dispatch).toHaveBeenCalledWith("pizza");
+      expect(ctx.dispatch).toHaveBeenCalledWith("pasta");
+      expect(ctx.dispatch).toHaveBeenCalledWith("pepperoni");
+    });
+  });
+
+  it("should create start_bind action that commits all ", () => {
+    let ctx = {
+      dispatch : jest.fn(),
+      commit   : jest.fn(),
+    };
+    return new_this.generated_actions.start_bind(ctx).then(() => {
+      expect(ctx.commit).toHaveBeenCalledTimes(2);
+      expect(ctx.commit).toHaveBeenCalledWith("loading_pizza");
+      expect(ctx.commit).toHaveBeenCalledWith("loading_pasta");
+    });
   });
 
   it("should create start_bind action that adds watch params", () => {
     let ctx = {
       dispatch : jest.fn(),
-      commit   : "some function"
+      commit   : jest.fn(),
     };
     new_this.generated_actions.start_bind(ctx)
     expect(new_this.add_watch_params).toHaveBeenCalledTimes(1);
-    expect(new_this.add_watch_params).toHaveBeenCalledWith("some function");
+    expect(new_this.add_watch_params).toHaveBeenCalledWith(ctx.commit);
   });
+
 });
 
 describe("add_watch_params", () => {

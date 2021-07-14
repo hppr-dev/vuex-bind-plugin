@@ -78,6 +78,10 @@ export default class BindModule {
 
                 let com =  commit(`${ns_prefix}${bind_out}`, data , { root : true }); 
 
+                if ( binding.loading ) {
+                  commit(`${ns_prefix}${BindPlugin.config.naming.done(output)}`, null, { root : true });
+                }
+
                 if ( binding.side_effect ) {
                   dispatch(`${ns_prefix}${binding.side_effect}`, data, { root : true });
                 }

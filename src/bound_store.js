@@ -4,7 +4,6 @@ import * as c from  './constants.js'
 
 export default class _BoundStore {
   constructor(store_config){
-    BindPlugin.config = BindPlugin.config;
 
     if ( store_config.namespace === undefined ) {
       throw `BoundStore initialized without namespace: ${JSON.stringify(store_config)}`; 
@@ -39,6 +38,7 @@ export default class _BoundStore {
     this.generated_mutations = {};
     this.generated_actions = {};
     this.all_load_actions = [];
+    this.commit_on_start = [];
     this.watch_param_defs = [];
     this.generate_modifications();
 
@@ -97,12 +97,23 @@ export default class _BoundStore {
 
   create_load_action(name, binding) {
     let action_name = BindPlugin.config.naming.trigger(name);
+
     if(binding.bind_type !== c.TRIGGER ){
       action_name = BindPlugin.config.naming.load(name);
       this.all_load_actions.push(action_name);
     }
-    this.generated_actions[action_name] = ({ dispatch }) => {
-      dispatch(`${BindPlugin.config.namespace}/${c.BIND}`, 
+
+    if ( binding.loading ) {
+      this.commit_on_start.push(BindPlugin.config.naming.loading(name));
+    }
+
+    this.generated_actions[action_name] = ({ dispatch, commit }) => {
+
+      if ( binding.loading === "each" ) {
+        commit(BindPlugin.config.naming.loading(name));
+      }
+
+      return dispatch(`${BindPlugin.config.namespace}/${c.BIND}`, 
       { 
         binding  : binding,
         namespace: this.namespace,
@@ -113,8 +124,13 @@ export default class _BoundStore {
 
   create_start_bind_action(name) {
     this.generated_actions[BindPlugin.config.naming.start] = ({ dispatch, commit }) => {
+      let prom = Promise.resolve();
       this.add_watch_params(commit);
-      this.all_load_actions.map((action) => dispatch(action));
+      this.commit_on_start.forEach((mut) => commit(mut));
+      this.all_load_actions.forEach((action) => {
+        prom = prom.then(() => Promise.resolve(dispatch(action)));
+      });
+      return prom;
     };
   }
 
