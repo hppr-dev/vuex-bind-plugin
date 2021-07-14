@@ -45,7 +45,7 @@ An example of a rest binding to the previous endpoint:
 const bindings = {
   current_user : {
     endpoint  : get_user,
-    bind_type : "change",
+    bind      : "change",
   }
 };
 ```
@@ -104,8 +104,8 @@ export default {
   actions   : {...},
   bindings  : {
     posts : {
-      bind_type : "watch",
-      time      : 30000,
+      bind : "watch",
+      time : 30000,
     },
   }
 };
@@ -270,7 +270,7 @@ const plugin = Bind.Plugin({
 
 const bindings = {
   users : {
-    bind_type     : "once",
+    bind          : "once",
     endpoint      : "users",
     create_params : true,
   }
@@ -523,7 +523,7 @@ const bindings = {
   * - begin             |  startBind      
 **/
   custom : {
-    bind_type : "trigger",
+    bind : "trigger",
     loading   : true,
     params    : {
       id : Number
@@ -776,7 +776,7 @@ Defines how to store endpoint data.
 const bindings = {
   OUTPUT_NAME : {
     endpoint      : OUTPUT_NAME,
-    bind_type     : "once",
+    bind          : "once",
     param_map     : {},
     side_effect   : "",
     redirect      : "",
