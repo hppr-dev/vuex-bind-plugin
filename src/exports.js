@@ -1,5 +1,6 @@
 import BindPlugin from "./bind_plugin.js"
 import BoundStore from "./bound_store.js"
+import { SnakeCase, CamelCase } from './naming.js'
 import { match, lookup_mock } from './utils.js'
 
 
@@ -24,5 +25,7 @@ export default {
         }
       )
     );
-  }
+  },
+  SnakeCase : () => new SnakeCase(),
+  CamelCase : () => new CamelCase(),
 }

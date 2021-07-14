@@ -1,6 +1,7 @@
 import Bind from '@src/exports.js'
 import BindPlugin from '@src/bind_plugin.js'
 import BoundStore from '@src/bound_store.js'
+import { SnakeCase, CamelCase } from '@src/naming.js'
 
 jest.mock('@src/bound_store.js');
 
@@ -118,5 +119,17 @@ describe("Bind.Modules", () => {
       two   : { namespace : "twons" },
       three : expect.any(BoundStore)
     });
+  });
+});
+
+describe("Bind.SnakeCase", () => {
+  it("should be an instance of SnakeCase", () => {
+    expect(Bind.SnakeCase()).toBeInstanceOf(SnakeCase);
+  });
+});
+
+describe("Bind.CamelCase", () => {
+  it("should be an instance of CamelCase", () => {
+    expect(Bind.CamelCase()).toBeInstanceOf(CamelCase);
   });
 });

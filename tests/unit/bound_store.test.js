@@ -387,6 +387,20 @@ describe("create_load_action", () => {
     expect(new_this.generated_actions.load_output(ctx)).toBe("this is returned from dispatch");
   });
 
+  it("should add variables to commit_on_start if loading is set", () => {
+    create_load_action("output", { name : "something", bind_type : "once", loading: true, endpoint : { this_is : "an endpoint" }});
+    expect(new_this.commit_on_start).toStrictEqual(["loading_output"]);
+  });
+
+  it("should create action that sets loading when loading is set to each", () => {
+    create_load_action("output", { name : "something", bind_type : "change", loading: "each", endpoint : { this_is : "an endpoint" }});
+    let ctx = {
+      dispatch : jest.fn(),
+      commit   : jest.fn()
+    };
+    new_this.generated_actions.load_output(ctx);
+    expect(ctx.commit).toHaveBeenCalledWith("loading_output");
+  });
 
 });
 

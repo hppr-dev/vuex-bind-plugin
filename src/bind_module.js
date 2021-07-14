@@ -73,10 +73,10 @@ export default class BindModule {
                 }
 
                 if(binding.endpoint.params[output] && ! is_unset(data, binding.endpoint.type) ) {
-                  return { message : "committed" };
+                  return;
                 }
 
-                let com =  commit(`${ns_prefix}${bind_out}`, data , { root : true }); 
+                commit(`${ns_prefix}${bind_out}`, data , { root : true }); 
 
                 if ( binding.loading ) {
                   commit(`${ns_prefix}${BindPlugin.config.naming.done(output)}`, null, { root : true });
@@ -85,8 +85,6 @@ export default class BindModule {
                 if ( binding.side_effect ) {
                   dispatch(`${ns_prefix}${binding.side_effect}`, data, { root : true });
                 }
-
-                return com;
               }
             );
           }

@@ -227,8 +227,8 @@ describe("actions", () => {
         zero_param     : 0,
       }
     },
-    commit : (...args) => args,
-    dispatch : jest.fn()
+    commit : jest.fn(),
+    dispatch : jest.fn(),
   };
 
   describe("once", () => {
@@ -239,6 +239,8 @@ describe("actions", () => {
     beforeAll(() => once = module.actions.once);
 
     beforeEach(() => {
+      ctx.dispatch.mockClear();
+      ctx.commit.mockClear();
       payload = {
         output    : "output_var",
         binding   : {
@@ -256,34 +258,43 @@ describe("actions", () => {
       payload.output = "non_zero_param";
       payload.binding.endpoint.params = { non_zero_param : Number };
       ctx.dispatch.mockClear();
-      return expect(once(ctx, payload)).resolves.toStrictEqual({ message : "committed" });
+      return once(ctx, payload).then( () => {
+        expect(ctx.commit).toHaveBeenCalledTimes(0);
+      });
     });
 
     it("should commit data from data source when parameters are non-zero", () => {
       payload.namespace = "test";
       payload.binding.endpoint.params = { non_zero_param : Number };
-      return expect(once(ctx, payload)).resolves.toStrictEqual(["test/update_output_var", { input: {non_zero_param : 10}, output: "from api" }, {root : true }]);
+      return once(ctx, payload).then( () => {
+        expect(ctx.commit).toHaveBeenCalledWith("test/update_output_var", { input: {non_zero_param : 10}, output: "from api" }, {root : true });
+      });
     });
     
     it("should not commit data from data source when parameters are zero", () => {
       payload.namespace = "test";
       payload.binding.endpoint.params = { zero_param : Number };
-      return expect(once(ctx, payload)).resolves.toStrictEqual({ message : "Not Updated" });
+      return once(ctx, payload).then( () => {
+        expect(ctx.commit).toHaveBeenCalledTimes(0);
+      });
     });
 
     it("should get and commit to/from rootState when no namespace", () => {
       payload.namespace = "";
       payload.binding.endpoint.params = { non_zero_param : Number };
-      return expect(once(ctx, payload)).resolves.toStrictEqual(["update_output_var", { input: {non_zero_param: 4444}, output: "from api" }, {root : true }]);
+      return once(ctx, payload).then( () => {
+        expect(ctx.commit).toHaveBeenCalledWith("update_output_var", { input: {non_zero_param: 4444}, output: "from api" }, {root : true });
+      });
     });
 
     it("should apply data source endpoint defaults", () => {
       payload.namespace = "";
       payload.binding.endpoint.params = { something : Number };
       test_plugin_config.data_source.apply_defaults.mockClear();
-      once(ctx, payload)
-      expect(test_plugin_config.data_source.apply_defaults).toHaveBeenCalledTimes(1);
-      expect(test_plugin_config.data_source.apply_defaults).toHaveBeenCalledWith("output_var", payload.binding.endpoint);
+      return once(ctx, payload).then(() => {
+        expect(test_plugin_config.data_source.apply_defaults).toHaveBeenCalledTimes(1);
+        expect(test_plugin_config.data_source.apply_defaults).toHaveBeenCalledWith("output_var", payload.binding.endpoint);
+      });
     });
 
     it("should warn on bad type from api when strict mode is on", () => {
@@ -311,14 +322,28 @@ describe("actions", () => {
       payload.namespace = "test";
       payload.binding.transform = (data) => data["input"];
       payload.binding.endpoint.params = { non_zero_param : Number };
-      return expect(once(ctx, payload)).resolves.toStrictEqual(["test/update_output_var",{non_zero_param : 10}, {root : true }]);
+      return once(ctx, payload).then( () => {
+        expect(ctx.commit).toHaveBeenCalledWith("test/update_output_var",{non_zero_param : 10}, {root : true });
+      });
     });
 
     it("should commit to redirect in namespace when given", () => {
       payload.namespace = "test";
       payload.binding.redirect = "update_something_else";
       payload.binding.endpoint.params = { non_zero_param : Number };
-      return expect(once(ctx, payload)).resolves.toStrictEqual(["test/update_something_else", expect.any(Object), {root : true }]);
+      return once(ctx, payload).then( () => {
+        expect(ctx.commit).toHaveBeenCalledWith("test/update_something_else", expect.any(Object), { root : true });
+      });
+    });
+
+    it("should set done loading variables", () => {
+      payload.namespace = "test";
+      payload.binding.loading = true;
+      payload.binding.endpoint.params = { non_zero_param : Number };
+      return once(ctx, payload).then( () => {
+        expect(ctx.commit).toHaveBeenCalledTimes(2);
+        expect(ctx.commit).toHaveBeenCalledWith("test/done_loading_output_var", null, { root : true });
+      });
     });
   });
   
