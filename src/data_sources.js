@@ -142,6 +142,10 @@ export class MultDataSource extends DataSource {
     if ( Object.keys(this.sources).length === 1 ){
       return this.sources[Object.keys(this.sources)[0]];
     }
+    Object.keys(this.sources).forEach((source) => {
+      this.state = { ...this.state, ...this.sources[source].state }
+      this.mutations = { ...this.mutations, ...this.sources[source].mutations }
+    });
   }
 
   apply_defaults(name, endpoint) {

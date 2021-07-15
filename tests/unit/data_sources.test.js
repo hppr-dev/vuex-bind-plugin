@@ -525,6 +525,17 @@ describe("MultDataSource", () => {
     expect(source.sources.wasm).toBeInstanceOf(MockWebAssemblyDataSource);
   });
 
+  it("should merge state and mutations from all datasources", () => {
+    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm", });
+    expect(source.state).toBeDefined();
+    expect(source.state.cookies).toBeDefined();
+    expect(source.state.url).toBeDefined();
+    expect(source.state.headers).toBeDefined();
+    expect(source.mutations).toBeDefined();
+    expect(source.mutations.update_header).toBeDefined();
+    expect(source.mutations.update_url).toBeDefined();
+  });
+
 });
 
 describe("MockDataSource", () => {
