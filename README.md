@@ -1,8 +1,8 @@
 # vuex-bind-plugin
 
-A vuex plugin that provides a link between outside data and your state.
-In this context, outside data means any data that is not initially available to the application.
-For example, outside data could be API endpoints, browser storage* or a WebAssembly binary*. 
+A vuex plugin that provides a link between outside data and application state.
+In this context, outside data refers to any data that is not initially available to the application.
+For example, outside data could be API endpoints, browser storage or a WebAssembly binary*. 
 
 *Future version
 
@@ -18,7 +18,7 @@ This plugin:
 - Provides an at-a-glance perspective of which data is coming from where
 - Seperates component and outside data
 
-The link is established by configuring 2 parts of the plugin:
+The link is established by configuring 2 parts:
   1. Endpoints
   2. Bindings
 
@@ -50,7 +50,7 @@ const bindings = {
 };
 ```
 
-In the resulting configuration, once `$store.commit("update_id", 10)` is called, `$store.state.current_user` will be automatically updated with resource is returned by GETing /users/?id=10.
+In the resulting configuration, once `$store.commit("update_id", 10)` is called, `$store.state.current_user` will be automatically updated with the resource that is returned by GETing /users/?id=10.
 See [Usage Overview](#usage-overview) for a more in depth example.
 
 # Installation
@@ -65,7 +65,7 @@ Install with npm
 # Usage Overview
 
 
-1. Define endpoints from which to pull data
+1. Define endpoints
 
 ```
 // endpoint_config.js
@@ -92,7 +92,7 @@ export default {
 }
 ```
 
-2. Create a Bind.Store config with namespace and binding information to your module store config
+2. Create a store with namespace and bindings information
 
 ```
 // user_store.js
@@ -112,7 +112,7 @@ export default {
 
 ```
 
-3. Include the plugin with your vuex config:
+3. Configure the plugin
 
 ```
 import Bind from 'vuex-bind-plugin'
@@ -132,7 +132,7 @@ const vuex_config = {
 }
 ```
 
-4. Use the state variables in your components:
+4. Use the state variables as normal
 
 ```
 <template>
@@ -167,34 +167,37 @@ export default {
 
 # Plugin Components
 
-## bind namespace module
+## bind module store
 
-The plugin automatically adds a module named "bind" to your store.
-The module name can be changed using the `namespace` configuration value.
-The bind module is responsible for keeping track of current bindings and the parameters that trigger updates.
+The plugin automatically creates a module store with the namespace "bind".
+This module is responsible for keeping track of current bindings and the parameters that trigger updates.
+It does this by maintaining a list of parameters that other pieces of state depend on.
 
-### Setting headers
+The bind module also holds state variables used by the data source.
+For instance, the rest datasource adds url and headers state variables to the bind module.
+To update these values use the update mutations for them: i.e. `commit("update_headers", { key : "Authorization", value: "sometoken" }`.
 
-Call `commit("bind/update_header", {key: "key", value: "value"})` to set custom request headers.
-Note that these headers will be set on all requests coming from the bind module.
+The module name can be changed using the `namespace` plugin configuration value.
 
-## Bind.Store
+## Store modules
 
-A Bind.Store generates state, mutations and actions for given bindings.
+Store modules refer to the custom module stores that define the state, getters, mutations, actions, and bindings of the application.
+These are the modules that are passed to `Bind.Modules` in the Vuex.Store config.
+When `Bind.Modules` is called each module store is inspected for bindings and namespace fields and if they have them they are made into `Bind.Store`s.
+Otherwise, the module store is imported as-is.
+
 The configuration for Bind.Store is exactly the same as for a regular vuex store, but with two extra required fields:
 
-- bindings  -- bindings configuration
-- namespace -- Namespace of the store. Not to be confused with the namespaced vuex option.
+- bindings  -- binding configuration for the store module. See [Binding Configuration](#binding-configuration)
+- namespace -- Namespace of the module. Not to be confused with the namespaced vuex option.
 
-and one optional:
+and one optional field:
 
-- endpoints -- store endpoint configuration. See [Organizing Endpoints and Bindings](#organizing-endpoints-and-bindings).
+- endpoints -- module endpoint configuration. See [Organizing Endpoints and Bindings](#organizing-endpoints-and-bindings).
 
-vuex-bind-plugin requires Bind.Stores to be have a namespace.
-The resulting configuration automatically sets namespaced to true, even if it is set to false in the Bind.Store config.
 An error will occur if namespace is not set or if a Bind.Store is initialized before the Bind.Plugin.
 
-It is possible to configure the root store by setting the namespace to "":
+It is possible to configure the root store as a Bind.Store by setting the namespace to "":
 
 ```
 import Vuex from "vuex"
@@ -211,16 +214,44 @@ var rootStore = new Vuex.Store(new Bind.Store({
 );
 ```
 
+A `Bind.Store` generates state, mutations and actions for each of the given bindings.
+See [Binding Configuration](#binding-configuration) for information on configuring bindings.
+
 ### Generated state
 
-Endpoint bindings require two pieces of state to be present: the output and the parameters.
+Endpoint bindings require two pieces of state: the output and the parameters.
 
-The output is automatically created and you may choose to have endpoint parameters generated using the `create_params` binding config value.
-Use `redirect : 'update_other_thing'` to redirect the output to another state variable.
+The output is automatically created.
+Parameters can be created in the module state, or automatically with `create_params : true`.
 
-A reason you may want to define the endpoint parameters is when you want to have specific default values.
+Note that when parameters are manually created in module state, they will also need update mutations created matching the current [naming scheme](#naming).
 
-The output and parameters types are defined in the endpoint config.
+For example using the default naming:
+```
+export default {
+  state : {
+    user_id : 0
+  },
+  mutations : {
+    update_user_id : (state, value) => ... // Required
+  },
+  bindings : {
+    posts : {
+      bind      : "once",
+      endpoint  : "posts",
+      param_map : {
+        user_id : 'id',
+      },
+    }
+  }
+}
+```
+
+The output can also be changed to modify another state variable by redirecting the output.
+Use `redirect : 'update_other_thing'` to commit to the update_other_thing mutation instead of updating the output state variable.
+
+The starting value of outputs and parameters in the state are defined as the default value of their defined type.
+See [Default Type Values](#default-type-values).
 
 ### Generated mutations
 
@@ -228,7 +259,7 @@ Each state variable must be able to be mutated.
 
 When the state variables are generated, an `update_` mutation is created as well.
 
-The prefix generated update mutations can be set using the update_prefix plugin config option.
+The prefix for generated update mutations can be set by modifying the [naming scheme](#naming).
 
 ### Generated actions
 
@@ -236,13 +267,10 @@ Every binding generates an action to be called to load its data.
 
 By default, the `load_` action is defined to load "watch" and "once" bindings and `trigger_` actions are generated for "trigger" bindings.
 
-These values can be changed with the `load_prefix` and `trigger_prefix` plugin config options.
+A special `"start_bind"` action is also created to intialize binding and load binding data.
+Only call this action once.
 
-A special "start_bind" action is also created to start loading data.
-
-The "state_bind" action dispatches all of the load actions.
-
-Only call this action once before the bindings are needed.
+The name of the start_bind action, as well as the prefixes for the load and trigger actions, can be set by modifying the [naming scheme](#naming).
 
 # Configuration
 
@@ -277,7 +305,7 @@ const bindings = {
 }
 ```
 
-The above could be written as:
+Could also be written as:
 
 ```
 const plugin = Bind.Plugin({...}); // Endpoint moved to bindings
@@ -294,13 +322,13 @@ const bindings = {
 };
 ```
 
-It is up to the user to decide which defaults they will implicitly declare for the sake of configuration clarity.
+It is up to the user to decide which defaults will be declared implicitly for the sake of configuration clarity.
 
 ## Plugin Configuration
 
 Defines how the plugin will function.
 
-Plugin defaults:
+Plugin configuration defaults:
 ```
 const plugin = new Bind.Plugin({
   sources           : { ... },  
@@ -317,10 +345,10 @@ const plugin = new Bind.Plugin({
 |----------------|-----------------------------------------|-------------------------------------------------------------------------|
 | sources        | {...}                                   | Configuration for data sources. See [Data Sources](#data-sources)         |
 | endpoints      | {}                                      | Endpoints config. See [Endpoint Configuration](#endpoint-configuration) |
-| namespace      | "bind"                                  | Namespace of the plugins "bind" store.                                  |
+| namespace      | "bind"                                  | Namespace of the plugin's "bind" store.                                  |
 | naming         | Bind.SnakeCase()                        | Naming scheme. See [Naming](#naming)                                    |
 | strict         | false                                   | Check types where possible and log them to the console. Use in development only |
-| default_source | "rest"                                  | The default source to use when endpoint source can't be inferred. See [Inferring Source](#inferring-source) |
+| default_source | "rest"                                  | The default source to use when the endpoint source can't be inferred. See [Inferring Source](#inferring-source) |
 | log_blocked_binds         | false                                   | Log when a bind was triggered, but not commited because of unset parameters. Use in development only |
 
 
@@ -328,9 +356,9 @@ const plugin = new Bind.Plugin({
 
 The plugin does not use any data source by default.
 You will need to add configuration values to the sources option to enable them.
-Each data source has it's own configuration keys.
+Each data source has it's own keys in the sources option.
 
-Configure the rest data source by include the url option.
+Inlude the `url` option to configure the rest data source.
 You may also configure headers for your requests here.
 ```
 {
@@ -339,14 +367,14 @@ You may also configure headers for your requests here.
 }
 ```
 
-Configure the WebAssembly data source by including the wasm option
+Include the `wasm` option to configure the WebAssembly data source.
 ```
 {
   wasm : "application.wasm" // url of the wasm file to load
 }
 ```
 
-Configure the storage data source by setting `storage` to `true`.
+Set `storage : true` to configure the storage data source.
 The `cookies` options is also available to set the default expiration and path of cookies.
 ```
 {
@@ -358,6 +386,7 @@ The `cookies` options is also available to set the default expiration and path o
 }
 ```
 
+For example, the following snippet configures all three:
 
 ```
 const plugin = Bind.Plugin({
@@ -369,9 +398,6 @@ const plugin = Bind.Plugin({
   ...
 });
 ```
-
-
-In most cases, setting the url in the initial_state will be all you need.
 
 ### Using Mock Data
 
@@ -404,9 +430,9 @@ const plugin = new Bind.Plugin({
 ```
 
 By default, this will cause endpoints to return the data in `mock` instead of requesting resources.
-If an endpoint does not have a mock field, the default value for the type is used.
+If an endpoint does not have a mock field, the [default value](#default-type-values) for the type is used.
 
-If different logic is needed for mock data, include a `transform` function in the sources option for the plugin.
+If different logic is needed for retrieving mock data, include a `transform` function in the sources option for the plugin.
 
 ```
 import { lookup_mock } from "vuex-bind-plugin"
@@ -420,7 +446,7 @@ const endpoints = {
       user    : String,
       date    : Date, 
     },
-    mock_data : ({ user }) => ({
+    mock : ({ user }) => ({
       "fred" : ["fred's first post", "fred is da best"],
       "ben"  : ["ben is da benst", "who wants a taco?"],
       "julia": ["can anyone pet sit?", "hey it's julia"]
@@ -453,9 +479,8 @@ Use the `naming` option to specify which naming scheme to use.
 The two included schemes are `Bind.SnakeCase` and `Bind.CamelCase`.
 
 The naming scheme only affects the generated portions of the vuex config and not configuration values associated with the plugin.
-Care has been taken to not use multi-word options, but when they do show up they will be in snake case.
 
-#### Why snake_case default?
+#### Why snake_case as default?
 
 Short Answer: It's easier: `prefix + '_' + name` requires less computation than `prefix + name.slice(0,1).toUpperCase() + name.slice(1)`.
 
@@ -539,7 +564,7 @@ Endpoints define where data will be retreived from.
 
 Endpoints are data source specific, so the endpoint format may differ between different data sources.
 
-Regardless of data sources the `type` and params` fields are available on all endpoints:
+Regardless of data source the `type` and `params` fields are available on all endpoints:
 ```
 const endpoints = {
   ENDPOINT_NAME : {
@@ -559,15 +584,12 @@ const endpoints = {
 ### Inferring Source
 
 The source of the data for the endpoint is inferred from the options provided for the endpoint and the plugin.
-If only one source is configured, it uses that.
-If multiple sources are configured, parameters use the presence of an "inference" option to decide which to use:
+If only one source is configured, it infers all endpoints are configured for that one.
+If multiple sources are configured, parameters use the presence of certain options to decide which defaults to use:
 
 - the rest data source uses `url` and `method`
 - the storage data source uses `scope` and `key`
 - the wasm data source uses `func`
-
-A source necessarily needs to be inferred to properly apply default values to the endpoint.
-Adding an explicit source to your endpoint config improves clarity, but it is not necessary.
 
 For example:
 ```
@@ -590,9 +612,11 @@ const endpoints = {
 }
 ```
 
+Adding an explicit source to your endpoint config improves clarity, but it is not necessary.
+
 If a source can not be inferred, then it will default to "rest".
 This may be changed by setting the `default_source` option in [Plugin Configuration](#plugin-configuration).
-This setting may be useful if a project starts with a single source configured, but moves to uses more.
+This is useful if a project starts with a single source configured, but then requires another.
 
 Inferring the source of an endpoint is important when considering defaults.
 See [Configuration Defaults](#configuration-defaults).
@@ -603,18 +627,17 @@ Endpoint parameters are set as an object in the form:
 
 ```
 params : {
-  name : TYPE_OR_MATCHER
+  NAME : TYPE_OR_MATCH
 }
 ```
 
-Where the `name` is the parameter name used in the request and `type` is the type of object.
+Where `NAME` is the name of the parameter that is used in the request and `TYPE_OR_MATCHER` is a type (Array, String, etc.) or a [match](#parameter-matching).
 
 Typically the type will be one of `String`, `Array`, `Number` or simply `Object` (which will match just about anything).
-Custom classes may also be able to be used.
 
-The types of these parameters are used to generate default values of parameters when they are stored in the state. See [Default Values](#default-values)
+The types of these parameters are used to generate [default values](#default-type-values) of parameters when they are stored in the state.
 
-The `strict` plugin config option may also be set to ensure that the values being sent are of the specified type.
+The `strict` plugin config option may be set to check the values being sent and received are of the specified type.
 If a variable that does not match a parameter type is provided and the `strict` option is set a warning will show on the console.
 This option should only be set in the development environment.
 
@@ -669,12 +692,12 @@ const params = {
 
 ### Rest Endpoints
 
-Rest endpoints require extra fields pertaining to request configuration:
+Rest endpoints require extra fields pertaining to rest request configuration:
 
 ```
 const endpoints = {
   ENDPOINT_NAME : {
-    url     : "/ENDPOINT_NAME",
+    url     : "/ENDPOINT_NAME/",
     method  : "get",
     headers : undefined,
     type    : Object,
@@ -685,7 +708,7 @@ const endpoints = {
 
 | Config Key     | Default          | Description                                                                                                                                       |
 |----------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| url            | "/ENDPOINT_NAME" | Endpoint url. Used as url in axios query. May be a function that takes params and returns the resulting url.                             |
+| url            | "/ENDPOINT_NAME/" | Endpoint url. Used as url in axios query. May be a function that takes params and returns the resulting url.                             |
 | method         | "get"            | REST method. Used as method in axios query.                                                                                                       |
 | headers        | null             | Special headers to set for this request. These headers are added to the headers set in the plugin config and then used as headers in axios query. |
 | type           | Object           | See [General Endpoints](#general-endpoints)                                                                                                     |
@@ -707,7 +730,7 @@ const endpoints = {
 }
 ```
 
-Note that the params are still sent in post data or get params.
+Note that the params are still sent in POST data or GET params.
 
 ### Storage Endpoints
 
@@ -791,12 +814,12 @@ const bindings = {
 | Config Key     | Default     | Description                                                                                                                                                |
 |----------------|-------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
 |  endpoint      | OUTPUT_NAME | Name of the endpoint to bind to. Should match an entry in endpoint configs. Defaults to the name of the output variable.                                   |
-|  bind          | "once"     | Binding type. One of "watch", "trigger", or "once". See [Binding Types](#binding-types)                                                                    |
+|  bind          | "once"     | Binding type. One of "watch", "trigger", "change", or "once". See [Binding Types](#binding-types)                                                                    |
 |  param_map     | {}        | Parameter mapping. Defines which state variables to use as parameters to the api. See [Parameter Mapping](#parameter-mapping)                              |
 |  side_effect   | N/A          | The name of an action to call when REST data is commited to this binding. The action must be within the current namespace.                                 |
 |  redirect      | N/A          | Redirects the output to another mutation. Instead of updating the data in OUTPUT_NAME, commit the data here.                                               |
 |  transform     | N/A        | Function that takes the (data) from the api and tranforms it before committing it to state.                                                                |
-|  create_params | false       | Set to true to automatically create state variables for the parameters in the param_map.                                                                   |
+|  create_params | false       | Set to true to automatically create state variables for endpoint parameters or the mappings in param_map.                                                                   |
 |  loading       | false       | Set to true to create state variables that track when the data is being loaded                                                                             |
 |  period        | N/A           | Time interval in milliseconds to check for new api data. Only used for "watch" bindings                                                                    |
 
@@ -840,22 +863,20 @@ Instead, output data is only updated when input parameters are changed.
 
 ### Parameter Mapping
 
-The default parameter mapping is to use the same names as the API endpoint.
-For example, if the endpoint has `params: {id: Number, text: String}` then the state should have `{ id: 0, text: "" }`.
+By default the state variables are named the same as the endpoint parameters.
+For example, if the endpoint has `params: {id: Number, text: String}` then the state SHOULD have `{ id: 0, text: "" }`.
+The `param_map` option can be used to set different names for state variables than endpoint parameters.
 
-Sometimes it may be necessary to name your state variables differently than what is in the endpoint parameters.
-This is where the param_map setting comes in.
+The `param_map` option is in the format `{ STATE_VAR: ENDPOINT_PARAM }` and any missing parameters default to the endpoint parameter name.
 
-The param_map is in the format `{ STATE_VAR: ENDPOINT_PARAM }` and any missing parameters default to the endpoint parameter name.
+For example, if the endpoint has `params: { id: Number, text: String }` and the binding has `{ param_map: { some_id: "id" } }` then the state SHOULD have `{ some_id: 0, text: "" }`.
 
-For example, if the endpoint has `params: { id: Number, text: String }` and the binding has `{ param_map: { some_id: "id" } }` then the state should have `{ some_id: 0, text: "" }`.
-
+Note that when `create_params` is `true` the state variables will be created to fufill the parameter requirements.
+In other words, the above examples WOULD create what the state SHOULD have.
 
 ## Organizing Endpoints and Bindings
 
-Bindings must be configured in the Bind.Store store config, as they are associated with that instance of Bind.Store.
-
-Endpoints on the otherhand may be configured in 3 different places/scopes:
+Endpoints may be configured in 3 different places/scopes:
 
 1. Plugin Config  -- Global scope
 2. Store Config   -- Local scope
@@ -957,85 +978,6 @@ const store = new Vuex.Store({
 
 ```
 
-Each of these approaches are equally valid, though using one over the other may lead to leaner code.
+Each of these approaches are equally valid, though using one over the other may lead to cleaner lookibg code.
 A caveat to defining the endpoint in the binding is that it can not be referenced in other bindings.
 The best way to define endpoints is up to the current application and api.
-
-# Webpack
-
-*Not Implemented Yet*
-
-## Preevaluating Bind.Stores
-
-By default, Bind.Stores are evaluated at run time in the user's browser.
-This is nice for development, but in production these are extra cycles that we don't need to happen at runtime.
-
-Since Bind.Stores evaluate to Vuex store configurations, it is possible to pre-load this configuration for the user.
-In other words, in the development environment we have:
-
-```
-const boundstore = new Bind.Store({
-  namespace : "mystore",
-  state     : {...},
-  getters   : {...},
-  mutations : {...},
-  actions   : {...},
-  bindings  : {...},
-})
-
-const store = new Vuex.Store({
-  ...
-  modules : {
-    ...boundstore
-  }
-});
-```
-
-But in production we want to skip the transformation step and have:
-
-```
-const boundstore = {
-  state     : {...},
-  getters   : {...},
-  mutations : {...},
-  actions   : {...},
-}
-
-const store = new Vuex.Store({
-  ...
-  modules : {
-    "mystore" : boundstore,
-  },
-});
-```
-
-For this we can add the `vuex-bind-plugin-loader` to our webpack or vue.config.js file to precompile Bind.Stores.
-
-```
-// vue.config.js
-import { vuex-bind-plugin-loader } from 'vuex-bind-plugin'
-...
-
-TODO
-
-// webpack.config
-
-TODO
-```
-
-
-## Removing mock data
-
-The additional `mock_data` can be excluded when building for production by adding `remove_mock_data` rule to your vue or webpack config.
-
-```
-// vue.config.js
-import { remove_mock_data } from 'vuex-bind-plugin'
-...
-
-TODO
-
-// webpack.config
-
-TODO
-```
