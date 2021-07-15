@@ -165,10 +165,10 @@ describe("RestDataSource", () => {
     expect(data_source.assign(response)).toBe("I'm some data");
   });
 
-  it("assign should return null when no data", () => {
+  it("assign should return the response when no data", () => {
     let data_source = new RestDataSource({});
-    let response = {};
-    expect(data_source.assign(response)).toBeNull();
+    let response = { error : "message" };
+    expect(data_source.assign(response)).toStrictEqual( { error : "message" } );
   });
   
   it("state should include url and headers", () => {
@@ -534,6 +534,12 @@ describe("MultDataSource", () => {
     expect(source.mutations).toBeDefined();
     expect(source.mutations.update_header).toBeDefined();
     expect(source.mutations.update_url).toBeDefined();
+  });
+
+  it("should call datasource specific assign", () => {
+    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm", });
+    expect(source.assign({ data : "my_data" }, "rest")).toBe("my_data");
+    expect(source.assign("some_data", "storage")).toBe("some_data");
   });
 
 });

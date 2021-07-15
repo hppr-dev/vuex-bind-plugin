@@ -64,8 +64,8 @@ export default class BindModule {
             return this.source.module(
               ...this.source.args(state, computed_params, binding.endpoint)
             ).then(
-              (data) => {
-                data = this.source.assign(data);
+              (response) => {
+                let data = this.source.assign(response, binding.endpoint.source);
                 data = binding.transform? binding.transform(data) : data;
 
                 if ( this.plugin_config.strict && ! is_type_match(data, binding.endpoint.type)) {

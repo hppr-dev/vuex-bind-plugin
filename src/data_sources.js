@@ -33,7 +33,7 @@ export class RestDataSource extends DataSource {
     }
   ];
 
-  assign = (response) => response.data? response.data : null ;
+  assign = (response) => response.data ?? response ;
 
   constructor({ 
       url     = "",
@@ -146,6 +146,9 @@ export class MultDataSource extends DataSource {
       this.state = { ...this.state, ...this.sources[source].state }
       this.mutations = { ...this.mutations, ...this.sources[source].mutations }
     });
+    this.assign = (response, source) => {
+      return this.sources[source].assign(response);
+    };
   }
 
   apply_defaults(name, endpoint) {
