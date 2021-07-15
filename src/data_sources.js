@@ -75,11 +75,11 @@ export class StorageDataSource extends DataSource {
   }
 
   apply_defaults(name, endpoint ) {
-    endpoint.type = endpoint.type? endpoint.type : String;
+    endpoint.type = endpoint.type ?? String;
     super.apply_defaults(name, endpoint);
-    endpoint.key = endpoint.key? endpoint.key : name;
-    endpoint.params[endpoint.key] = endpoint.params[endpoint.key]? endpoint.params[endpoint.key] : endpoint.type;
-    endpoint.scope = endpoint.scope? endpoint.scope : "local";
+    endpoint.key = endpoint.key ?? name;
+    endpoint.params[endpoint.key] = endpoint.params[endpoint.key] ?? endpoint.type;
+    endpoint.scope = endpoint.scope ?? "local";
   }
 }
 
@@ -96,8 +96,8 @@ export class WebAssemblyDataSource extends DataSource {
 
   apply_defaults(name, endpoint) {
     super.apply_defaults(name, endpoint);
-    endpoint.func_name = endpoint.func_name? endpoint.func_name : name;
-    endpoint.order = endpoint.order? endpoint.order : [] ;
+    endpoint.func_name = endpoint.func_name ?? name;
+    endpoint.order = endpoint.order ?? [] ;
   }
 }
 
@@ -146,7 +146,7 @@ export class MultDataSource extends DataSource {
 
   apply_defaults(name, endpoint) {
     endpoint.source = this.infer_source(endpoint);
-    this.sources[endpoint.source].apply_defaults(endpoint);
+    this.sources[endpoint.source].apply_defaults(name, endpoint);
   }
 
   infer_source(endpoint) {

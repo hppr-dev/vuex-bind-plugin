@@ -473,7 +473,7 @@ describe("MultDataSource", () => {
     expect(source.infer_source).toHaveBeenCalledTimes(1);
     expect(source.infer_source).toHaveBeenCalledWith(endpoint);
     expect(source.sources.rest.apply_defaults).toHaveBeenCalledTimes(1);
-    expect(source.sources.rest.apply_defaults).toHaveBeenCalledWith(endpoint);
+    expect(source.sources.rest.apply_defaults).toHaveBeenCalledWith("myend", endpoint);
   });
 
   it("should infer source is rest when url or method is set", () => {
