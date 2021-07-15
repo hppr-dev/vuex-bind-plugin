@@ -66,7 +66,7 @@ export default class _BoundStore {
       if ( binding.bind == c.WATCH || binding.bind == c.CHANGE ) {
         this.watch_param_defs[output_var] = params;
       }
-      if ( ! binding.redirect ) {
+      if ( ! binding.redirect && ! params[output_var] ) {
         this.create_variable(output_var, binding.endpoint.type);
       }
       if ( params && binding.create_params ) {

@@ -259,6 +259,18 @@ describe("generate_modifications", () => {
     expect(new_this.create_variable).toHaveBeenCalledWith("out", undefined);
   });
 
+  it("should not create the output variable when the output is in parameters and create_params is false", () => {
+    new_this.bindings.out = {
+      bind : "once",
+      endpoint  : {
+        params : { out : String },
+      },
+      type : String,
+    };
+    generate_modifications();
+    expect(new_this.create_variable).toHaveBeenCalledTimes(0);
+  });
+
 });
 
 describe("create_variable", () => {
