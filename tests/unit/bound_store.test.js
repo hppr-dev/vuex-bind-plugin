@@ -72,12 +72,14 @@ describe("constructor", () => {
     BindPlugin.config.strict = true;
     expect(() => init_store({ some : { endpoint : "asdf" } }, "ns")).toThrow("some");
     expect(() => init_store({ some : { endpoint : "asdf" } }, "ns")).toThrow("asdf");
+    BindPlugin.config.strict = false;
   });
 
   it("should throw when initializing a bind with bad bind and strict is on", () => {
     BindPlugin.config.strict = true;
     expect(() => init_store({ some : { bind : "asdf", endpoint: {} } }, "ns")).toThrow("some");
     expect(() => init_store({ some : { bind : "asdf", endpoint: {} } }, "ns")).toThrow("asdf");
+    BindPlugin.config.strict = false;
   });
 
   it("should handle empty state, mutations, etc", () => {
@@ -436,6 +438,7 @@ describe("create_load_action", () => {
 
 describe("create_start_bind_action", () => {
   let new_this = {
+    namespace : "dinner",
     generated_actions   : {},
     all_load_actions : [ "pizza", "pasta", "pepperoni" ],
     plugin_config : {
@@ -445,8 +448,20 @@ describe("create_start_bind_action", () => {
     commit_on_start : [ "loading_pizza", "loading_pasta" ],
   };
 
+  let ctx = {
+    dispatch : jest.fn(),
+    commit   : jest.fn(),
+    rootState : {
+      bind : {
+        bound_stores : [],
+      },
+    },
+  };
+
   beforeEach(() => {
     new_this.add_watch_params.mockClear();
+    ctx.dispatch.mockClear();
+    ctx.commit.mockClear();
   });
 
   let create_start_bind_action = BoundStore.prototype.create_start_bind_action.bind(new_this);
@@ -459,18 +474,10 @@ describe("create_start_bind_action", () => {
   });
 
   it("should create action that returns a promise", () => {
-    let ctx = {
-      dispatch : jest.fn(),
-      commit   : jest.fn(),
-    };
     expect(new_this.generated_actions.start_bind(ctx)).toBeInstanceOf(Promise);
   });
 
   it("should create start_bind action that dispatches all load actions", () => {
-    let ctx = {
-      dispatch : jest.fn(),
-      commit   : jest.fn(),
-    };
     return new_this.generated_actions.start_bind(ctx).then(() => {
       expect(ctx.dispatch).toHaveBeenCalledTimes(3);
       expect(ctx.dispatch).toHaveBeenCalledWith("pizza");
@@ -480,22 +487,24 @@ describe("create_start_bind_action", () => {
   });
 
   it("should create start_bind action that commits all ", () => {
-    let ctx = {
-      dispatch : jest.fn(),
-      commit   : jest.fn(),
-    };
     return new_this.generated_actions.start_bind(ctx).then(() => {
-      expect(ctx.commit).toHaveBeenCalledTimes(2);
+      expect(ctx.commit).toHaveBeenCalledTimes(3);
+      expect(ctx.commit).toHaveBeenCalledWith("bind/add_bound_store", { name: "dinner"}, { root : true });
       expect(ctx.commit).toHaveBeenCalledWith("loading_pizza");
       expect(ctx.commit).toHaveBeenCalledWith("loading_pasta");
     });
   });
 
+  it("should create start_bind action that rejects when strict is on and store is already bound", () => {
+    BindPlugin.config.strict = true;
+    ctx.rootState.bind.bound_stores = ["dinner"];
+    return expect(new_this.generated_actions.start_bind(ctx)).rejects.toBe("Tried to dinner/start_bind twice. Dispatch bind/reset before restarting bind").then( () => {
+      ctx.rootState.bind.bound_stores = [];
+      BindPlugin.config.strict = false;
+    });
+  });
+
   it("should create start_bind action that adds watch params", () => {
-    let ctx = {
-      dispatch : jest.fn(),
-      commit   : jest.fn(),
-    };
     new_this.generated_actions.start_bind(ctx)
     expect(new_this.add_watch_params).toHaveBeenCalledTimes(1);
     expect(new_this.add_watch_params).toHaveBeenCalledWith(ctx.commit);

@@ -119,8 +119,14 @@ export default class _BoundStore {
   }
 
   create_start_bind_action(name) {
-    this.generated_actions[BindPlugin.config.naming.start] = ({ dispatch, commit }) => {
-      let prom = Promise.resolve();
+    this.generated_actions[BindPlugin.config.naming.start] = ({ dispatch, commit, rootState }) => {
+      let prom = new Promise((resolve, reject) => {
+        if ( BindPlugin.config.strict && rootState.bind.bound_stores.includes(this.namespace) ) {
+          return reject(`Tried to ${this.namespace}/${BindPlugin.config.naming.start} twice. Dispatch ${BindPlugin.config.namespace}/reset before restarting bind`);
+        } 
+        commit(`${BindPlugin.config.namespace}/${c.ADD_BOUND_STORE}`, { name : this.namespace }, { root : true });
+        return resolve();
+      });
       this.add_watch_params(commit);
       this.commit_on_start.forEach((mut) => commit(mut));
       this.all_load_actions.forEach((action) => {
