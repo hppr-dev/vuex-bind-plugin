@@ -42,7 +42,7 @@ export default class BindModule {
           }
           state.intervals = {};
         },
-        [c.CLEAR_BOUND_STORES] : (state) => state.bound_stores = [],
+        [c.CLEAR_BOUND_STORES] : (state) => state.bound_stores = state.bound_stores.filter((name) => name === ""),
         [c.CLEAR_WATCH_PARAMS] : (state) => state.watch_params = {},
       },
       actions: {

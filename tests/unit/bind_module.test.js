@@ -240,6 +240,11 @@ describe("mutations", () => {
       module.mutations.clear_bound_stores(state);
       expect(state.bound_stores).toStrictEqual([]);
     });
+    it("should not clear root store if it is bound", () => {
+      state.bound_stores = ["", "some", "thing" ];
+      module.mutations.clear_bound_stores(state);
+      expect(state.bound_stores).toStrictEqual([""]);
+    });
   });
 
   describe("clear_watch_params", () => {
