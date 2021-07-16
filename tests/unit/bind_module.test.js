@@ -162,11 +162,21 @@ describe("mutations", () => {
 
   describe("add_interval", () => {
 
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
     it("should add interval to intervals", () => {
       let payload = {
-        name : "test/some_interval",
-        interval: 1023,
+        name   : "test/some_interval",
+        func   : () => "some fun",
+        period : 10000,
       };
+      setInterval = jest.fn(() => 1023)
       state.intervals = {};
       module.mutations.add_interval(state, payload);
       expect(state.intervals).toStrictEqual({
@@ -373,7 +383,7 @@ describe("actions", () => {
   
   describe("bind action", () => {
     let ctx = {
-      dispatch : (...args) => args
+      dispatch : jest.fn()
     };
     let payload = {
       binding   : {
@@ -381,38 +391,39 @@ describe("actions", () => {
       },
     };
 
+    beforeEach( () => {
+      ctx.dispatch.mockClear();
+    });
+
     it("bind action should dispatch once action with bind is trigger", () => {
       payload.binding.bind = "trigger";
-      expect(module.actions.bind(ctx, payload)).toStrictEqual(["once", payload]);
+      module.actions.bind(ctx, payload)
+      expect(ctx.dispatch).toHaveBeenCalledWith("once", payload);
     });
 
     it("bind action should dispatch once action with bind is once", () => {
       payload.binding.bind = "once";
-      expect(module.actions.bind(ctx, payload)).toStrictEqual(["once", payload]);
+      module.actions.bind(ctx, payload)
+      expect(ctx.dispatch).toHaveBeenCalledWith("once", payload);
     });
 
     it("bind action should dispatch once action with bind is change", () => {
       payload.binding.bind = "change";
-      expect(module.actions.bind(ctx, payload)).toStrictEqual(["once", payload]);
+      module.actions.bind(ctx, payload)
+      expect(ctx.dispatch).toHaveBeenCalledWith("once", payload);
     });
     
     it("bind action should dispatch watch action when bind is watch", () => {
       payload.binding.bind = "watch";
-      expect(module.actions.bind(ctx, payload)).toStrictEqual(["watch", payload]);
+      module.actions.bind(ctx, payload);
+      expect(ctx.dispatch).toHaveBeenCalledWith("watch", payload);
     });
   });
   
   describe("watch action", () => {
-    let dispatches = [];
-    let commits = [];
     let ctx = {
-      dispatch : (...args) => {
-        dispatches.push(args);
-        return args;
-      },
-      commit : (...args) => {
-        commits.push(args)
-      }
+      dispatch : jest.fn(),
+      commit   : jest.fn(),
     };
     let payload = {
       output    : "output_var",
@@ -426,29 +437,29 @@ describe("actions", () => {
 
     beforeEach(() => {
       jest.useFakeTimers();
-      dispatches = [];
-      commits = [];
+      ctx.dispatch.mockClear();
+      ctx.commit.mockClear();
     });
 
     afterEach(() => jest.useRealTimers());
 
     it("should dispatch once action when called", () => {
-      expect(module.actions.watch(ctx, payload)).toStrictEqual(["once", payload]);
-      expect(dispatches).toStrictEqual([["once", payload]])
+      module.actions.watch(ctx, payload);
+      expect(ctx.dispatch).toHaveBeenCalledWith("once", payload);
     });
 
     it("should commit an interval id to intervals", () => {
-      setInterval = jest.fn(() => 1)
       module.actions.watch(ctx, payload);
-      expect(commits).toStrictEqual([["add_interval", {name: "test/output_var", interval: 1}]]);
-      expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 1000);
-      expect(setInterval).toHaveBeenCalledTimes(1);
+      expect(ctx.commit).toHaveBeenCalledWith("add_interval", {name: "test/output_var", func : expect.any(Function), period : 1000 });
     });
 
     it("should dispatch once action on an interval", () => {
       module.actions.watch(ctx, payload);
-      jest.advanceTimersByTime(1001);
-      expect(dispatches).toStrictEqual([["once", payload],["once", payload]])
+      expect(ctx.commit).toHaveBeenCalledTimes(1);
+      ctx.dispatch.mockClear();
+      // call the function passed to add_interval
+      ctx.commit.mock.calls[0][1].func();
+      expect(ctx.dispatch).toHaveBeenCalledWith("once", payload);
     });
   });
 

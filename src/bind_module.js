@@ -28,9 +28,9 @@ export default class BindModule {
         [c.ADD_BOUND_STORE] : (state, { name } ) => {
           state.bound_stores.push(name);
         }, 
-        [c.ADD_INTERVAL] : (state, { name, interval } ) => {
+        [c.ADD_INTERVAL] : (state, { name, func, period } ) => {
           clearInterval(state.intervals[name]);
-          state.intervals[name] = interval;
+          state.intervals[name] = setInterval(func, period);
         },
         [c.DELETE_INTERVAL] : (state, { name }) => {
           clearInterval(state.intervals[name]);
@@ -62,8 +62,9 @@ export default class BindModule {
             dispatch(c.ONCE, payload );
           };
           commit(c.ADD_INTERVAL, { 
-            name: `${payload.namespace}/${payload.output}`,
-            interval: setInterval( interval_func, payload.binding.period ) 
+            name   : `${payload.namespace}/${payload.output}`,
+            func   : interval_func,
+            period : payload.binding.period,
           });
           return dispatch(c.ONCE, payload);
         },
