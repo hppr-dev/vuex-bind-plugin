@@ -1,7 +1,7 @@
 import axios from 'axios'
 import BindPlugin from './bind_plugin.js'
 import { get_default } from './utils.js'
-import { wasm_adapter, storage_adapter } from './adapters.js'
+import { wasm_adapter } from './adapters.js'
 import { REST, STORAGE, WASM } from './constants.js'
 
 export class DataSource {
@@ -51,38 +51,6 @@ export class RestDataSource extends DataSource {
   }
 }
 
-export class StorageDataSource extends DataSource {
-  module = storage_adapter;
-
-  args = ( bind_state, input_params, endpoint ) => [
-    endpoint.key,
-    input_params[endpoint.key],
-    endpoint.type,
-    endpoint.scope,
-    {
-      expires : endpoint.expires ?? bind_state.cookies.expires,
-      path    : endpoint.path ?? bind_state.cookies.path,
-    }
-  ];
-
-  constructor({ 
-    cookies = {
-      expires : 720000,
-      path    : "/"
-    }
-  }) {
-    super({ cookies });
-  }
-
-  apply_defaults(name, endpoint ) {
-    endpoint.type = endpoint.type ?? String;
-    super.apply_defaults(name, endpoint);
-    endpoint.key = endpoint.key ?? name;
-    endpoint.params[endpoint.key] = endpoint.params[endpoint.key] ?? endpoint.type;
-    endpoint.scope = endpoint.scope ?? "local";
-  }
-}
-
 export class WebAssemblyDataSource extends DataSource {
   module = wasm_adapter;
 
@@ -116,7 +84,6 @@ export class MultDataSource extends DataSource {
   constructor({
     url       = undefined,
     headers   = undefined,
-    storage   = false,
     cookies   = undefined,
     wasm      = undefined,
     mock      = {},
@@ -132,9 +99,6 @@ export class MultDataSource extends DataSource {
     };
     if ( url != null ) {
       this.sources[REST] = mock === true || mock[REST] ? new MockRestDataSource(conf, transform) : new RestDataSource(conf);
-    }
-    if ( storage ) {
-      this.sources[STORAGE] = mock === true || mock[STORAGE] ? new MockStorageDataSource(conf, transform) : new StorageDataSource(conf);
     }
     if ( wasm != null ) {
       this.sources[WASM] = mock === true || mock[WASM] ? new MockWebAssemblyDataSource(conf, transform) : new WebAssemblyDataSource({ wasm });
@@ -200,19 +164,6 @@ export class MockRestDataSource extends MockDataSource {
     super({url, headers}, transform);
     this.mutations[BindPlugin.config.naming.update("header")] = (state, { key, value }) => state.headers[key] = value;
     this.mutations[BindPlugin.config.naming.update("url")] = (state, value ) => state.url = value;
-  }
-}
-
-export class MockStorageDataSource extends MockDataSource {
-  constructor({
-      cookies = {
-        expires : 720000,
-        path    : "/"
-      }
-    },
-    transform = undefined,
-  ) {
-    super({ cookies }, transform);
   }
 }
 

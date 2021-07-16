@@ -2,7 +2,7 @@
 
 A vuex plugin that provides a link between outside data and application state.
 In this context, outside data refers to any data that is not initially available to the application.
-For example, outside data could be API endpoints, browser storage or a WebAssembly binary*. 
+For example, outside data could be API endpoints, or a WebAssembly binary*. 
 
 *Future version
 
@@ -374,18 +374,6 @@ Include the `wasm` option to configure the WebAssembly data source.
 }
 ```
 
-Set `storage : true` to configure the storage data source.
-The `cookies` options is also available to set the default expiration and path of cookies.
-```
-{
-  storage : true,
-  cookies : {         // Optional default cookie configuration
-    expires : 720000,
-    path    : '/',
-  },
-}
-```
-
 For example, the following snippet configures all three:
 
 ```
@@ -393,7 +381,6 @@ const plugin = Bind.Plugin({
   sources : {
     url     : "http://my_api",
     wasm    : "functions.wasm",
-    storage : true,
   }
   ...
 });
@@ -577,7 +564,7 @@ const endpoints = {
 
 | Config Key     | Default          | Description                                                                                                                                       |
 |----------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| source         | ""               | Data source to use, one of "rest", "storage", or "wasm". See [Inferring Source](#inferring-source). |
+| source         | ""               | Data source to use. See [Inferring Source](#inferring-source). |
 | type           | Object           | Type of object returned in the responses data                                                                                                     |
 | params         | {}               | Endpoint parameters. See [Endpoint Parameters](#endpoint-parameters)                                                                              |
 
@@ -588,18 +575,11 @@ If only one source is configured, it infers all endpoints are configured for tha
 If multiple sources are configured, parameters use the presence of certain options to decide which defaults to use:
 
 - the rest data source uses `url` and `method`
-- the storage data source uses `scope` and `key`
 - the wasm data source uses `func`
 
 For example:
 ```
 const endpoints = {
-  token : { // Infers source : storage
-    scope : "cookie",
-  },
-  resul : { // Infers source : storage
-    key : "results",
-  },
   posts : { // Infers source : rest
     url : "/posts/",
   },
@@ -731,43 +711,6 @@ const endpoints = {
 ```
 
 Note that the params are still sent in POST data or GET params.
-
-### Storage Endpoints
-
-Storage endpoints define keys in browser storage that are accessed and bound into state.
-
-```
-const endpoints = {
-  ENDPOINT_NAME : {
-    key     : "ENDPOINT_NAME",
-    scope   : "local",
-    expires : 720000,
-    path    : "/",
-    type    : String,
-  }
-}
-```
-
-| Config Key     | Default            | Description                                                                               |
-|----------------|--------------------|-------------------------------------------------------------------------------------------|
-| key            | "ENDPOINT_NAME"    | Storage key, what the value is stored under                                               |
-| scope          | "local"            | Storage scope, one of "local", "session" or "cookie"                                      |
-| expires        | 720000             | Expiration time. For cookies only. Overrides the cookies.expires plugin option.           |
-| path           | "/"                | Cookie path. For cookies only. Overrides the cookies.path plugin option.                   |
-| type           | String             | See [General Endpoints](#general-endpoints)                                               |
-
-Note: params are not used/required.
-
-A standard definition of a storage endpoint may look something like:
-
-```
-const endpoints = {
-  token   : { scope : "cookie" },
-  user_id : { scope : "local" },
-  static :  { scope : "session" },
-}
-```
-
 
 ### WebAssembly Endpoints
 

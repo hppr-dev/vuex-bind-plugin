@@ -3,8 +3,6 @@ import {
   MockDataSource,
   RestDataSource,
   MockRestDataSource,
-  StorageDataSource,
-  MockStorageDataSource,
   WebAssemblyDataSource,
   MockWebAssemblyDataSource,
   MultDataSource
@@ -286,78 +284,6 @@ describe("MockRestDataSource", () => {
   });
 });
 
-describe("StorageDataSource", () => {
-
-  let data_source = new StorageDataSource({});
-
-  it("should use storage_adapter", () => {
-    expect(data_source.module).toBe(storage_adapter);
-  });
-
-  it("should have cookies state variables and no mutations", () => {
-    expect(data_source.state).toStrictEqual({ cookies: { expires : 720000, path: "/" } });
-    expect(data_source.mutations).toStrictEqual({});
-  });
-
-  it("should have args that returns key, value, type, scope, cookie_config", () => {
-    let bind_state = {
-      cookies : {
-        expires : 1111,
-        path    : "somepath",
-      }
-    }
-    let input_params = { "out" : 123 };
-    let endpoint = { 
-      key: "out",
-      type: String,
-      scope: "scope"
-    };
-    expect(data_source.args(bind_state, input_params, endpoint)).toStrictEqual(["out", 123, String, "scope", { expires : 1111, path :"somepath" }]);
-  });
-
-  it("should have an assign that returns the same data", () => {
-    expect(data_source.assign(1234)).toBe(1234);
-  });
-
-  it("should apply defaults", () => {
-    let def = {};
-    data_source.apply_defaults("mystorage", def);
-    expect(def.key).toBe("mystorage");
-    expect(def.params).toStrictEqual({ mystorage : String });
-    expect(def.type).toBe(String);
-    expect(def.scope).toBe("local");
-  });
-
-  it("should leave non-defaults", () => {
-    let def = {
-      key   : "something",
-      type  : Array,
-      scope : "session",
-    };
-    data_source.apply_defaults("mystorage", def);
-    expect(def.key).toBe("something");
-    expect(def.params).toStrictEqual({ something : Array });
-    expect(def.type).toBe(Array);
-    expect(def.scope).toBe("session");
-  });
-
-  it("should leave non-defaults with params", () => {
-    let def = {
-      key   : "something",
-      type  : Array,
-      scope : "session",
-      params : {
-        something : Array
-      },
-    };
-    data_source.apply_defaults("mystorage", def);
-    expect(def.key).toBe("something");
-    expect(def.params).toStrictEqual({ something : Array });
-    expect(def.type).toBe(Array);
-    expect(def.scope).toBe("session");
-  });
-});
-
 describe("WebAssemblyDataSource", () => {
   let data_source = new WebAssemblyDataSource({wasm: "some.wasm"});
 
@@ -415,19 +341,10 @@ describe("WebAssemblyDataSource", () => {
 describe("MultDataSource", () => {
  
   it("should configure all datsources", () => {
-    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm" });
+    let source = new MultDataSource({ url: "myurl", wasm : "app.wasm" });
     expect(source.sources).toStrictEqual({
       "rest"    : expect.any(RestDataSource),
-      "storage" : expect.any(StorageDataSource),
       "wasm"    : expect.any(WebAssemblyDataSource),
-    });
-  });
-
-  it("should configure rest, storage datsources", () => {
-    let source = new MultDataSource({ url: "myurl", storage : true });
-    expect(source.sources).toStrictEqual({
-      "rest"    : expect.any(RestDataSource),
-      "storage" : expect.any(StorageDataSource),
     });
   });
 
@@ -436,9 +353,9 @@ describe("MultDataSource", () => {
     expect(source).toBeInstanceOf(RestDataSource);
   });
 
-  it("should return a single storage datasource when it is only present", () => {
-    let source = new MultDataSource({ storage: true });
-    expect(source).toBeInstanceOf(StorageDataSource);
+  it("should return a single wasm datasource when it is only present", () => {
+    let source = new MultDataSource({ wasm : "app.wasm" });
+    expect(source).toBeInstanceOf(WebAssemblyDataSource);
   });
 
   it("should forward args to rest on rest source on datasource", () => {
@@ -512,23 +429,20 @@ describe("MultDataSource", () => {
   });
 
   it("should use mock datasources when mock is set to true", () => {
-    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm", mock : true });
+    let source = new MultDataSource({ url: "myurl", wasm : "app.wasm", mock : true });
     expect(source.sources.rest).toBeInstanceOf(MockRestDataSource);
-    expect(source.sources.storage).toBeInstanceOf(MockStorageDataSource);
     expect(source.sources.wasm).toBeInstanceOf(MockWebAssemblyDataSource);
   });
 
   it("should use selected mock datasources when mock is set to object", () => {
-    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm", mock : { rest: true, wasm: true } });
+    let source = new MultDataSource({ url: "myurl", wasm : "app.wasm", mock : { rest: true } });
     expect(source.sources.rest).toBeInstanceOf(MockRestDataSource);
-    expect(source.sources.storage).toBeInstanceOf(StorageDataSource);
-    expect(source.sources.wasm).toBeInstanceOf(MockWebAssemblyDataSource);
+    expect(source.sources.wasm).toBeInstanceOf(WebAssemblyDataSource);
   });
 
   it("should merge state and mutations from all datasources", () => {
     let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm", });
     expect(source.state).toBeDefined();
-    expect(source.state.cookies).toBeDefined();
     expect(source.state.url).toBeDefined();
     expect(source.state.headers).toBeDefined();
     expect(source.mutations).toBeDefined();
@@ -537,9 +451,8 @@ describe("MultDataSource", () => {
   });
 
   it("should call datasource specific assign", () => {
-    let source = new MultDataSource({ url: "myurl", storage : true, wasm : "app.wasm", });
+    let source = new MultDataSource({ url: "myurl", wasm : "app.wasm", });
     expect(source.assign({ data : "my_data" }, "rest")).toBe("my_data");
-    expect(source.assign("some_data", "storage")).toBe("some_data");
   });
 
 });
@@ -566,20 +479,6 @@ describe("MockDataSource", () => {
     return expect(source.module({ endpoint : { type : Array } })).resolves.toStrictEqual([]);
   });
 })
-
-describe("MockStorageDataSource", () => {
-  it("should set the default transform", () => {
-    let source = new MockStorageDataSource({});
-    expect(source.module).toBeDefined();
-    return expect(source.module({ endpoint : { mock : "mocked" } })).resolves.toBe("mocked");
-  });
-  it("should set cookie options", () => {
-    let source = new MockStorageDataSource({});
-    expect(source.state.cookies).toBeDefined();
-    expect(source.state.cookies.expires).toBe(720000);
-    expect(source.state.cookies.path).toBe("/");
-  });
-});
 
 describe("MockWebAssemblyDataSource", () => {
   it("should set the default tranform", () => {
