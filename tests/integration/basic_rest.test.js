@@ -16,6 +16,7 @@ for ( let [ name, plugin_config, store_config ] of scenarios ) {
   
     beforeEach(() => {
       bb.module.mockClear();
+      bb.dispatch("bind/reset");
     });
   
     it("should start bindings when start bind is called", () => {

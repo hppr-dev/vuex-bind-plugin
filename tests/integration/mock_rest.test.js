@@ -11,6 +11,10 @@ describe("mocked rest scenario", () => {
 
   bb.spy_module();
 
+  beforeEach(() => {
+    bb.dispatch("bind/reset");
+  });
+
   it("should start bindings when start bind is called", () => {
     bb.input_state("profile", {
       users: ["something","here"]
@@ -72,9 +76,9 @@ describe("mocked rest scenario", () => {
   });
 
   describe("After start_bind has been called", () => {
-    bb.dispatch("profile/start_bind");
 
     it("should call get data when selected_user_id is updated", () => {
+      bb.dispatch("profile/start_bind");
       bb.input_state("profile", {
         user_data : { some : "data" }
       }), 
