@@ -215,6 +215,30 @@ describe("mutations", () => {
       expect(clearInterval).toHaveBeenCalledWith(4321);
     });
   });
+
+  describe("add_bound_store", () => {
+    it("should store to bound list", () => {
+      state.bound_stores = [];
+      module.mutations.add_bound_store(state, { name: "some_store" } );
+      expect(state.bound_stores).toStrictEqual(["some_store"]);
+    });
+  });
+
+  describe("clear_bound_stores", () => {
+    it("should clear to bound store list", () => {
+      state.bound_stores = ["some","thing","here"];
+      module.mutations.clear_bound_stores(state);
+      expect(state.bound_stores).toStrictEqual([]);
+    });
+  });
+
+  describe("clear_watch_params", () => {
+    it("shoud clear watch_params", () => {
+      state.watch_params = { "some_mut" : "some_action" };
+      module.mutations.clear_watch_params(state);
+      expect(state.watch_params).toStrictEqual({});
+    });
+  });
 });
 
 describe("actions", () => {
@@ -427,4 +451,23 @@ describe("actions", () => {
       expect(dispatches).toStrictEqual([["once", payload],["once", payload]])
     });
   });
+
+  describe("reset", () => {
+
+    beforeEach(() => ctx.commit.mockClear());
+
+    it("should return a promise", () => {
+      expect(module.actions.reset(ctx)).toBeInstanceOf(Promise);
+    });
+
+    it("should clear watch_params, bound_stores and intevals", () =>  {
+      return expect(module.actions.reset(ctx)).resolves.toBeUndefined().then( () => {
+        expect(ctx.commit).toHaveBeenCalledTimes(3);
+        expect(ctx.commit).toHaveBeenCalledWith("clear_watch_params");
+        expect(ctx.commit).toHaveBeenCalledWith("clear_intervals");
+        expect(ctx.commit).toHaveBeenCalledWith("clear_bound_stores");
+      });
+    })
+  });
+
 });

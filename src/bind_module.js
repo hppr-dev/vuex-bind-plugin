@@ -11,11 +11,12 @@ export default class BindModule {
       state      : {
         intervals    : {},
         watch_params : {},
+        bound_stores : [],
         ...this.source.state,
       },
       mutations: {
         ...this.source.mutations,
-        [c.WATCH_PARAMS] : ( state,{ action, mutations } ) => {
+        [c.WATCH_PARAMS] : ( state, { action, mutations } ) => {
           mutations.forEach((mutation) => {
             if ( state.watch_params[mutation] ) {
               state.watch_params[mutation].push(action);
@@ -24,6 +25,9 @@ export default class BindModule {
             }
           });
         },
+        [c.ADD_BOUND_STORE] : (state, { name } ) => {
+          state.bound_stores.push(name);
+        }, 
         [c.ADD_INTERVAL] : (state, { name, interval } ) => {
           clearInterval(state.intervals[name]);
           state.intervals[name] = interval;
@@ -37,9 +41,19 @@ export default class BindModule {
             clearInterval(interval);
           }
           state.intervals = {};
-        }
+        },
+        [c.CLEAR_BOUND_STORES] : (state) => state.bound_stores = [],
+        [c.CLEAR_WATCH_PARAMS] : (state) => state.watch_params = {},
       },
       actions: {
+        [c.RESET]  : ({ commit } ) => {
+          return new Promise( (resolve) => {
+            commit(c.CLEAR_INTERVALS);
+            commit(c.CLEAR_BOUND_STORES);
+            commit(c.CLEAR_WATCH_PARAMS);
+            resolve();
+          });
+        },
         [c.BIND]    : ({ dispatch }, payload) => {
           return payload.binding.bind === c.WATCH? dispatch(c.WATCH, payload) : dispatch(c.ONCE, payload);
         },
