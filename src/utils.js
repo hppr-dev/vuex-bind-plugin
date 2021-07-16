@@ -20,14 +20,16 @@ export const map_endpoint_types = function(param_map={}, type_map={}) {
 
 export const is_unset = function(value, type) {
   switch (type) {
-    case Object :
-    case Array  :
-    case String :
+    case Object  :
+    case Array   :
+    case String  :
       return value == null || Object.keys(value).length === 0;
-    case Number:
+    case Number  :
       return value === 0;
+    case Boolean :
+      return value !== true && value !== false;
   }
-  if ( type instanceof Function){
+  if ( type instanceof Function && type().is_set ){
     let t = type();
     return !t.is_set(value);
   }

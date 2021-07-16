@@ -131,6 +131,12 @@ describe("is_unset", () => {
     expect(is_unset({}, undefined)).toBe(true);
   });
 
+  it("should support booleans", () => {
+    expect(is_unset(true, Boolean)).toBe(false);
+    expect(is_unset(false, Boolean)).toBe(false);
+    expect(is_unset(null, Boolean)).toBe(true);
+  });
+
 });
 
 describe("is_type_match", () => {
@@ -202,7 +208,7 @@ describe("get_default", () => {
   });
 });
 
-describe("query_mock_data", () => {
+describe("lookup_mock", () => {
 
   it("should pull data from endpoint mock data", () => {
     let endpoint = { mock_data : ({x, y}) => x * y }
