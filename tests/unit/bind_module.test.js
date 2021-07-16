@@ -62,8 +62,17 @@ describe("pull_params_from", () => {
   beforeEach(() => {
     param_map = { user_id : "user", date_str : "date" };
     params = { user: String, date: String }; 
-    state = { user_id : "", date_str : "2020-01-01" };
+    state = { user_id : "something", date_str : "2020-01-01" };
     new_this.plugin_config = {};
+  });
+
+  it("should pull from state when computed is defined", () => {
+    param_map = { user_id : "user"};
+    param_map.date = { computed : (s) => s.date.join(',') };
+    params.date = String
+    state.date = [1,2,3,4,5];
+    let pulled_params = pull_params_from(state, param_map, params, "output");
+    expect(pulled_params.date).toBe('1,2,3,4,5');
   });
 
   it("should return falsey if params are unset", () => {

@@ -112,8 +112,12 @@ export default class BindModule {
     let computed_params = {};
     let param_defs = map_endpoint_types(param_map, params);
     for ( let state_name of Object.keys(param_defs) ) {
-      let param_name = param_map[state_name]? param_map[state_name] : state_name;
-      computed_params[param_name] = local_state[state_name];
+      let param = param_map[state_name]? param_map[state_name] : state_name;
+      if ( param_map[state_name] && param_map[state_name].computed ) {
+        computed_params[state_name] = param_map[state_name].computed(local_state);
+      } else {
+        computed_params[param] = local_state[state_name];
+      }
     }
 
     if ( this.plugin_config.strict ) {

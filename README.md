@@ -867,6 +867,45 @@ For example, if the endpoint has `params: { id: Number, text: String }` and the 
 Note that when `create_params` is `true` the state variables will be created to fufill the parameter requirements.
 In other words, the above examples WOULD create what the state SHOULD have.
 
+#### Computed Parameters
+
+Parameters may be computed from the state of the store module.
+To compute a parameter from the local state, set the parameter in the `param_map` as an object with a `computed` property that is a function.
+
+Note that the name in the binding `param_map` must match the name in the endpoint `params`.
+
+```
+const endpoints = { 
+  user_nums : {
+    method : "get",
+    type   : Array,
+    params : {
+      id   : String,
+      nums : String,
+    }
+  }
+},
+
+const bindings = {
+  user_nums : {
+    param_map : {
+      user_id : "id",
+      nums    : { computed : (state) => state.sequence.join(',') },
+  }
+}
+
+export default {
+  bindings,
+  endpoints,
+  state : {
+    sequence : [1,2,3,4,5],
+    user_id  : 10,
+  },
+}
+``` 
+
+In the above example the `nums` parameter would be computed as `'1,2,3,4,5'`.
+
 ## Organizing Endpoints and Bindings
 
 Endpoints may be configured in 3 different places/scopes:
