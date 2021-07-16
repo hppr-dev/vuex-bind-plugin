@@ -6,6 +6,14 @@ import { match, lookup_mock } from './utils.js'
 
 export { match, lookup_mock }
 
+export const naming = {
+  update  : (name) => BindPlugin.config.naming.update(name),
+  load    : (name) => BindPlugin.config.naming.load(name),
+  loading : (name) => BindPlugin.config.naming.loading(name),
+  trigger : (name) => BindPlugin.config.naming.trigger(name),
+  done    : (name) => BindPlugin.config.naming.done(name),
+}
+
 export default {
   Plugin  : BindPlugin,
   Store   : BoundStore,

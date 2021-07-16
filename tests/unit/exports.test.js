@@ -1,4 +1,4 @@
-import Bind from '@src/exports.js'
+import Bind, { naming } from '@src/exports.js'
 import BindPlugin from '@src/bind_plugin.js'
 import BoundStore from '@src/bound_store.js'
 import { SnakeCase, CamelCase } from '@src/naming.js'
@@ -131,5 +131,16 @@ describe("Bind.SnakeCase", () => {
 describe("Bind.CamelCase", () => {
   it("should be an instance of CamelCase", () => {
     expect(Bind.CamelCase()).toBeInstanceOf(CamelCase);
+  });
+});
+
+describe("naming", () => {
+  it("should use BindPlugin.config.naming", () => {
+    new BindPlugin({});
+    expect(naming.update("name")).toBe("update_name");
+    expect(naming.trigger("name")).toBe("trigger_name");
+    expect(naming.loading("name")).toBe("loading_name");
+    expect(naming.load("name")).toBe("load_name");
+    expect(naming.done("name")).toBe("done_loading_name");
   });
 });

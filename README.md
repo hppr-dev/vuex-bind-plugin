@@ -272,6 +272,54 @@ Only call this action once.
 
 The name of the start_bind action, as well as the prefixes for the load and trigger actions, can be set by modifying the [naming scheme](#naming).
 
+### Overwriting Generated Configuration
+
+After all of the state, mutations, and actions are generated they are merged back in with the original config.
+If a piece of the original store config conflicts with the generated config, the store config will be used instead.
+
+When using or intending to overwrite a generated piece of config use `naming` to refer to it.
+
+The config:
+
+```
+export default {
+  state : {
+    users : []
+  },
+  mutations : {
+    update_users : (state, data) => ... //Custom handling
+  },
+  bindings : {
+    users : {
+      bind : "once",
+    }
+  }
+}
+```
+
+Could be written as:
+
+```
+import { naming } from 'vuex-bind-plugin'
+
+export default {
+  state : {
+    users : []
+  },
+  mutations : {
+    [naming.update("users")] : (state, data) => ... //Custom handling
+  },
+  bindings : {
+    users : {
+      bind : "once",
+    }
+  }
+}
+```
+
+This has the benefit of showing that you intend to use the prewritten mutation instead of the generated one.
+It also grants the flexibility to change your naming scheme in the future.
+
 # Configuration
 
 ## Default Configuration
@@ -466,6 +514,8 @@ Use the `naming` option to specify which naming scheme to use.
 The two included schemes are `Bind.SnakeCase` and `Bind.CamelCase`.
 
 The naming scheme only affects the generated portions of the vuex config and not configuration values associated with the plugin.
+
+Access to the current naming scheme is available by using `naming`. See [Overwriting Generated Configuration](#overwriting-generated-configuration).
 
 #### Why snake_case as default?
 
