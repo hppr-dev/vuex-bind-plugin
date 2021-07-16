@@ -29,7 +29,7 @@ export default class _BoundStore {
 
       }
 
-      if  ( BindPlugin.config.strict && ! c.BINDING_TYPES.includes(binding.bind) ) {
+      if ( BindPlugin.config.strict && ! c.BINDING_TYPES.includes(binding.bind) ) {
         throw `Unknown binding type for ${output_var}<-${binding.bind}->${binding.endpoint}`;
       }
     }
@@ -45,13 +45,9 @@ export default class _BoundStore {
     delete store_config.bindings;
     delete store_config.namespace;
 
-    store_config.state = store_config.state ?? {};
-    store_config.mutations = store_config.mutations ?? {};
-    store_config.actions = store_config.actions ?? {};
-
-    Object.assign(store_config.state, this.generated_state);
-    Object.assign(store_config.mutations, this.generated_mutations);
-    Object.assign(store_config.actions, this.generated_actions);
+    store_config.state = { ...this.generated_state, ...store_config.state };
+    store_config.mutations = { ...this.generated_mutations, ...store_config.mutations };
+    store_config.actions = { ...this.generated_actions, ...store_config.actions };
 
     store_config.namespaced = true;
 

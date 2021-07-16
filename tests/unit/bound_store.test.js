@@ -15,9 +15,11 @@ describe("constructor", () => {
     bindings,
     state : {
       regular_state_var : "hello",
+      dont_touch : "dont touch this state",
     },
     mutations : {
       regular_mutation : "mutate a thing",
+      update_dont_touch : "dont touch me",
     },
     actions : {
       regular_action : "some action",
@@ -82,6 +84,22 @@ describe("constructor", () => {
     store = new BoundStore({ namespace: "empty", bindings : {} });
     expect(store).toBeDefined();
   });
+
+  it("should not overwrite already written state and mutations", () => {
+    let hold = BoundStore.prototype.generate_modifications;
+    BoundStore.prototype.generate_modifications = function() {
+      this.generated_state = {
+        dont_touch : "this is changed",
+      };
+      this.generated_mutations = {
+        update_dont_touch : "this is also changed",
+      };
+    }
+    store = init_store( { dont_touch : { endpoint : {}, create_params: true } }, "test" );
+    expect(store.state.dont_touch).toBe("dont touch this state");
+    expect(store.mutations.update_dont_touch).toBe("dont touch me");
+    BoundStore.prototype.generate_modifications = hold;
+  })
   
 });
 
