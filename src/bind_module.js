@@ -54,23 +54,32 @@ export default class BindModule {
             resolve();
           });
         },
-        [c.BIND]    : ({ dispatch }, payload) => {
+        [c.BIND]    : ({ dispatch, rootState, state }, payload) => {
+
+          if ( payload.namespace === "" ) {
+            payload.local_state = rootState;
+            payload.ns_prefix   = ""
+          } else {
+            payload.local_state = rootState[payload.namespace];
+            payload.ns_prefix = `${namespace}/`;
+          }
+
           return payload.binding.bind === c.WATCH? dispatch(c.WATCH, payload) : dispatch(c.ONCE, payload);
         },
         [c.WATCH]   : ({ dispatch, commit }, payload) => {
           let interval_func = () => {
-            dispatch(c.ONCE, payload );
+            dispatch(c.ONCE, payload);
           };
+
           commit(c.ADD_INTERVAL, { 
-            name   : `${payload.namespace}/${payload.output}`,
+            name   : `${payload.ns_prefix}${payload.output}`,
             func   : interval_func,
             period : payload.binding.period,
           });
+
           return dispatch(c.ONCE, payload);
         },
-        [c.ONCE]    : ({ state, rootState, commit, dispatch },{ output , binding, namespace }) => {
-          let local_state = namespace? rootState[namespace] : rootState;
-          let ns_prefix = namespace? `${namespace}/` : "";
+        [c.ONCE]    : ({ state, commit, dispatch },{ output , binding, namespace, local_state, ns_prefix }) => {
           this.source.apply_defaults(output, binding.endpoint);
           let computed_params = this.pull_params_from(local_state, binding.param_map, binding.endpoint.params, output);
           let bind_out = binding.redirect? binding.redirect : `${BindPlugin.config.naming.update(output)}`;
@@ -85,10 +94,6 @@ export default class BindModule {
 
                 if ( this.plugin_config.strict && ! is_type_match(data, binding.endpoint.type)) {
                   console.warn(`Received bad type for ${ns_prefix}${output}. Expected ${binding.endpoint.type.name} but got ${JSON.stringify(data)}.`);
-                }
-
-                if(binding.endpoint.params[output] && ! is_unset(data, binding.endpoint.type) ) {
-                  return;
                 }
 
                 commit(`${ns_prefix}${bind_out}`, data , { root : true }); 
