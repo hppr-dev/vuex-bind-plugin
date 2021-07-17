@@ -1,10 +1,11 @@
 import BindPlugin from "./bind_plugin.js"
 import BoundStore from "./bound_store.js"
+import { DataSource, RestDataSource } from './data_sources.js'
 import { SnakeCase, CamelCase } from './naming.js'
 import { match, lookup_mock } from './utils.js'
 
 
-export { match, lookup_mock }
+export { DataSource, RestDataSource, match, lookup_mock }
 
 export const naming = {
   update  : (name) => BindPlugin.config.naming.update(name),

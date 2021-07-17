@@ -44,7 +44,7 @@ An example of a rest binding to the previous endpoint:
 ```
 const bindings = {
   current_user : {
-    endpoint  : get_user,
+    endpoint  : "get_user",
     bind      : "change",
   }
 };
@@ -272,54 +272,6 @@ Only call this action once.
 
 The name of the start_bind action, as well as the prefixes for the load and trigger actions, can be set by modifying the [naming scheme](#naming).
 
-### Overwriting Generated Configuration
-
-After all of the state, mutations, and actions are generated they are merged back in with the original config.
-If a piece of the original store config conflicts with the generated config, the store config will be used instead.
-
-When using or intending to overwrite a generated piece of config use `naming` to refer to it.
-
-The config:
-
-```
-export default {
-  state : {
-    users : []
-  },
-  mutations : {
-    update_users : (state, data) => ... //Custom handling
-  },
-  bindings : {
-    users : {
-      bind : "once",
-    }
-  }
-}
-```
-
-Could be written as:
-
-```
-import { naming } from 'vuex-bind-plugin'
-
-export default {
-  state : {
-    users : []
-  },
-  mutations : {
-    [naming.update("users")] : (state, data) => ... //Custom handling
-  },
-  bindings : {
-    users : {
-      bind : "once",
-    }
-  }
-}
-```
-
-This has the benefit of showing that you intend to use the prewritten mutation instead of the generated one.
-It also grants the flexibility to change your naming scheme in the future.
-
 # Configuration
 
 ## Default Configuration
@@ -406,6 +358,15 @@ The plugin does not use any data source by default.
 You will need to add configuration values to the sources option to enable them.
 Each data source has it's own keys in the sources option.
 
+Sources keys:
+
+| Key   | Type | Data Source | Description |
+|=======|======|=============|=============|
+| url   | String | "rest"    | the base url to query for data |
+| headers | Object | "rest"  | the initial headers for requests to the data |
+| wasm    | String | "wasm"  | the path to the wasm file to load |
+| custom  | Class  | ...     | See [Custom Data Sources](#custom-data-sources) |
+
 Inlude the `url` option to configure the rest data source.
 You may also configure headers for your requests here.
 ```
@@ -432,6 +393,157 @@ const plugin = Bind.Plugin({
   }
   ...
 });
+```
+
+#### Custom Data Sources
+
+To create a custom data source include the `custom` field in the `sources` plugin option.
+The value should be a custom data source that extends the DataSource class below.
+
+```
+export class DataSource {
+  // module    = (data) => Promise.resolve(data)         -- Must be defined by subclass
+  // args      = (state, params, endpoint) => [ params ] -- Must be defined by subclass
+  assign    = (response) => response;
+
+  state     = {};
+  mutations = {};
+
+  constructor(state) {
+    this.state = state;
+  }
+
+  apply_defaults(name, endpoint) {
+    endpoint.params = endpoint.params? endpoint.params : {};
+    endpoint.type = endpoint.type? endpoint.type : Object;
+  }
+}
+```
+
+##### Queries
+
+The data source describes the 3 parts of pulling data from an endpoint:
+
+1. Creating the arguments to the module -- args
+2. Calling the module                   -- module
+3. Assigning the data back to state     -- assign
+
+
+`module` returns a promise that resolves to the data to commit to state.
+The arguments to module are calculated by calling the datasource's `args` function.
+
+`args` parses the bind state, parameters, and endpoint data to create the arguments for the module call.
+It returns an Array which is used as the arguments to the datasource's `module` function.
+The `args` function takes three arguments in the following order:
+
+  1. state    -- The state store of the bind module
+  2. params   -- The parameters computed from the state
+  3. endpoint -- The endpoint definition
+
+`assign` transforms the data from the module to the format that will be stored in state.
+
+Basically, the data source is called as `module(...args(bind_state, params, endpoint))then((data) => commit(output, assign(data)))`.
+
+##### State, Mutations, and Defaults
+
+A data source's `apply_defaults` function is used to apply the default endpoint options to it's endpoints.
+
+The data source's `state` and `mutations` properties are added to the bind module's store, so they can be used in the module's queries.
+
+##### Example
+
+```
+import { DataSource } from 'vuex-bind-plugin'
+
+class WaiterDataSource extends DataSource {
+  module = (greeting, person, data) => Promise.resolve(`${greeting} ${person}, ${JSON.stringify(data)}`)
+
+  args   = (bind_state, params, endpoint) => [
+    bind_state.greeting,
+    endpoint.person
+    params,
+  ]
+
+  constructor() {
+    super({ greeting : "hello" });
+    this.mutations.update_greeting = (state, value) => state.greeting = value;
+  }
+
+  apply_defaults(name, endpoint) {
+    super.apply_defaults(name, endpoint);
+    endpoint.person = endpoint.person ?? name;
+  }
+}
+
+const plugin = new Bind.Plugin({
+  sources : {
+    custom : { 
+      "waiter" : WaiterDataSource 
+    },
+  },
+});
+
+const store_config = {
+  namespace : "kitchen",
+  bindings : {
+
+    paul : {
+      bind     : "change",
+      endpoint : {
+        source : "waiter", // Must be set because data source is custom
+        params : {
+          burger : String,
+          cheese : Boolean,
+        }
+      },
+    },
+
+    matt : {
+      bind     : "change",
+      endpoint : {
+        source : "waiter",
+        person : "matthew",
+        params : {
+          pizza : String
+        }
+      }
+    }
+
+  }
+}
+```
+
+When initialized into a vuex store the above contrived example with the module state:
+
+```
+{
+  burger : "veggie",
+  cheese : true,
+  pizza : "pepperoni"
+}
+```
+
+Would set `state.paul` to `'Hello paul, { burger : "veggie", cheese : true }'`
+
+and `state.matt` to `'Hello matthew, { pizza : "pepperoni" }'`.
+
+Then when `commit('kitchen/update_pizza', 'cheese')` is called, `state.matt` will be set to `Hello matthew, { pizza : "cheese" }`.
+
+A less contrived example would be to have a custom `RestDataSource` that allows different endpoint options.
+Note that the RestDataSource's module function is `axios`.
+The following would allow the endpoint to set `additional_data` and `additional_params` on each request.
+
+```
+import { RestDataSource } from 'vuex-bind-plugin'
+
+class CustomRestDataSource extends RestDataSource {
+  args = (bind_state, params, endpoint) => {
+    let rest_args = super.args(bind_state, params, endpoint);
+    rest_args[0].data = { ...rest_args[0].data, ...endpoint.additional_data };
+    rest_args[0].params = { ...rest_args[0].params, ...endpoint.additional_params };
+    return rest_args;
+  }
+}
 ```
 
 ### Using Mock Data
@@ -612,11 +724,12 @@ const endpoints = {
 }
 ```
 
-| Config Key     | Default          | Description                                                                                                                                       |
-|----------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| source         | ""               | Data source to use. See [Inferring Source](#inferring-source). |
-| type           | Object           | Type of object returned in the responses data                                                                                                     |
-| params         | {}               | Endpoint parameters. See [Endpoint Parameters](#endpoint-parameters)                                                                              |
+| Config Key  | Default | Description                                                                                  |
+|-------------|---------|----------------------------------------------------------------------------------------------|
+| source      | ""      | Data source to use. See [Inferring Source](#inferring-source).                               |
+| type        | Object  | Type of object returned in the responses data                                                |
+| params      | {}      | Endpoint parameters. See [Endpoint Parameters](#endpoint-parameters)                         |
+| transform   | N/A     | Function that takes the (data) from the api and transforms it before committing it to state. |
 
 ### Inferring Source
 
@@ -626,6 +739,9 @@ If multiple sources are configured, parameters use the presence of certain optio
 
 - the rest data source uses `url` and `method`
 - the wasm data source uses `func`
+
+Note that when custom datasources are configured, the source can not be inferred.
+In other words, the source must be set on endpoints that use custom datasources.
 
 For example:
 ```
@@ -737,12 +853,12 @@ const endpoints = {
 ```
 
 | Config Key     | Default          | Description                                                                                                                                       |
-|----------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| url            | "/ENDPOINT_NAME/" | Endpoint url. Used as url in axios query. May be a function that takes params and returns the resulting url.                             |
-| method         | "get"            | REST method. Used as method in axios query.                                                                                                       |
-| headers        | null             | Special headers to set for this request. These headers are added to the headers set in the plugin config and then used as headers in axios query. |
-| type           | Object           | See [General Endpoints](#general-endpoints)                                                                                                     |
-| params         | {}               | See [Endpoint Parameters](#endpoint-parameters)                                                                              |
+|----------------|------------------|-------------------------------------------------|
+| url            | "/ENDPOINT_NAME/" | Endpoint url. Used as url in axios query. May be a function that takes params and returns the resulting url. |
+| method         | "get"             | REST method. Used as method in axios query.     |
+| headers        | null              | Special headers to set for this request. These headers are added to the headers set in the plugin config and then used as headers in axios query. |
+| type           | Object            | See [General Endpoints](#general-endpoints)     |
+| params         | {}                | See [Endpoint Parameters](#endpoint-parameters) |
 
 #### Computed url
 
@@ -806,15 +922,15 @@ const bindings = {
 
 | Config Key     | Default     | Description                                                                                                                                                |
 |----------------|-------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|  endpoint      | OUTPUT_NAME | Name of the endpoint to bind to. Should match an entry in endpoint configs. Defaults to the name of the output variable.                                   |
-|  bind          | "once"     | Binding type. One of "watch", "trigger", "change", or "once". See [Binding Types](#binding-types)                                                                    |
-|  param_map     | {}        | Parameter mapping. Defines which state variables to use as parameters to the api. See [Parameter Mapping](#parameter-mapping)                              |
-|  side_effect   | N/A          | The name of an action to call when REST data is commited to this binding. The action must be within the current namespace.                                 |
-|  redirect      | N/A          | Redirects the output to another mutation. Instead of updating the data in OUTPUT_NAME, commit the data here.                                               |
-|  transform     | N/A        | Function that takes the (data) from the api and tranforms it before committing it to state.                                                                |
+|  endpoint      | OUTPUT_NAME | Name of the endpoint to bind to. Should match an entry in endpoint configs. Defaults to the name of the output variable. |
+|  bind          | "once"      | Binding type. One of "watch", "trigger", "change", or "once". See [Binding Types](#binding-types) |
+|  param_map     | {}          | Parameter mapping. Defines which state variables to use as parameters to the api. See [Parameter Mapping](#parameter-mapping) |
+|  side_effect   | N/A         | The name of an action to call when REST data is commited to this binding. The action must be within the current namespace. |
+|  redirect      | N/A         | Redirects the output to another mutation. Instead of updating the data in OUTPUT_NAME, commit the data here. |
+|  transform     | N/A         | Function that takes the (data) from the api and tranforms it before committing it to state.       |
 |  create_params | false       | Set to true to automatically create state variables for endpoint parameters or the mappings in param_map.                                                                   |
-|  loading       | false       | Set to true to create state variables that track when the data is being loaded                                                                             |
-|  period        | N/A           | Time interval in milliseconds to check for new api data. Only used for "watch" bindings                                                                    |
+|  loading       | false       | Set to true to create state variables that track when the data is being loaded                    |
+|  period        | N/A         | Time interval in milliseconds to check for new api data. Only used for "watch" bindings           |
 
 ### Binding Types
 

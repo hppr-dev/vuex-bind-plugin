@@ -90,6 +90,7 @@ export default class BindModule {
             ).then(
               (response) => {
                 let data = this.source.assign(response, binding.endpoint.source);
+                data = binding.endpoint.transform? binding.endpoint.transform(data) : data;
                 data = binding.transform? binding.transform(data) : data;
 
                 if ( this.plugin_config.strict && ! is_type_match(data, binding.endpoint.type)) {

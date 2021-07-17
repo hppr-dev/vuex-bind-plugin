@@ -368,6 +368,15 @@ describe("actions", () => {
       });
     });
 
+    it("should use endpoint transform when given", () => {
+      payload.namespace = "test";
+      payload.binding.endpoint.transform = (data) => data["output"] + " with love";
+      payload.binding.endpoint.params = { non_zero_param : Number };
+      return once(ctx, payload).then( () => {
+        expect(ctx.commit).toHaveBeenCalledWith("test/update_output_var", "from api with love", {root : true });
+      });
+    });
+
     it("should commit to redirect in namespace when given", () => {
       payload.namespace = "test";
       payload.binding.redirect = "update_something_else";
