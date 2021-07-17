@@ -280,7 +280,7 @@ describe("actions", () => {
   };
 
   describe("once", () => {
-    let payload = {};
+    let payload = { };
 
     let once = null;
 
@@ -298,17 +298,9 @@ describe("actions", () => {
             data : (params) => ({input : params, output: "from api"}),
           },
         },
+        local_state : ctx.rootState.test,
+        ns_prefix : "test/",
       };
-    });
-
-    it("shouldn't commit data from data source if parameters would trigger self referencing loops", () => {
-      payload.namespace = "test";
-      payload.output = "non_zero_param";
-      payload.binding.endpoint.params = { non_zero_param : Number };
-      ctx.dispatch.mockClear();
-      return once(ctx, payload).then( () => {
-        expect(ctx.commit).toHaveBeenCalledTimes(0);
-      });
     });
 
     it("should commit data from data source when parameters are non-zero", () => {
@@ -328,7 +320,8 @@ describe("actions", () => {
     });
 
     it("should get and commit to/from rootState when no namespace", () => {
-      payload.namespace = "";
+      payload.ns_prefix = "";
+      payload.local_state = ctx.rootState;
       payload.binding.endpoint.params = { non_zero_param : Number };
       return once(ctx, payload).then( () => {
         expect(ctx.commit).toHaveBeenCalledWith("update_output_var", { input: {non_zero_param: 4444}, output: "from api" }, {root : true });
@@ -395,53 +388,77 @@ describe("actions", () => {
     });
   });
   
-  describe("bind action", () => {
-    let ctx = {
-      dispatch : jest.fn()
-    };
-    let payload = {
-      binding   : {
-        endpoint : {},
-      },
-    };
+  describe("bind", () => {
+    let payload = null;
 
     beforeEach( () => {
       ctx.dispatch.mockClear();
+      ctx.commit.mockClear();
+      payload = {
+        namespace : "test",
+        binding   : {
+          endpoint : {},
+        },
+      };
     });
 
-    it("bind action should dispatch once action with bind is trigger", () => {
+    it("should set ns_prefix and local_state to '' and rootState when namespace is ''", () => {
+      payload.namespace = "";
+      module.actions.bind(ctx, payload);
+      expect(ctx.dispatch).toHaveBeenCalledWith("once", { 
+        ...payload,
+        ns_prefix   : "",
+        local_state : ctx.rootState,
+      });
+    })
+
+    it("should dispatch once action with bind is trigger", () => {
       payload.binding.bind = "trigger";
       module.actions.bind(ctx, payload)
-      expect(ctx.dispatch).toHaveBeenCalledWith("once", payload);
+      expect(ctx.dispatch).toHaveBeenCalledWith("once", { 
+        ...payload,
+        ns_prefix   : "test/",
+        local_state : ctx.rootState.test,
+      });
     });
 
-    it("bind action should dispatch once action with bind is once", () => {
+    it("should dispatch once action with bind is once", () => {
       payload.binding.bind = "once";
       module.actions.bind(ctx, payload)
-      expect(ctx.dispatch).toHaveBeenCalledWith("once", payload);
+      expect(ctx.dispatch).toHaveBeenCalledWith("once", { 
+        ...payload,
+        ns_prefix   : "test/",
+        local_state : ctx.rootState.test,
+      });
     });
 
-    it("bind action should dispatch once action with bind is change", () => {
+    it("should dispatch once action with bind is change", () => {
       payload.binding.bind = "change";
       module.actions.bind(ctx, payload)
-      expect(ctx.dispatch).toHaveBeenCalledWith("once", payload);
+      expect(ctx.dispatch).toHaveBeenCalledWith("once", { 
+        ...payload,
+        ns_prefix   : "test/",
+        local_state : ctx.rootState.test,
+      });
     });
     
-    it("bind action should dispatch watch action when bind is watch", () => {
+    it("should dispatch watch action when bind is watch", () => {
       payload.binding.bind = "watch";
       module.actions.bind(ctx, payload);
-      expect(ctx.dispatch).toHaveBeenCalledWith("watch", payload);
+      expect(ctx.dispatch).toHaveBeenCalledWith("watch", { 
+        ...payload,
+        ns_prefix   : "test/",
+        local_state : ctx.rootState.test,
+      });
     });
   });
   
-  describe("watch action", () => {
-    let ctx = {
-      dispatch : jest.fn(),
-      commit   : jest.fn(),
-    };
+  describe("watch", () => {
     let payload = {
       output    : "output_var",
       namespace : "test",
+      ns_prefix : "test/",
+      local_state : ctx.rootState.test,
       binding   : {
         endpoint  : {},
         bind : "watch",

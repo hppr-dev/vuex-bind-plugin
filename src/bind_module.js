@@ -61,7 +61,7 @@ export default class BindModule {
             payload.ns_prefix   = ""
           } else {
             payload.local_state = rootState[payload.namespace];
-            payload.ns_prefix = `${namespace}/`;
+            payload.ns_prefix = `${payload.namespace}/`;
           }
 
           return payload.binding.bind === c.WATCH? dispatch(c.WATCH, payload) : dispatch(c.ONCE, payload);
