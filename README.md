@@ -627,7 +627,7 @@ The two included schemes are `Bind.SnakeCase` and `Bind.CamelCase`.
 
 The naming scheme only affects the generated portions of the vuex config and not configuration values associated with the plugin.
 
-Access to the current naming scheme is available by using `naming`. See [Overwriting Generated Configuration](#overwriting-generated-configuration).
+Access to the current naming scheme is available by using `naming`.
 
 #### Why snake_case as default?
 
