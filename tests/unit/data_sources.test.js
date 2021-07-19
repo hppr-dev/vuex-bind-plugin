@@ -455,6 +455,25 @@ describe("MultDataSource", () => {
     expect(source.assign({ data : "my_data" }, "rest")).toBe("my_data");
   });
 
+  it("should create custom datasources", () => {
+    class TestCustomSource extends DataSource {
+      constructor() {
+        super({});
+        this.state = { test: "" };
+        this.mutations = { update_test: "" };
+      }
+    }
+    let source = new MultDataSource({
+      url: "myurl",
+      custom : {
+        test_custom_source : TestCustomSource
+      },
+     });
+    expect(source.sources.test_custom_source).toBeInstanceOf(TestCustomSource);
+    expect(source.state.test).toBeDefined();
+    expect(source.mutations.update_test).toBeDefined()
+  });
+
 });
 
 describe("MockDataSource", () => {

@@ -361,11 +361,11 @@ Each data source has it's own keys in the sources option.
 Sources keys:
 
 | Key   | Type | Data Source | Description |
-|=======|======|=============|=============|
+|-------|------|-------------|-------------|
 | url   | String | "rest"    | the base url to query for data |
 | headers | Object | "rest"  | the initial headers for requests to the data |
 | wasm    | String | "wasm"  | the path to the wasm file to load |
-| custom  | Class  | ...     | See [Custom Data Sources](#custom-data-sources) |
+| custom  | Object | ...     | See [Custom Data Sources](#custom-data-sources) |
 
 Inlude the `url` option to configure the rest data source.
 You may also configure headers for your requests here.
@@ -397,8 +397,8 @@ const plugin = Bind.Plugin({
 
 #### Custom Data Sources
 
-To create a custom data source include the `custom` field in the `sources` plugin option.
-The value should be a custom data source that extends the DataSource class below.
+To create a custom data source include the `custom` property in the `sources` plugin option.
+Each property of the `custom` option should be a custom data source that extends the DataSource class below.
 
 ```
 export class DataSource {
@@ -419,6 +419,35 @@ export class DataSource {
   }
 }
 ```
+
+The datasource will be initialized by calling the constructor with no arguments. 
+
+Example of using `sources.custom` field:
+
+```
+import Bind, { DataSource } from 'vuex-bind-plugin'
+
+class MySource extends DataSource {
+  constructor() {
+    super({ custom_state_var : "init_value" });
+    ...
+  }
+  ...
+}
+
+const plugin = new Bind.Plugin({
+  ...
+  sources : {
+    url    : "http://myapi",
+    custom : {
+       mysource : MySource
+    }
+  }
+})
+```
+
+In the above case, the "mysource" would be initialized as `new MySource()`.
+Note: custom datasources are not automatically mocked when mock is set to true.
 
 ##### Queries
 

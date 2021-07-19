@@ -88,6 +88,7 @@ export class MultDataSource extends DataSource {
     wasm      = undefined,
     mock      = {},
     transform = undefined,
+    custom    = {},
   }) {
     super();
     this.sources = {};
@@ -97,19 +98,28 @@ export class MultDataSource extends DataSource {
       cookies,
       wasm
     };
+
     if ( url != null ) {
       this.sources[REST] = mock === true || mock[REST] ? new MockRestDataSource(conf, transform) : new RestDataSource(conf);
     }
+
     if ( wasm != null ) {
       this.sources[WASM] = mock === true || mock[WASM] ? new MockWebAssemblyDataSource(conf, transform) : new WebAssemblyDataSource({ wasm });
     }
+
+    Object.keys(custom).forEach((custom_source) => {
+      this.sources[custom_source] = new custom[custom_source]();
+    });
+
     if ( Object.keys(this.sources).length === 1 ){
       return this.sources[Object.keys(this.sources)[0]];
     }
+
     Object.keys(this.sources).forEach((source) => {
       this.state = { ...this.state, ...this.sources[source].state }
       this.mutations = { ...this.mutations, ...this.sources[source].mutations }
     });
+
     this.assign = (response, source) => {
       return this.sources[source].assign(response);
     };
