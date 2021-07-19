@@ -229,6 +229,7 @@ describe("apply_binding_defaults", () => {
     expect(binding.endpoint).toBe("ENDPOINT_NAME");
     expect(binding.bind).toBe("once");
     expect(binding.param_map).toStrictEqual({});
+    expect(binding.create_params).toBe(true);
   })
 
   it("should keep binding_values", () => {
@@ -237,7 +238,8 @@ describe("apply_binding_defaults", () => {
       endpoint  : "somethingelse",
       redirect  : "update_something",
       period    : 10000,
-      param_map : { one : "two" }
+      param_map : { one : "two" },
+      create_params : false,
     };
     apply_binding_defaults("ENDPOINT_NAME", binding);
     expect(binding.endpoint).toBe("somethingelse");
@@ -245,5 +247,6 @@ describe("apply_binding_defaults", () => {
     expect(binding.param_map).toStrictEqual({ one : "two" });
     expect(binding.period).toBe(10000);
     expect(binding.redirect).toBe("update_something");
+    expect(binding.create_params).toBe(false);
   })
 })

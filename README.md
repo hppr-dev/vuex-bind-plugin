@@ -221,10 +221,8 @@ See [Binding Configuration](#binding-configuration) for information on configuri
 
 Endpoint bindings require two pieces of state: the output and the parameters.
 
-The output is automatically created.
-Parameters can be created in the module state, or automatically with `create_params : true`.
+The output and parameters are automatically created.
 
-Note that when parameters are manually created in module state, they will also need update mutations created matching the current [naming scheme](#naming).
 
 For example using the default naming:
 ```
@@ -300,7 +298,6 @@ const bindings = {
   users : {
     bind          : "once",
     endpoint      : "users",
-    create_params : true,
   }
 }
 ```
@@ -317,7 +314,6 @@ const bindings = {
         group : String,
       },
     },
-    create_params : true,
   }
 };
 ```
@@ -731,7 +727,6 @@ const bindings = {
     params    : {
       id : Number
     },
-    create_params : true
   }
 };
 ```
@@ -942,7 +937,7 @@ const bindings = {
     side_effect   : "",
     redirect      : "",
     transform     : null,
-    create_params : false,
+    create_params : true,
     loading       : false,
     period        : 0,
   },
@@ -957,7 +952,7 @@ const bindings = {
 |  side_effect   | N/A         | The name of an action to call when REST data is commited to this binding. The action must be within the current namespace. |
 |  redirect      | N/A         | Redirects the output to another mutation. Instead of updating the data in OUTPUT_NAME, commit the data here. |
 |  transform     | N/A         | Function that takes the (data) from the api and tranforms it before committing it to state.       |
-|  create_params | false       | Set to true to automatically create state variables for endpoint parameters or the mappings in param_map.                                                                   |
+|  create_params | true        | Set to true to automatically create state variables for endpoint parameters or the mappings in param_map.                                                                   |
 |  loading       | false       | Set to true to create state variables that track when the data is being loaded                    |
 |  period        | N/A         | Time interval in milliseconds to check for new api data. Only used for "watch" bindings           |
 
@@ -1002,15 +997,15 @@ Instead, output data is only updated when input parameters are changed.
 ### Parameter Mapping
 
 By default the state variables are named the same as the endpoint parameters.
-For example, if the endpoint has `params: {id: Number, text: String}` then the state SHOULD have `{ id: 0, text: "" }`.
+For example, if the endpoint has `params: {id: Number, text: String}` then the state will have `{ id: 0, text: "" }`.
 The `param_map` option can be used to set different names for state variables than endpoint parameters.
 
 The `param_map` option is in the format `{ STATE_VAR: ENDPOINT_PARAM }` and any missing parameters default to the endpoint parameter name.
 
-For example, if the endpoint has `params: { id: Number, text: String }` and the binding has `{ param_map: { some_id: "id" } }` then the state SHOULD have `{ some_id: 0, text: "" }`.
+For example, if the endpoint has `params: { id: Number, text: String }` and the binding has `{ param_map: { some_id: "id" } }` then the state will have `{ some_id: 0, text: "" }`.
 
-Note that when `create_params` is `true` the state variables will be created to fufill the parameter requirements.
-In other words, the above examples WOULD create what the state SHOULD have.
+If you would not like the parameters to be automatically created set the `create_params` binding option to `false`.
+Note that when `create_params` is set to false, the update mutations will need to be created to match the current [naming scheme](#naming).
 
 #### Computed Parameters
 

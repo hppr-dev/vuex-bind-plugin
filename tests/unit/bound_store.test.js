@@ -64,8 +64,8 @@ describe("constructor", () => {
   it('should apply binding defaults',  () => {
     store = init_store({ some : { }, thing: { } }, "ns");
     expect(utils.apply_binding_defaults).toHaveBeenCalledTimes(2);
-    expect(utils.apply_binding_defaults).toHaveBeenCalledWith("some",  { endpoint: undefined, bind:"once", param_map: {} });
-    expect(utils.apply_binding_defaults).toHaveBeenCalledWith("thing", { endpoint: undefined, bind:"once", param_map: {} });
+    expect(utils.apply_binding_defaults).toHaveBeenCalledWith("some",  { endpoint: undefined, bind:"once", param_map: {}, create_params : true });
+    expect(utils.apply_binding_defaults).toHaveBeenCalledWith("thing", { endpoint: undefined, bind:"once", param_map: {}, create_params : true });
   });
 
   it("should throw when initializing a bind to a named unknown endpoint and strict is on", () => {
