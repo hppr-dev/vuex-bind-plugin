@@ -1,5 +1,5 @@
 import BindPlugin from './bind_plugin.js'
-import { map_endpoint_types, get_default, apply_binding_defaults, check_bindings } from './utils.js'
+import { map_endpoint_types, get_default, apply_binding_defaults, check_bindings, create_bound_stores } from './utils.js'
 import * as c from  './constants.js'
 
 export default class _BoundStore {
@@ -48,6 +48,9 @@ export default class _BoundStore {
     store_config.state = { ...this.generated_state, ...store_config.state };
     store_config.mutations = { ...this.generated_mutations, ...store_config.mutations };
     store_config.actions = { ...this.generated_actions, ...store_config.actions };
+    if ( store_config.modules ) {
+      store_config.modules = create_bound_stores(store_config.modules);
+    }
 
     store_config.namespaced = true;
 

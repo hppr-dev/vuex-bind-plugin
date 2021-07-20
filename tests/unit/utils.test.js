@@ -1,3 +1,4 @@
+import BoundStore from '@src/bound_store.js'
 import {
   reverse_map,
   map_endpoint_types,
@@ -7,7 +8,10 @@ import {
   get_default,
   lookup_mock,
   apply_binding_defaults,
- } from '@src/utils.js'
+  create_bound_stores,
+} from '@src/utils.js'
+
+jest.mock('@src/bound_store.js');
 
 describe("reverse_map", () => {
   it("should create a map that values are keys and keys are values", () => {
@@ -250,3 +254,125 @@ describe("apply_binding_defaults", () => {
     expect(binding.create_params).toBe(false);
   })
 })
+
+describe("create_bound_stores", () => {
+
+
+  console.warn = jest.fn();
+  let result = null;
+
+  beforeEach(() => {
+    console.warn.mockClear()
+    result = null;
+  });
+
+  it("should create BoundStore configs for each config with bindings and namespace", () => {
+    let configs = {
+      one : {
+        bindings  : { some_more_config : 10 },
+        namespace : "one",
+      },
+      two : {
+        bindings  : { some_more_config : 11 },
+        namespace : "twons",
+      },
+      three : {
+        bindings  : { some_more_config : 16 },
+        namespace : "three",
+      },
+    };
+    result = create_bound_stores(configs);
+    expect(console.warn).toHaveBeenCalledTimes(0);
+    expect(result).toStrictEqual({
+      one   : expect.any(BoundStore),
+      twons : expect.any(BoundStore),
+      three : expect.any(BoundStore)
+    });
+  });
+
+  it("should leave configs without namespace or bindings", () => {
+    let configs = {
+      one : {
+        leave_me : "alone"
+      },
+      two : {
+        me_too : "dont change",
+      },
+      three : {
+        bindings  : { some_more_config : 16 },
+        namespace : "three",
+      },
+    };
+    result = create_bound_stores(configs);
+    expect(console.warn).toHaveBeenCalledTimes(0);
+    expect(result).toStrictEqual({
+      one   : { leave_me : "alone" },
+      two   : { me_too   : "dont change"},
+      three : expect.any(BoundStore)
+    });
+  });
+
+  it("should warn about configs with bindings but no namespace", () => {
+    let configs = {
+      one : {
+        bindings : { whoops : "sie daisy"},
+      },
+      two : {
+        bindings : { not_good : "bad" },
+      },
+      three : {
+        bindings  : { some_more_config : 16 },
+        namespace : "three",
+      },
+    };
+    result = create_bound_stores(configs);
+    expect(console.warn).toHaveBeenCalledTimes(2);
+    expect(console.warn).toHaveBeenCalledWith("Module one has bindings but is missing namespace");
+    expect(console.warn).toHaveBeenCalledWith("Module two has bindings but is missing namespace");
+    expect(result).toStrictEqual({
+      one   : { bindings : { whoops : "sie daisy" } },
+      two   : { bindings : { not_good : "bad"} },
+      three : expect.any(BoundStore)
+    });
+  });
+
+  it("should warn about configs with namespace but no bindings", () => {
+    let configs = {
+      one : {
+        namespace : "one",
+      },
+      two : {
+        namespace : "twons",
+      },
+      three : {
+        bindings  : { some_more_config : 16 },
+        namespace : "three",
+      },
+    };
+    result = create_bound_stores(configs);
+    expect(console.warn).toHaveBeenCalledTimes(2);
+    expect(console.warn).toHaveBeenCalledWith("Module one has namespace but is missing bindings");
+    expect(console.warn).toHaveBeenCalledWith("Module two has namespace but is missing bindings");
+    expect(result).toStrictEqual({
+      one   : { namespace : "one" },
+      two   : { namespace : "twons" },
+      three : expect.any(BoundStore)
+    });
+  });
+
+  it("should create bound_store within plain store", () => {
+    let configs = {
+      plain : {
+        modules : {
+          bound : {
+            namespace: "inner_bound",
+            bindings : {},
+          },
+        },
+      },
+    };
+    let result = create_bound_stores(configs);
+    expect(result.plain).toBeDefined();
+  });
+
+});

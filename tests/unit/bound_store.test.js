@@ -5,6 +5,7 @@ import { test_plugin_config, mock_prototype } from './test-utils.js'
 
 
 jest.spyOn(utils, "apply_binding_defaults");
+jest.spyOn(utils, "create_bound_stores");
 beforeAll(() => BindPlugin.config = test_plugin_config);
 afterAll(() => BindPlugin.config = null);
 
@@ -102,6 +103,19 @@ describe("constructor", () => {
     expect(store.mutations.update_dont_touch).toBe("dont touch me");
     BoundStore.prototype.generate_modifications = hold;
   })
+
+  it("should create nested bound stores if modules is defined", () => {
+    let config = {
+      namespace : "tester",
+      modules : {
+        some_module : {}
+      },
+      bindings : {}
+    };
+    let bound_store = new BoundStore(config);
+    expect(utils.create_bound_stores).toHaveBeenCalledTimes(1);
+    expect(utils.create_bound_stores).toHaveBeenCalledWith(config.modules);
+  });
   
 });
 

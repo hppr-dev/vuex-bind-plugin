@@ -1,4 +1,5 @@
 import { ONCE } from './constants.js'
+import BoundStore from './bound_store.js'
 
 export const reverse_map = function(str_map) {
   return Object.fromEntries(Object.keys(str_map).map( (key) => [ str_map[key], key ] ) );
@@ -110,3 +111,23 @@ export const apply_binding_defaults = (name, binding) => {
   binding.create_params = binding.create_params ?? true;
 }
 
+export const create_bound_stores = (configs) => {
+  return Object.fromEntries(
+    Object.keys(configs)
+      .map((ns) => {
+        if ( configs[ns].namespace || configs[ns].bindings || configs[ns].modules ) {
+          if ( ( configs[ns].namespace && configs[ns].bindings ) || configs[ns].modules ) {
+            return [
+              configs[ns].namespace ?? ns,
+              new BoundStore(configs[ns])
+            ];
+          } 
+          let m = ["bindings", "namespace"];
+          let n = configs[ns].bindings? 0 : 1; 
+          console.warn(`Module ${ns} has ${m[n]} but is missing ${m[(n+1)%2]}`);
+        }
+        return [ns, configs[ns]]
+      }
+    )
+  );
+}
