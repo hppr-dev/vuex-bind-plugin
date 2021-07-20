@@ -3,12 +3,12 @@ import BoundStore from "./bound_store.js"
 import { DataSource, RestDataSource } from './data_sources.js'
 import { SnakeCase, CamelCase } from './naming.js'
 import { match, lookup_mock } from './utils.js'
-import { mapBindings, mapBindingsWithLoading, mapLoads, mapTriggers, mapParams, syncParams } from './importers.js'
+import { mapBindings, mapBindingsWithLoading, mapTriggers, mapParams, syncParams } from './importers.js'
 
 
 export { DataSource, RestDataSource, match, lookup_mock }
 
-export { mapBindings, mapBindingsWithLoading, mapLoads, mapTriggers, mapParams, syncParams }
+export { mapBindings, mapBindingsWithLoading, mapTriggers, mapParams, syncParams }
 
 export default {
   Plugin  : BindPlugin,

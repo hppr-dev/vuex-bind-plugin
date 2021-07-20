@@ -41,16 +41,6 @@ export const syncParams = (ns, vars) => {
   ]));
 }
 
-export const mapLoadActions = (ns, vars) => {
-  [ns, vars] = assume_ns_vars(ns, vars);
-  return Object.fromEntries(vars.map((v) => [
-    v,
-    function() { 
-      return this.$store.dispatch(`${ns}${BindPlugin.config.naming.load(v)}`);
-    }
-  ]))
-}
-
 export const mapTriggerActions = (ns, vars) => {
   [ns, vars] = assume_ns_vars(ns, vars);
   return Object.fromEntries(vars.map((v) => [

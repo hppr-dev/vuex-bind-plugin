@@ -64,25 +64,6 @@ describe("mapParams", () => {
   });
 });
 
-describe("mapLoadActions", () => {
-  let mapped = { ...mapLoadActions("city", ["park", "road", "lamp"]) };
-  it("should create load methods", () => {
-    expect(mapped.park).toBeDefined();
-    expect(mapped.road).toBeDefined();
-    expect(mapped.lamp).toBeDefined();
-  });
-  it("should create methods that call store.dispatch with current naming scheme", () => {
-    let new_this = {
-      $store : {
-        dispatch : jest.fn(),
-      }
-    };
-    mapped.park.bind(new_this)();
-    expect(new_this.$store.dispatch).toHaveBeenCalledTimes(1);
-    expect(new_this.$store.dispatch).toHaveBeenCalledWith("city/load_park");
-  });
-});
-
 describe("mapTriggerActions", () => {
   let mapped = { ...mapTriggerActions("zoo", ["walrus", "deer", "lamp"]) };
   it("should create load methods", () => {

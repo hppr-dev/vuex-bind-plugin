@@ -270,6 +270,103 @@ Only call this action once.
 
 The name of the start_bind action, as well as the prefixes for the load and trigger actions, can be set by modifying the [naming scheme](#naming).
 
+### Mapping Helper Functions
+
+Helper functions for mapping binding information into vue components are provided to help clarify that you are dealing with bindings.
+The helper functions allow you to be agnostic about the current naming scheme.
+Much like the `mapState`, `mapActions`, `mapMutations`, `mapGetters` helpers of vuex, these helper functions take a namespace and a list of variables to import from the state.
+Unlike vuex's map helpers, these helpers do not support an object as the variables to import.
+
+Examples:
+```
+<script>
+import { mapBindings, syncParams, mapTriggerActions } from 'vuex-bind-plugin'
+
+export default {
+  name : "Test",
+  computed : {
+    ...mapBindings("user", ["info", "posts"]),
+    ...syncParams("user", ["name", "password"),
+  },
+  methods : {
+    ...mapTriggerActions("user", ["login"]),
+  },
+}
+</script>
+```
+
+#### mapBindings and mapParams
+
+`mapBindings` and `mapParams` are basically equivalent to each other and vuex's `mapState`.
+They are included provided to help provide context to the variables and denote how the component intends to use them.
+
+```
+...
+  computed : {
+    ...mapBindings(["info", "data"]), // maps info and data from the root state
+    ...mapParams("user", ["name", "password"]), // maps info and data from the user namespace
+  }
+  methods : {
+    something : function() {
+      console.log(this.name);
+      console.log(this.password);
+      console.log(this.info);
+      console.log(this.data);
+      ...
+    }
+  }
+...
+```
+
+#### syncParams
+
+`syncParams` maps the given parameters state and makes it so that they're value with be pushed back to state.
+
+```
+  computed : {
+    ...syncParams("user", ["name", "password"]),
+  }
+  methods : {
+    something : function() {
+      this.name = "something else"; // triggers commit("user/name", "something else")
+      ...
+    }
+```
+
+#### mapBindingsWithLoading
+
+`mapBindingsWithLoading` maps bindings with the loading option set to true.
+This will map the binding as an object with `value` and `loading`.
+`value` being the bindings value and `loading` being the loading value.
+
+```
+  computed : {
+    ...mapBindingswithLoading("user", ["info"]),
+  }
+  methods : {
+    something : function() {
+      if( ! this.info.loading ) {     // loading variable
+        console.log(this.info.value); // binding value
+      }
+      ...
+    }
+```
+
+#### mapTriggerActions
+
+`mapTriggerActions` maps trigger bindings as a function that dispatches the bindings trigger.
+
+```
+  methods : {
+    ...mapTriggerActions("user", ["login"]),
+    something : function() {
+      this.login().then( () => console.log("success!") );
+      ...
+    }
+  }
+```
+
+
 # Configuration
 
 ## Default Configuration
