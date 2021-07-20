@@ -8,3 +8,8 @@
 - Finish implementation/documentation of custom data sources
 - Fix README custom data sources tabnle formatting
 
+# [Version 1.0.2](https://github.com/hppr-dev/vuex-bind-plugin/tree/1.0.2)
+
+- Add mapping helpers
+- Support nested BoundStores
+
