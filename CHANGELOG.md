@@ -13,3 +13,10 @@
 - Add mapping helpers
 - Support nested BoundStores
 
+# [Version 1.0.3](https://github.com/hppr-dev/vuex-bind-plugin/tree/1.0.3)
+
+- Fix mapTriggerActions helper method
+- Update mapBindingsWithLoading to have it actually work
+- Remove computed params from bound store params creation
+- Add watch property to computed params to enable updating on updates to the state
+
