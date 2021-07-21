@@ -1,5 +1,12 @@
 import BindPlugin from './bind_plugin.js'
-import { map_endpoint_types, get_default, apply_binding_defaults, check_bindings, create_bound_stores } from './utils.js'
+import {
+  map_endpoint_types,
+  get_default,
+  apply_binding_defaults,
+  check_bindings,
+  create_bound_stores,
+  get_watchable_params,
+} from './utils.js'
 import * as c from  './constants.js'
 
 export default class _BoundStore {
@@ -63,14 +70,14 @@ export default class _BoundStore {
       let params = map_endpoint_types(binding.param_map, binding.endpoint.params);
 
       if ( binding.bind == c.WATCH || binding.bind == c.CHANGE ) {
-        this.watch_param_defs[output_var] = params;
+        this.watch_param_defs[output_var] = get_watchable_params(params) ;
       }
       if ( ! binding.redirect && ! params[output_var] ) {
         this.create_variable(output_var, binding.endpoint.type);
       }
       if ( params && binding.create_params ) {
         for ( let [state_var, type] of Object.entries(params) ) {
-          if ( ! ( binding.param_map && binding.param_map[state_var].computed ) ) {
+          if ( ! ( params[state_var].computed ) ) {
             this.create_variable(state_var, type);
           }
         }
@@ -145,7 +152,7 @@ export default class _BoundStore {
     for( let output_var of Object.keys(this.watch_param_defs) ) {
       commit(`${BindPlugin.config.namespace}/${c.WATCH_PARAMS}`, {
         action    : `${this.namespace}/${BindPlugin.config.naming.load(output_var)}`,
-        mutations : Object.keys(this.watch_param_defs[output_var]).map((state_var) => `${this.namespace}/${BindPlugin.config.naming.update(state_var)}`),
+        mutations : this.watch_param_defs[output_var].map((state_var) => `${this.namespace}/${BindPlugin.config.naming.update(state_var)}`),
       }, { root : true });
     }
   }

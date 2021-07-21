@@ -13,6 +13,9 @@ export const map_endpoint_types = function(param_map={}, type_map={}) {
       if ( reversed[param] ) {
         return [ reversed[param], param_type ];
       } 
+      if ( param_map?.[param]?.computed ) {
+        return [ param, param_map[param] ];
+      }
       return [ param, param_type ];
     })
   );
@@ -130,4 +133,13 @@ export const create_bound_stores = (configs) => {
       }
     )
   );
+}
+
+export const get_watchable_params = (params={}) => {
+  return Object.keys(params).map((key) => {
+    if ( params[key].computed ) {
+      return params[key].watch;
+    }
+    return key;
+  }).filter((key) => key !== undefined);
 }

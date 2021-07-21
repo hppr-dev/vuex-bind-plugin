@@ -9,6 +9,7 @@ import {
   lookup_mock,
   apply_binding_defaults,
   create_bound_stores,
+  get_watchable_params,
 } from '@src/utils.js'
 
 jest.mock('@src/bound_store.js');
@@ -375,4 +376,38 @@ describe("create_bound_stores", () => {
     expect(result.plain).toBeDefined();
   });
 
+});
+
+describe("get_watchable_params", () => {
+  it("should return all params if it is a normal map", () => {
+    let param_map = {
+      thing : "thong",
+      that  : "this",
+      right : "wrong",
+    };
+    expect(get_watchable_params(param_map)).toStrictEqual(["thing", "that", "right"]);
+  });
+  it("should skip params that are computed with no watch set", () => {
+    let param_map = {
+      miss : { computed : () => "me" },
+    };
+    expect(get_watchable_params(param_map)).toStrictEqual([]);
+  });
+  it("should use watch when params are computed", () => {
+    let param_map = {
+      dont : { computed : () => "ignore", watch : "hey" },
+      yoyo : { computed : () => "cool", watch : "school" },
+    };
+    expect(get_watchable_params(param_map)).toStrictEqual(["hey", "school"]);
+  });
+  it("should use watch when params are computed and keep regular params", () => {
+    let param_map = {
+      boba : "fett",
+      tea  : { computed : () => "shop", watch: "me" },
+    };
+    expect(get_watchable_params(param_map)).toStrictEqual(["boba", "me"]);
+  });
+  it("should return an empty array when given undefined", () => {
+    expect(get_watchable_params(undefined)).toStrictEqual([]);
+  });
 });

@@ -228,7 +228,7 @@ describe("generate_modifications", () => {
       endpoint  : { params },
     };
     generate_modifications();
-    expect(new_this.watch_param_defs).toStrictEqual({"out" : params});
+    expect(new_this.watch_param_defs).toStrictEqual({"out" : ["day", "month"]});
   });
 
   it("should add parameters to watch with watch binding", () => {
@@ -241,7 +241,7 @@ describe("generate_modifications", () => {
       endpoint  : { params }
     };
     generate_modifications();
-    expect(new_this.watch_param_defs).toStrictEqual({"out" : params});
+    expect(new_this.watch_param_defs).toStrictEqual({"out" : ["day", "month"]});
   });
 
   it("should not add parameters to watch with once binding", () => {
@@ -547,8 +547,8 @@ describe("add_watch_params", () => {
   let new_this = {
     namespace : "testing",
     watch_param_defs : {
-      output  : {  param : Number },
-      output2 : {  param : Number, param2: Number }
+      output  : [ "param" ],
+      output2 : [ "param", "param2" ],
     },
     plugin_config : {
       namespace : "bind",

@@ -1145,6 +1145,20 @@ export default {
 
 In the above example the `nums` parameter would be computed as `'1,2,3,4,5'`.
 
+If you want the parameter to still trigger updates you must include a `watch` property as well.
+For instance the `nums` in the binding above would be:
+
+```
+...
+      nums    : {
+        computed : (state) => state.sequence.join(','),
+        watch : "sequence",
+      },
+...
+```
+
+This would trigger an update when `update_sequence` is called.
+
 ## Organizing Endpoints and Bindings
 
 Endpoints may be configured in 3 different places/scopes:
