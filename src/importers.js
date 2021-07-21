@@ -16,10 +16,9 @@ export const mapBindingsWithLoading = (ns, vars) => {
     v,
     function () {
       let local_state = reduce_namespace_state(ns, this.$store.state);
-      return {
-        value : local_state[v],
-        loading : local_state[BindPlugin.config.naming.loading(v)],
-      }
+      let value = new Object(local_state[v]);
+      value.loading = local_state[BindPlugin.config.naming.loading(v)];
+      return value;
     },
   ]));
 }

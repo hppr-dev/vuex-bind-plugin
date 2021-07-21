@@ -51,9 +51,13 @@ describe("mapBindingsWithLoading", () => {
         }
       }
     };
-    expect(mapped.price.bind(new_this)().value).toBe(100);
+    let expected_price = new Object(100);
+    expected_price.loading = false;
+    let expected_symbol = new Object("");
+    expected_price.loading = true;
+    expect(mapped.price.bind(new_this)()).toStrictEqual(expected_price);
     expect(mapped.price.bind(new_this)().loading).toBe(false);
-    expect(mapped.symbol.bind(new_this)().value).toBe("");
+    expect(mapped.symbol.bind(new_this)()).toStrictEqual(expected_symbol);
     expect(mapped.symbol.bind(new_this)().loading).toBe(true);
   });
 });

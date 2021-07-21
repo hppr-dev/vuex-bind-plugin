@@ -336,8 +336,10 @@ They are included provided to help provide context to the variables and denote h
 #### mapBindingsWithLoading
 
 `mapBindingsWithLoading` maps bindings with the loading option set to true.
-This will map the binding as an object with `value` and `loading`.
-`value` being the bindings value and `loading` being the loading value.
+This will map the binding as an object with a `loading` property.
+A caveat: using this will convert whatever value you have in your state to an object.
+The created object has the same prototype as the bindings current value, i.e. methods on the current value's type will work.
+If the binding is a primitive type and you need to just get the value, call `my_binding.valueOf`.
 
 ```
   computed : {
@@ -346,7 +348,7 @@ This will map the binding as an object with `value` and `loading`.
   methods : {
     something : function() {
       if( ! this.info.loading ) {     // loading variable
-        console.log(this.info.value); // binding value
+        console.log(this.info);       // binding value with loading prop
       }
       ...
     }
