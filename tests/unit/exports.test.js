@@ -4,8 +4,34 @@ import BoundStore from '@src/bound_store.js'
 import { SnakeCase, CamelCase } from '@src/naming.js'
 import { create_bound_stores } from '@src/utils.js'
 
+import {
+  DataSource,
+  RestDataSource,
+  match,
+  lookup_mock,
+  mapBindings,
+  mapBindingsWithLoading,
+  mapParams,
+  syncParams,
+  mapTriggerActions,
+} from '@src/exports.js'
+  
+
 jest.mock('@src/bound_store.js');
 
+describe("module exports", () => {
+  it("should export what is expected", () => {
+    expect(DataSource).toBeDefined();
+    expect(RestDataSource).toBeDefined();
+    expect(match).toBeDefined();
+    expect(lookup_mock).toBeDefined();
+    expect(mapBindings).toBeDefined();
+    expect(mapBindingsWithLoading).toBeDefined();
+    expect(mapParams).toBeDefined();
+    expect(syncParams).toBeDefined();
+    expect(mapTriggerActions).toBeDefined();
+  });
+})
 describe("Bind.Plugin", () => {
   it("should be BindPlugin", () => {
     expect(Bind.Plugin).toBe(BindPlugin);
