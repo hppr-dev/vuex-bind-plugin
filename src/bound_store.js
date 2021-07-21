@@ -70,7 +70,9 @@ export default class _BoundStore {
       }
       if ( params && binding.create_params ) {
         for ( let [state_var, type] of Object.entries(params) ) {
-          this.create_variable(state_var, type);
+          if ( ! ( binding.param_map && binding.param_map[state_var].computed ) ) {
+            this.create_variable(state_var, type);
+          }
         }
       }
       if ( binding.loading ) {

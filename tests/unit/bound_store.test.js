@@ -305,6 +305,23 @@ describe("generate_modifications", () => {
     expect(new_this.create_variable).toHaveBeenCalledTimes(0);
   });
 
+  it("should not create the computed params", () => {
+    new_this.bindings.out = {
+      bind : "once",
+      endpoint  : {
+        params : { param1 : String },
+      },
+      type : String,
+      param_map : {
+        param1 : { computed : () => "something" }
+      },
+      redirect : "no_output",
+      create_params : true,
+    };
+    generate_modifications();
+    expect(new_this.create_variable).toHaveBeenCalledTimes(0);
+  });
+
 });
 
 describe("create_variable", () => {
