@@ -425,7 +425,6 @@ describe("actions", () => {
         ...payload,
         ns_prefix   : "",
         local_state : ctx.rootState,
-        local_getters : ctx.rootGetters,
       });
     })
 
@@ -436,7 +435,6 @@ describe("actions", () => {
         ...payload,
         ns_prefix   : "test/",
         local_state : ctx.rootState.test,
-        local_getters : ctx.rootGetters.test,
       });
     });
 
@@ -447,7 +445,6 @@ describe("actions", () => {
         ...payload,
         ns_prefix   : "test/",
         local_state : ctx.rootState.test,
-        local_getters : ctx.rootGetters.test,
       });
     });
 
@@ -458,7 +455,6 @@ describe("actions", () => {
         ...payload,
         ns_prefix   : "test/",
         local_state : ctx.rootState.test,
-        local_getters : ctx.rootGetters.test,
       });
     });
     
@@ -469,7 +465,6 @@ describe("actions", () => {
         ...payload,
         ns_prefix   : "test/",
         local_state : ctx.rootState.test,
-        local_getters : ctx.rootGetters.test,
       });
     });
   });

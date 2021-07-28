@@ -1143,7 +1143,8 @@ export default {
 }
 ``` 
 
-The computed function is passed two values: the local module state and the local module getters, in that order.
+The computed function is passed two values: the local module state and the root getters, in that order.
+To access local getters from the rootGetters use the namespaced name, i.e `rootGetters["ns/my_getter"]`.
 
 In the above example the `nums` parameter would be computed as `'1,2,3,4,5'`.
 
