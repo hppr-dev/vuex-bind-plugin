@@ -20,6 +20,11 @@
 - Remove computed params from bound store params creation
 - Add watch property to computed params to enable updating on updates to the state
 
-# [Version 1.0.4](https://github.com/hppr-dev/vuex-bind-plugin/tree/1.0.4)
+# Version 1.0.4 BROKEN UNPUBLISHED
 
 - Quick patch to add getters to computed parameters in param_maps.
+
+# [Version 1.0.5](https://github.com/hppr-dev/vuex-bind-plugin/tree/1.0.5)
+
+- Quick patch fix last version. rootGetters is not setup like rootState is.
+- Pass rootGetters instead of trying to get the local module getters in computed params

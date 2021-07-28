@@ -1,6 +1,6 @@
 {
   "name": "vuex-bind-plugin",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "vuex plugin to automatically bind input state to output state",
   "main": "lib/exports.js",
   "scripts": {
