@@ -1143,6 +1143,8 @@ export default {
 }
 ``` 
 
+The computed function is passed two values: the local module state and the local module getters, in that order.
+
 In the above example the `nums` parameter would be computed as `'1,2,3,4,5'`.
 
 If you want the parameter to still trigger updates you must include a `watch` property as well.

@@ -52,6 +52,7 @@ describe("pull_params_from", () => {
   let param_map = null;
   let params = null;
   let state = null;
+  let getters = {};
 
   let new_this = {
     plugin_config : {}
@@ -71,19 +72,19 @@ describe("pull_params_from", () => {
     param_map.date = { computed : (s) => s.date.join(',') };
     params.date = String
     state.date = [1,2,3,4,5];
-    let pulled_params = pull_params_from(state, param_map, params, "output");
+    let pulled_params = pull_params_from(state, getters, param_map, params, "output");
     expect(pulled_params.date).toBe('1,2,3,4,5');
   });
 
   it("should return falsey if params are unset", () => {
     state.user_id = "";
-    let pulled_params = pull_params_from(state,  param_map, params, "output");
+    let pulled_params = pull_params_from(state, getters, param_map, params, "output");
     expect(pulled_params).toBeFalsy();
   });
   
   it("should return data when all params are set", () => {
     state.user_id = "honcho";
-    let pulled_params = pull_params_from(state,  param_map, params, "output");
+    let pulled_params = pull_params_from(state, getters, param_map, params, "output");
     expect(pulled_params).toBeTruthy();
     expect(pulled_params.user).toBe("honcho");
     expect(pulled_params.date).toBe("2020-01-01");
@@ -93,7 +94,7 @@ describe("pull_params_from", () => {
     new_this.plugin_config.strict = true;
     state.user_id = 1000;
     console.warn = jest.fn();
-    let pulled_params = pull_params_from(state, param_map, params, "output");
+    let pulled_params = pull_params_from(state, getters, param_map, params, "output");
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(expect.any(String));
   });
@@ -102,14 +103,14 @@ describe("pull_params_from", () => {
     new_this.plugin_config.strict = true;
     state.user_id = "julia";
     console.warn = jest.fn();
-    let pulled_params = pull_params_from(state,  param_map, params, "output");
+    let pulled_params = pull_params_from(state, getters, param_map, params, "output");
     expect(console.warn).toHaveBeenCalledTimes(0);
   });
 
   it("should return ok if param is match.All()", () => {
     params.user = match.All();
     state.user_id = "";
-    let pulled_params = pull_params_from(state, param_map, params, "out");
+    let pulled_params = pull_params_from(state, getters, param_map, params, "out");
     expect(pulled_params.user).toBe("");
     expect(pulled_params.date).toBe("2020-01-01");
   });
@@ -117,7 +118,7 @@ describe("pull_params_from", () => {
   it("should return flasey if param is specified as unset", () => {
     params.user = match.AnythingBut("unset");
     state.user_id = "unset";
-    let pulled_params = pull_params_from(state, param_map, params, "out");
+    let pulled_params = pull_params_from(state, getters, param_map, params, "out");
     expect(pulled_params).toBeFalsy();
   });
 
@@ -125,7 +126,7 @@ describe("pull_params_from", () => {
     state.user_id = "";
     console.info = jest.fn();
     new_this.plugin_config.log_blocked_binds = true;
-    pull_params_from(state, param_map, params, "out");
+    pull_params_from(state, getters, param_map, params, "out");
     expect(console.info).toHaveBeenCalledTimes(1);
     expect(console.info).toHaveBeenCalledWith(expect.any(String));
   });
@@ -275,6 +276,12 @@ describe("actions", () => {
         zero_param     : 0,
       }
     },
+    rootGetters: {
+      get_something : () => "42",
+      test : {
+        get_something_else : () => "24",
+      }
+    },
     commit : jest.fn(),
     dispatch : jest.fn(),
   };
@@ -418,6 +425,7 @@ describe("actions", () => {
         ...payload,
         ns_prefix   : "",
         local_state : ctx.rootState,
+        local_getters : ctx.rootGetters,
       });
     })
 
@@ -428,6 +436,7 @@ describe("actions", () => {
         ...payload,
         ns_prefix   : "test/",
         local_state : ctx.rootState.test,
+        local_getters : ctx.rootGetters.test,
       });
     });
 
@@ -438,6 +447,7 @@ describe("actions", () => {
         ...payload,
         ns_prefix   : "test/",
         local_state : ctx.rootState.test,
+        local_getters : ctx.rootGetters.test,
       });
     });
 
@@ -448,6 +458,7 @@ describe("actions", () => {
         ...payload,
         ns_prefix   : "test/",
         local_state : ctx.rootState.test,
+        local_getters : ctx.rootGetters.test,
       });
     });
     
@@ -458,6 +469,7 @@ describe("actions", () => {
         ...payload,
         ns_prefix   : "test/",
         local_state : ctx.rootState.test,
+        local_getters : ctx.rootGetters.test,
       });
     });
   });

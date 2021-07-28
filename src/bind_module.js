@@ -54,13 +54,15 @@ export default class BindModule {
             resolve();
           });
         },
-        [c.BIND]    : ({ dispatch, rootState, state }, payload) => {
+        [c.BIND]    : ({ dispatch, rootState, rootGetters }, payload) => {
 
           if ( payload.namespace === "" ) {
             payload.local_state = rootState;
+            payload.local_getters = rootGetters;
             payload.ns_prefix   = ""
           } else {
-            payload.local_state = rootState[payload.namespace];
+            payload.local_state = rootState?.[payload.namespace];
+            payload.local_getters = rootGetters?.[payload.namespace];
             payload.ns_prefix = `${payload.namespace}/`;
           }
 
@@ -79,9 +81,9 @@ export default class BindModule {
 
           return dispatch(c.ONCE, payload);
         },
-        [c.ONCE]    : ({ state, commit, dispatch },{ output , binding, namespace, local_state, ns_prefix }) => {
+        [c.ONCE]    : ({ state, commit, dispatch },{ output , binding, namespace, local_state, local_getters, ns_prefix }) => {
           this.source.apply_defaults(output, binding.endpoint);
-          let computed_params = this.pull_params_from(local_state, binding.param_map, binding.endpoint.params, output);
+          let computed_params = this.pull_params_from(local_state, local_getters, binding.param_map, binding.endpoint.params, output);
           let bind_out = binding.redirect? binding.redirect : `${BindPlugin.config.naming.update(output)}`;
 
           if ( computed_params ) {
@@ -114,13 +116,13 @@ export default class BindModule {
       }
     }
   }
-  pull_params_from(local_state, param_map={}, params, output) {
+  pull_params_from(local_state, local_getters, param_map={}, params, output) {
     let computed_params = {};
     let param_defs = map_endpoint_types(param_map, params);
     for ( let state_name of Object.keys(param_defs) ) {
       let param = param_map[state_name]? param_map[state_name] : state_name;
       if ( param_map[state_name] && param_map[state_name].computed ) {
-        computed_params[state_name] = param_map[state_name].computed(local_state);
+        computed_params[state_name] = param_map[state_name].computed(local_state, local_getters);
       } else {
         computed_params[param] = local_state[state_name];
       }
