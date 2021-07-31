@@ -41,13 +41,13 @@ describe("mocked rest scenario", () => {
     });
   });
 
-  it("shouldn't trigger login when username is blank", () => {
+  it("should reject and not trigger login when username is blank", () => {
     bb.input_state("profile", {
       username : "",
       password : "brond",
       token    : {}
     });
-    return bb.dispatch("profile/trigger_login").then( () => {
+    return bb.dispatch("profile/trigger_login").catch( () => {
       return bb.output_state("profile", {
         username : "",
         password : "brond",

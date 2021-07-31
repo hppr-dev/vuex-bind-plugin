@@ -1054,6 +1054,7 @@ const bindings = {
 |  create_params | true        | Set to true to automatically create state variables for endpoint parameters or the mappings in param_map.                                                                   |
 |  loading       | false       | Set to true to create state variables that track when the data is being loaded                    |
 |  period        | N/A         | Time interval in milliseconds to check for new api data. Only used for "watch" bindings           |
+|  reject_on_unset | bind != "watch" | Whether or not to call Promise.reject when parameters are unset. Set to true on trigger and once bindings by default. Makes it so that the `catch` block is called when a request is blocked instead of the `then` block |
 
 ### Binding Types
 

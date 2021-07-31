@@ -311,6 +311,7 @@ describe("actions", () => {
     });
 
     it("should commit data from data source when parameters are non-zero", () => {
+      expect.assertions(1);
       payload.namespace = "test";
       payload.binding.endpoint.params = { non_zero_param : Number };
       return once(ctx, payload).then( () => {
@@ -319,6 +320,7 @@ describe("actions", () => {
     });
     
     it("should not commit data from data source when parameters are zero", () => {
+      expect.assertions(1);
       payload.namespace = "test";
       payload.binding.endpoint.params = { zero_param : Number };
       return once(ctx, payload).then( () => {
@@ -326,7 +328,17 @@ describe("actions", () => {
       });
     });
 
+    it("should reject when parameters are zero and reject_on_unset is true", () => {
+      expect.assertions(1);
+      payload.namespace = "test";
+      payload.binding.endpoint.params = { zero_param : Number };
+      payload.binding.reject_on_unset = true;
+      return expect(once(ctx, payload)).rejects.toStrictEqual({ message : expect.any(String) });
+    });
+
+
     it("should get and commit to/from rootState when no namespace", () => {
+      expect.assertions(1);
       payload.ns_prefix = "";
       payload.local_state = ctx.rootState;
       payload.binding.endpoint.params = { non_zero_param : Number };
@@ -336,6 +348,7 @@ describe("actions", () => {
     });
 
     it("should apply data source endpoint defaults", () => {
+      expect.assertions(2);
       payload.namespace = "";
       payload.binding.endpoint.params = { something : Number };
       test_plugin_config.data_source.apply_defaults.mockClear();
@@ -346,6 +359,7 @@ describe("actions", () => {
     });
 
     it("should warn on bad type from api when strict mode is on", () => {
+      expect.assertions(1);
       console.warn = jest.fn();
       payload.binding.endpoint.params = { non_zero_param : Number };
       test_plugin_config.strict = true;
@@ -356,6 +370,7 @@ describe("actions", () => {
     });
 
     it("should dispatch binding side effect when given", () => {
+      expect.assertions(2);
       payload.namespace = "test";
       payload.binding.side_effect = "do_something_else";
       payload.binding.endpoint.params = { non_zero_param : Number };
@@ -367,6 +382,7 @@ describe("actions", () => {
     });
 
     it("should use binding transform when given", () => {
+      expect.assertions(1);
       payload.namespace = "test";
       payload.binding.transform = (data) => data["input"];
       payload.binding.endpoint.params = { non_zero_param : Number };
@@ -376,6 +392,7 @@ describe("actions", () => {
     });
 
     it("should use endpoint transform when given", () => {
+      expect.assertions(1);
       payload.namespace = "test";
       payload.binding.endpoint.transform = (data) => data["output"] + " with love";
       payload.binding.endpoint.params = { non_zero_param : Number };
@@ -385,6 +402,7 @@ describe("actions", () => {
     });
 
     it("should commit to redirect in namespace when given", () => {
+      expect.assertions(1);
       payload.namespace = "test";
       payload.binding.redirect = "update_something_else";
       payload.binding.endpoint.params = { non_zero_param : Number };
@@ -394,6 +412,7 @@ describe("actions", () => {
     });
 
     it("should set done loading variables", () => {
+      expect.assertions(2);
       payload.namespace = "test";
       payload.binding.loading = true;
       payload.binding.endpoint.params = { non_zero_param : Number };
@@ -519,6 +538,7 @@ describe("actions", () => {
     });
 
     it("should clear watch_params, bound_stores and intevals", () =>  {
+      expect.assertions(5);
       return expect(module.actions.reset(ctx)).resolves.toBeUndefined().then( () => {
         expect(ctx.commit).toHaveBeenCalledTimes(3);
         expect(ctx.commit).toHaveBeenCalledWith("clear_watch_params");

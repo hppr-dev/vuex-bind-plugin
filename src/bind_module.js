@@ -78,7 +78,14 @@ export default class BindModule {
 
           return dispatch(c.ONCE, payload);
         },
-        [c.ONCE]    : ({ state, commit, dispatch, rootGetters },{ output , binding, namespace, local_state, ns_prefix }) => {
+        [c.ONCE]    : (
+          { state, commit, dispatch, rootGetters },
+          { 
+            output,          // Name of output state variable
+            binding,         // Binding object
+            local_state,     // Local module state
+            ns_prefix,       // Prefix to use when accessing local state
+          }) => {
           this.source.apply_defaults(output, binding.endpoint);
           let computed_params = this.pull_params_from(local_state, rootGetters, binding.param_map, binding.endpoint.params, output);
           let bind_out = binding.redirect? binding.redirect : `${BindPlugin.config.naming.update(output)}`;
@@ -108,7 +115,14 @@ export default class BindModule {
               }
             );
           }
-          return new Promise((resolve) => resolve({ message : "Not Updated" })) ;
+          return new Promise((resolve, reject) => {
+            let data = { message : `Binding ${output}: Parameters were unset ${JSON.stringify(binding.endpoint)}` };
+            if ( binding.reject_on_unset ) {
+              reject(data);
+            } else {
+              resolve(data) ;
+            }
+          })
         },
       }
     }

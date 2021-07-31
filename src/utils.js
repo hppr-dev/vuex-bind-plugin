@@ -1,4 +1,4 @@
-import { ONCE } from './constants.js'
+import { ONCE, WATCH } from './constants.js'
 import BoundStore from './bound_store.js'
 
 export const reverse_map = function(str_map) {
@@ -112,6 +112,7 @@ export const apply_binding_defaults = (name, binding) => {
   binding.bind = binding.bind ?? ONCE;
   binding.param_map = binding.param_map ?? {};
   binding.create_params = binding.create_params ?? true;
+  binding.reject_on_unset = binding.reject_on_unset ?? binding.bind !== WATCH ;
 }
 
 export const create_bound_stores = (configs) => {
