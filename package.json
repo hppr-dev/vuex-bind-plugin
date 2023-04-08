@@ -10,7 +10,7 @@
     "int": "jest integration",
     "intcoverage": "jest integration --coverage",
     "prepare": "babel src --out-dir lib",
-    "prepublishOnly" : "jest unit && jest unit --coverage && jest integration"
+    "prepublishOnly": "jest unit && jest unit --coverage && jest integration"
   },
   "repository": {
     "type": "git",
@@ -37,10 +37,10 @@
     "testEnvironment": "jsdom",
     "moduleNameMapper": {
       "^@src/(.*)$": "<rootDir>/src/$1"
-    },  
-    "coverageThreshold" : {
-      "global" :{
-        "lines" : 99
+    },
+    "coverageThreshold": {
+      "global": {
+        "lines": 99
       }
     }
   },
@@ -49,7 +49,7 @@
   },
   "homepage": "https://github.com/hppr-dev/vuex-bind-plugin#readme",
   "dependencies": {
-    "axios": "^0.21.1"
+    "axios": "^0.21.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.14.5",
